@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
@@ -14,13 +14,11 @@ const Chat = ({ darkMode }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [typingUsers, setTypingUsers] = useState([]);
-  const [showReactions, setShowReactions] = useState(null);
-  const bottomRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const prevLengthRef = useRef(0);
+ const [previewImage, setPreviewImage] = useState(null);
+const [showReactions, setShowReactions] = useState(null);
+const messagesContainerRef = useRef(null);  // ← yangi
+const fileInputRef = useRef(null);
+const prevLengthRef = useRef(0);
 
   // Video call states
   const [inCall, setInCall] = useState(false);
@@ -40,91 +38,34 @@ const Chat = ({ darkMode }) => {
   }, []);
 
   // Faqat yangi xabar kelganda scroll
-  useEffect(() => {
-    if (messages.length > prevLengthRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-    prevLengthRef.current = messages.length;
-  }, [messages]);
-
-  // Typing — listen
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "typing"), (snap) => {
-      const users = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((d) => d.uid !== user?.uid && d.isTyping);
-      setTypingUsers(users);
+useEffect(() => {
+  if (messages.length > prevLengthRef.current) {
+    messagesContainerRef.current?.scrollTo({
+      top: messagesContainerRef.current.scrollHeight,
+      behavior: "smooth"
     });
-    return () => unsub();
-  }, [user]);
+  }
+  prevLengthRef.current = messages.length;
+}, [messages]);
 
-  // Sahifadan chiqqanda typing o'chirish
-  useEffect(() => {
-    return () => {
-      if (user) {
-        setDoc(doc(db, "typing", user.uid), { uid: user.uid, isTyping: false }, { merge: true }).catch(() => {});
-      }
-    };
-  }, [user]);
+  const handleTyping = (e) => {
+    setText(e.target.value);
+  };
 
-  // Typing yoqish — setDoc ishlatamiz (document yo'q bo'lsa yaratadi)
- const setTypingStatus = async (isTyping) => {
-  if (!user) return;
-  try {
-    await setDoc(doc(db, "typing", user.uid), {
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    const sendText = text;
+    setText("");
+    await addDoc(collection(db, "messages"), {
+      text: sendText,
       uid: user.uid,
       name: user.displayName || user.email,
-      isTyping,
-    }, { merge: true });
-  } catch  {
-    // ignore
-  }
-};
-
-const handleTyping = (e) => {
-  setText(e.target.value);
-  setTypingStatus(true);
-  clearTimeout(typingTimeoutRef.current);
-  typingTimeoutRef.current = setTimeout(() => {
-    setTypingStatus(false);
-  }, 1000); // 3 soniyada o'chadi
-};
-
-  // Input blur — typing o'chirish (Telegram uslubi)
-
-const handleBlur = async () => {
-  clearTimeout(typingTimeoutRef.current);
-  // Bir necha marta urinib ko'ramiz
-  for (let i = 0; i < 3; i++) {
-    try {
-      await setDoc(doc(db, "typing", user.uid), {
-        uid: user.uid,
-        name: user.displayName || user.email,
-        isTyping: false,
-      });
-      break;
-    } catch {
-      await new Promise(r => setTimeout(r, 200));
-    }
-  }
-};
-
-const handleSend = async () => {
-  if (!text.trim()) return;
-  clearTimeout(typingTimeoutRef.current);
-  await setTypingStatus(false); // ← birinchi
-  const sendText = text;
-  setText(""); // ← keyin
-  await addDoc(collection(db, "messages"), {
-    text: sendText,
-    uid: user.uid,
-    name: user.displayName || user.email,
-    avatar: user.photoURL || null,
-    type: "text",
-    reactions: {},
-    createdAt: serverTimestamp(),
-  });
-};
+      avatar: user.photoURL || null,
+      type: "text",
+      reactions: {},
+      createdAt: serverTimestamp(),
+    });
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -221,19 +162,7 @@ const handleSend = async () => {
         <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl">💬</div>
         <div>
           <h2 className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Umumiy chat</h2>
-          {/* Typing indicator — Telegram uslubi: header ostida */}
-          {typingUsers.length > 0 ? (
-            <p className="text-xs text-blue-400 flex items-center gap-1">
-              <span>{typingUsers[0]?.name} yozyapti</span>
-              <span className="flex gap-0.5">
-                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </span>
-            </p>
-          ) : (
-            <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Barcha foydalanuvchilar</p>
-          )}
+          <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Barcha foydalanuvchilar</p>
         </div>
         <div className="ml-auto">
           {!inCall ? (
@@ -365,7 +294,7 @@ const handleSend = async () => {
             </div>
           );
         })}
-        <div ref={bottomRef} />
+        
       </div>
 
       {/* Input */}
@@ -381,17 +310,12 @@ const handleSend = async () => {
           value={text}
           onChange={handleTyping}
           onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
           className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`}
         />
-        <button 
-  onMouseDown={(e) => e.preventDefault()} // ← blur oldini oladi
-  onClick={handleSend} 
-  disabled={!text.trim()}
-  className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition"
->
-  ➤
-</button>
+        <button onClick={handleSend} disabled={!text.trim()}
+          className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
+          ➤
+        </button>
       </div>
 
       {/* Rasm preview */}
