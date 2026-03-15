@@ -68,14 +68,18 @@ const Chat = ({ darkMode }) => {
   }, [user]);
 
   // Typing yoqish — setDoc ishlatamiz (document yo'q bo'lsa yaratadi)
-  const setTypingStatus = async (isTyping) => {
-    if (!user) return;
+ const setTypingStatus = async (isTyping) => {
+  if (!user) return;
+  try {
     await setDoc(doc(db, "typing", user.uid), {
       uid: user.uid,
       name: user.displayName || user.email,
       isTyping,
     }, { merge: true });
-  };
+  } catch  {
+    // ignore
+  }
+};
 
   const handleTyping = (e) => {
     setText(e.target.value);
@@ -87,29 +91,26 @@ const Chat = ({ darkMode }) => {
   };
 
   // Input blur — typing o'chirish (Telegram uslubi)
-  const handleBlur = () => {
-    clearTimeout(typingTimeoutRef.current);
-    setTypingStatus(false);
-  };
+ const handleBlur = async () => {
+  clearTimeout(typingTimeoutRef.current);
+  await setTypingStatus(false);
+};
 
-  const handleSend = async () => {
-    if (!text.trim()) return;
-    clearTimeout(typingTimeoutRef.current);
-    setTypingStatus(false);
-    await addDoc(collection(db, "messages"), {
-      text,
-      uid: user.uid,
-      name: user.displayName || user.email,
-      avatar: user.photoURL || null,
-      type: "text",
-      reactions: {},
-      createdAt: serverTimestamp(),
-    });
-    setText("");
-    setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  };
+const handleSend = async () => {
+  if (!text.trim()) return;
+  clearTimeout(typingTimeoutRef.current);
+  await setTypingStatus(false);
+  await addDoc(collection(db, "messages"), {
+    text,
+    uid: user.uid,
+    name: user.displayName || user.email,
+    avatar: user.photoURL || null,
+    type: "text",
+    reactions: {},
+    createdAt: serverTimestamp(),
+  });
+  setText("");
+};
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
