@@ -81,19 +81,32 @@ const Chat = ({ darkMode }) => {
   }
 };
 
-  const handleTyping = (e) => {
-    setText(e.target.value);
-    setTypingStatus(true);
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      setTypingStatus(false);
-    }, 2000);
-  };
+const handleTyping = (e) => {
+  setText(e.target.value);
+  setTypingStatus(true);
+  clearTimeout(typingTimeoutRef.current);
+  typingTimeoutRef.current = setTimeout(() => {
+    setTypingStatus(false);
+  }, 1000); // 3 soniyada o'chadi
+};
 
   // Input blur — typing o'chirish (Telegram uslubi)
+
 const handleBlur = async () => {
   clearTimeout(typingTimeoutRef.current);
-  await setTypingStatus(false);
+  // Bir necha marta urinib ko'ramiz
+  for (let i = 0; i < 3; i++) {
+    try {
+      await setDoc(doc(db, "typing", user.uid), {
+        uid: user.uid,
+        name: user.displayName || user.email,
+        isTyping: false,
+      });
+      break;
+    } catch {
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
 };
 
 const handleSend = async () => {
