@@ -31,7 +31,7 @@ const TypingGame = ({ darkMode }) => {
   const [lang, setLang] = useState("en");
   const [time, setTime] = useState(30);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [words, setWords] = useState([]);
+  const [words, setWords] = useState(() => generateWords("en"));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [typedWords, setTypedWords] = useState([]);
@@ -39,7 +39,7 @@ const TypingGame = ({ darkMode }) => {
   const [finished, setFinished] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile] = useState(() => window.matchMedia("(pointer: coarse)").matches);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -47,27 +47,22 @@ const TypingGame = ({ darkMode }) => {
   const activeWordRef = useRef(null);
   const prevLengthRef = useRef(0);
 
-  // Mobil tekshirish
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
 
-  const reset = useCallback(() => {
+
+  const reset = useCallback((newLang = lang, newTime = time) => {
     clearInterval(timerRef.current);
-    setWords(generateWords(lang));
+    setWords(generateWords(newLang));
     setCurrentIndex(0);
     setInput("");
     setTypedWords([]);
     setStarted(false);
     setFinished(false);
-    setTimeLeft(time);
+    setTimeLeft(newTime);
     setCorrectCount(0);
     setWrongCount(0);
     prevLengthRef.current = 0;
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [lang, time]);
-
-  useEffect(() => { reset(); }, [reset]);
 
   // Active word scroll
   useEffect(() => {
@@ -160,7 +155,7 @@ const TypingGame = ({ darkMode }) => {
             {/* Til */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               {["en", "uz"].map((l) => (
-                <button key={l} onClick={() => setLang(l)}
+                <button key={l} onClick={() => { setLang(l); reset(l, time); }}
                   className={`px-3 py-1.5 text-sm font-semibold transition ${
                     lang === l ? "bg-blue-500 text-white"
                     : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
@@ -172,7 +167,7 @@ const TypingGame = ({ darkMode }) => {
             {/* Vaqt */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               {[15, 30, 60].map((t) => (
-                <button key={t} onClick={() => setTime(t)}
+                <button key={t} onClick={() => { setTime(t); reset(lang, t); }}
                   className={`px-3 py-1.5 text-sm font-semibold transition ${
                     time === t ? "bg-blue-500 text-white"
                     : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
