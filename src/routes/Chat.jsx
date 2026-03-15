@@ -91,7 +91,7 @@ const Chat = ({ darkMode }) => {
   };
 
   // Input blur — typing o'chirish (Telegram uslubi)
- const handleBlur = async () => {
+const handleBlur = async () => {
   clearTimeout(typingTimeoutRef.current);
   await setTypingStatus(false);
 };
@@ -99,9 +99,11 @@ const Chat = ({ darkMode }) => {
 const handleSend = async () => {
   if (!text.trim()) return;
   clearTimeout(typingTimeoutRef.current);
-  await setTypingStatus(false);
+  await setTypingStatus(false); // ← birinchi
+  const sendText = text;
+  setText(""); // ← keyin
   await addDoc(collection(db, "messages"), {
-    text,
+    text: sendText,
     uid: user.uid,
     name: user.displayName || user.email,
     avatar: user.photoURL || null,
@@ -109,7 +111,6 @@ const handleSend = async () => {
     reactions: {},
     createdAt: serverTimestamp(),
   });
-  setText("");
 };
 
   const handleKeyDown = (e) => {
