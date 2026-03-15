@@ -1,0 +1,51 @@
+import { useContext } from "react";
+import { LangContext } from "./LangContext";
+
+export const useLang = () => useContext(LangContext);
+
+export const translations = {
+  uz: {
+    home: "Bosh sahifa",
+    about: "Biz haqimizda",
+    contact: "Aloqa",
+    products: "Mahsulotlar",
+    learnMore: "Ko'proq o'qish",
+    readMore: "Ko'proq o'qish",
+    aboutTitle: "Biz haqimizda",
+    aboutText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse a sapien justo. Nulla facilisis tristique imperdiet.",
+    contactTitle: "Ommabop kurslar",
+    contactSub: "Klassik fizikaning ikki asosiy sohasi o'rtasidagi ziddiyatni hal etishga urinishlar",
+    productsTitle: "Sayohat maslahatlari",
+    viewAll: "Hammasini ko'rish",
+    footerDesc: "O'rganish maqsadida yaratilgan React Router loyihasi.",
+    footerPages: "Sahifalar",
+    footerContact: "Kontakt",
+    copyright: "© 2026 React Router. Barcha huquqlar himoyalangan.",
+    heroTitle: "Qulay Paketlar",
+    heroText: "Klassik fizikaning ikki asosiy sohasi o'rtasidagi ziddiyatni hal etishga urinishlar: Nyuton mexanikasi",
+    testimonials: "Fikrlar",
+    today: "Bugun",
+  },
+  en: {
+    home: "Home",
+    about: "About",
+    contact: "Contact",
+    products: "Products",
+    learnMore: "Learn More",
+    readMore: "Read more",
+    aboutTitle: "About Us",
+    aboutText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse a sapien justo. Nulla facilisis tristique imperdiet.",
+    contactTitle: "Our Popular Courses",
+    contactSub: "Problems trying to resolve the conflict between the two major realms of Classical physics: Newtonian mechanics",
+    productsTitle: "Travel Tips and Advice",
+    viewAll: "View all",
+    footerDesc: "A React Router project created for learning purposes.",
+    footerPages: "Pages",
+    footerContact: "Contact",
+    copyright: "© 2026 React Router. All rights reserved.",
+    heroTitle: "Approdable Packages",
+    heroText: "Problems trying to resolve the conflict between the two major realms of Classical physics: Newtonian mechanics",
+    testimonials: "Testimonials",
+    today: "Today",
+  },
+};
