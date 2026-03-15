@@ -30,7 +30,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         <Link to="/" onClick={onNavClick}>
           <span className="font-semibold text-lg flex items-center gap-3 text-blue-400">
             <BiLogoReact className="text-4xl md:text-6xl" />
-            <span className="font-semibold text-xl md:text-2xl">React Router</span>
+            <span className="font-semibold text-xl md:text-2xl">Uzbekas Pixel</span>
           </span>
         </Link>
 

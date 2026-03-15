@@ -17,7 +17,7 @@ const Footer = ({ darkMode }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <BiLogoReact className="text-4xl text-blue-400" />
-            <span className="text-blue-400 font-bold text-xl">React Router</span>
+            <span className="text-blue-400 font-bold text-xl">Uzbekas Pixel</span>
           </div>
           <p className="text-sm leading-relaxed">{t.footerDesc}</p>
         </div>
