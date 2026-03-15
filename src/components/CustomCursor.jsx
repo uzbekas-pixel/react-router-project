@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 
 const CustomCursor = ({ darkMode }) => {
+  
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [trailer, setTrailer] = useState({ x: 0, y: 0 });
   const [clicking, setClicking] = useState(false);
   const [hovering, setHovering] = useState(false);
+  
 
   useEffect(() => {
     const move = (e) => setPos({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
+    
   }, []);
 
   // Trailer — orqada ergashib keladi
@@ -35,6 +38,7 @@ const CustomCursor = ({ darkMode }) => {
       window.removeEventListener("mousedown", down);
       window.removeEventListener("mouseup", up);
     };
+    
   }, []);
 
   useEffect(() => {
@@ -42,11 +46,14 @@ const CustomCursor = ({ darkMode }) => {
       document.querySelectorAll("a, button, [role=button]").forEach((el) => {
         el.addEventListener("mouseenter", () => setHovering(true));
         el.addEventListener("mouseleave", () => setHovering(false));
+        
       });
     };
     addHover();
   }, []);
-
+if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+    return null;
+  }
   return (
     <>
       {/* Asosiy cursor — kichik dot */}

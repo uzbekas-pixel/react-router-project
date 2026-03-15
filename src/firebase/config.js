@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { GithubAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBaMm5pXooMcdiLKdqcSM_eVh1zB6_n7Eo",
@@ -20,3 +21,4 @@ export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 export const messaging = getMessaging(app);
 export { getToken, onMessage };
+export const githubProvider = new GithubAuthProvider();
