@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../firebase/config";
+import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import AgoraRTC from "agora-rtc-sdk-ng";
 
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
+const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢"];
 
 const Chat = ({ darkMode }) => {
@@ -22,7 +22,6 @@ const Chat = ({ darkMode }) => {
   const prevLengthRef = useRef(0);
   const longPressTimer = useRef(null);
 
-  // Video call states
   const [inCall, setInCall] = useState(false);
   const [localTracks, setLocalTracks] = useState(null);
   const [remoteUsers, setRemoteUsers] = useState([]);
@@ -30,7 +29,6 @@ const Chat = ({ darkMode }) => {
   const [camOn, setCamOn] = useState(true);
   const clientRef = useRef(null);
 
-  // Messages
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt"));
     const unsub = onSnapshot(q, (snap) => {
@@ -39,7 +37,6 @@ const Chat = ({ darkMode }) => {
     return () => unsub();
   }, []);
 
-  // Scroll
   useEffect(() => {
     if (messages.length > prevLengthRef.current) {
       messagesContainerRef.current?.scrollTo({
@@ -50,7 +47,6 @@ const Chat = ({ darkMode }) => {
     prevLengthRef.current = messages.length;
   }, [messages]);
 
-  // Long press
   const handleLongPress = (msgId) => {
     longPressTimer.current = setTimeout(() => {
       setLongPressMsg(msgId);
@@ -106,20 +102,30 @@ const Chat = ({ darkMode }) => {
     setLongPressMsg(null);
   };
 
+  // imgbb bilan rasm yuklash
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { alert("Rasm 5MB dan kichik bo'lishi kerak!"); return; }
     setImageUploading(true);
     try {
-      const storageRef = ref(storage, `chat-images/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const formData = new FormData();
+      formData.append("image", file);
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error("Yuklash muvaffaqiyatsiz");
+      const url = data.data.url;
       await addDoc(collection(db, "messages"), {
-        text: "", imageUrl: url, uid: user.uid,
+        text: "",
+        imageUrl: url,
+        uid: user.uid,
         name: user.displayName || user.email,
         avatar: user.photoURL || null,
-        type: "image", reactions: {},
+        type: "image",
+        reactions: {},
         createdAt: serverTimestamp(),
       });
     } catch { alert("Rasm yuklashda xatolik!"); }
@@ -318,20 +324,15 @@ const Chat = ({ darkMode }) => {
         })}
       </div>
 
-      {/* Long press menyu — telefon uchun */}
+      {/* Long press menyu */}
       {longPressMsg && (() => {
         const msg = messages.find((m) => m.id === longPressMsg);
         const isMe = msg?.uid === user?.uid;
         return (
-          <div
-            className="fixed inset-0 z-9998 bg-black/40 flex items-end justify-center pb-24"
-            onClick={() => setLongPressMsg(null)}
-          >
-            <div
-              className={`w-full max-w-sm rounded-2xl shadow-xl overflow-hidden mx-4 ${darkMode ? "bg-slate-700" : "bg-white"}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Reactions */}
+          <div className="fixed inset-0 z-9998 bg-black/40 flex items-end justify-center pb-24"
+            onClick={() => setLongPressMsg(null)}>
+            <div className={`w-full max-w-sm rounded-2xl shadow-xl overflow-hidden mx-4 ${darkMode ? "bg-slate-700" : "bg-white"}`}
+              onClick={(e) => e.stopPropagation()}>
               <div className={`flex justify-around p-4 border-b ${darkMode ? "border-slate-600" : "border-gray-100"}`}>
                 {REACTIONS.map((emoji) => (
                   <button key={emoji} onClick={() => handleReaction(longPressMsg, emoji)}
@@ -340,22 +341,14 @@ const Chat = ({ darkMode }) => {
                   </button>
                 ))}
               </div>
-
-              {/* O'chirish — faqat o'z xabari */}
               {isMe && (
-                <button
-                  onClick={() => handleDelete(longPressMsg, msg.uid)}
-                  className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3"
-                >
+                <button onClick={() => handleDelete(longPressMsg, msg.uid)}
+                  className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3">
                   🗑️ Xabarni o'chirish
                 </button>
               )}
-
-              {/* Bekor qilish */}
-              <button
-                onClick={() => setLongPressMsg(null)}
-                className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-400 hover:bg-slate-600" : "text-gray-500 hover:bg-gray-50"}`}
-              >
+              <button onClick={() => setLongPressMsg(null)}
+                className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-400 hover:bg-slate-600" : "text-gray-500 hover:bg-gray-50"}`}>
                 ✕ Bekor qilish
               </button>
             </div>
@@ -370,14 +363,9 @@ const Chat = ({ darkMode }) => {
           {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-        <input
-          type="text"
-          placeholder="Xabar yozing..."
-          value={text}
-          onChange={handleTyping}
-          onKeyDown={handleKeyDown}
-          className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`}
-        />
+        <input type="text" placeholder="Xabar yozing..." value={text}
+          onChange={handleTyping} onKeyDown={handleKeyDown}
+          className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`} />
         <button onClick={handleSend} disabled={!text.trim()}
           className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
           ➤
