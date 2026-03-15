@@ -26,6 +26,7 @@ import { useAuth } from "./context/useAuth";
 import TypingGame from "./routes/TypingGame";
 import MultiTyping from "./routes/MultiTyping";
 
+
 function App() {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("darkMode") === "true"
@@ -81,6 +82,7 @@ function App() {
             <Route path="/chat" element={<Chat darkMode={darkMode} />} />
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
             <Route path="/typing" element={<TypingGame darkMode={darkMode} />} />
+           
             <Route path="/multiplayer" element={
               <ProtectedRoute>
                 <MultiTyping darkMode={darkMode} showToast={showToast} />

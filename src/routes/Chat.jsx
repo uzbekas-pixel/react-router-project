@@ -155,7 +155,7 @@ useEffect(() => {
   const toggleCam = () => { localTracks?.cam?.setEnabled(!camOn); setCamOn(!camOn); };
 
   return (
-    <div className="page-transition w-full max-w-3xl mx-auto px-4 py-6 mt-10 flex flex-col h-[calc(100vh-120px)]">
+    <div className="page-transition w-full max-w-3xl mx-auto px-4 py-6 mt-10 flex flex-col h-[calc(100vh-120px)] overflow-hidden">
 
       {/* Header */}
       <div className={`rounded-2xl px-6 py-4 mb-4 flex items-center gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
@@ -212,7 +212,7 @@ useEffect(() => {
       )}
 
       {/* Xabarlar */}
-      <div className={`flex-1 overflow-y-auto rounded-2xl p-4 mb-2 flex flex-col gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}
+      <div ref={messagesContainerRef} className={`chat-scroll flex-1 overflow-y-auto rounded-2xl p-4 mb-2 flex flex-col gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}
         onClick={() => setShowReactions(null)}>
         {messages.length === 0 && (
           <p className={`text-center text-sm my-auto ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
