@@ -106,7 +106,7 @@ const Chat = ({ darkMode }) => {
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Rasm 5MB dan kichik bo'lishi kerak!"); return; }
+    if (file.size > 20 * 2560 * 1440) { alert("Rasm 20MB dan kichik bo'lishi kerak!"); return; }
     setImageUploading(true);
     try {
       const formData = new FormData();
