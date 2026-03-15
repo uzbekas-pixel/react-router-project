@@ -24,7 +24,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
   return (
     <nav className="bg-slate-800 shadow-lg fixed top-0 left-0 w-full z-50">
-      <div className="flex items-center justify-between py-3 px-6 md:px-32">
+      <div className="flex items-center justify-between py-3 px-6 md:px-15">
 
         {/* Logo */}
         <Link to="/" onClick={onNavClick}>
