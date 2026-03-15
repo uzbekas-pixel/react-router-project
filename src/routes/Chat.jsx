@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import AgoraRTC from "agora-rtc-sdk-ng";
+import { onMessageListener } from "../hooks/useNotifications";
 
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
@@ -36,6 +37,15 @@ const Chat = ({ darkMode }) => {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+useEffect(() => {
+  onMessageListener().then((payload) => {
+    // App ochiq bo'lsa toast ko'rsatish
+    if (payload.notification) {
+      // showToast ni props orqali oling yoki o'zingiz qo'shing
+      console.log("Yangi xabar:", payload.notification);
+    }
+  });
+}, []);
 
   const handleSend = async () => {
     if (!text.trim()) return;
