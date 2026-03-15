@@ -46,8 +46,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   </NavLink>
 )}
         <div className="hidden md:flex items-center gap-5">
-          {["/", "/about", "/contact", "/products"].map((path, i) => {
-            const labels = ["Home", "About", "Contact", "Products"];
+          {["/", "/about", "/contact", "/products","/typing"].map((path, i) => {
+            const labels = ["Home", "About", "Contact", "Products","⌨️"];
             return (
               <NavLink
                 key={path}
