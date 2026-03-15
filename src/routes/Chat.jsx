@@ -14,11 +14,13 @@ const Chat = ({ darkMode }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
- const [previewImage, setPreviewImage] = useState(null);
-const [showReactions, setShowReactions] = useState(null);
-const messagesContainerRef = useRef(null);  // ← yangi
-const fileInputRef = useRef(null);
-const prevLengthRef = useRef(0);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [showReactions, setShowReactions] = useState(null);
+  const [longPressMsg, setLongPressMsg] = useState(null);
+  const messagesContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const prevLengthRef = useRef(0);
+  const longPressTimer = useRef(null);
 
   // Video call states
   const [inCall, setInCall] = useState(false);
@@ -37,20 +39,29 @@ const prevLengthRef = useRef(0);
     return () => unsub();
   }, []);
 
-  // Faqat yangi xabar kelganda scroll
-useEffect(() => {
-  if (messages.length > prevLengthRef.current) {
-    messagesContainerRef.current?.scrollTo({
-      top: messagesContainerRef.current.scrollHeight,
-      behavior: "smooth"
-    });
-  }
-  prevLengthRef.current = messages.length;
-}, [messages]);
+  // Scroll
+  useEffect(() => {
+    if (messages.length > prevLengthRef.current) {
+      messagesContainerRef.current?.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+    prevLengthRef.current = messages.length;
+  }, [messages]);
 
-  const handleTyping = (e) => {
-    setText(e.target.value);
+  // Long press
+  const handleLongPress = (msgId) => {
+    longPressTimer.current = setTimeout(() => {
+      setLongPressMsg(msgId);
+    }, 500);
   };
+
+  const handleLongPressEnd = () => {
+    clearTimeout(longPressTimer.current);
+  };
+
+  const handleTyping = (e) => setText(e.target.value);
 
   const handleSend = async () => {
     if (!text.trim()) return;
@@ -74,13 +85,12 @@ useEffect(() => {
     }
   };
 
-  // Xabarni o'chirish
   const handleDelete = async (msgId, msgUid) => {
     if (msgUid !== user.uid) return;
     await deleteDoc(doc(db, "messages", msgId));
+    setLongPressMsg(null);
   };
 
-  // Reaction
   const handleReaction = async (msgId, emoji) => {
     const msg = messages.find((m) => m.id === msgId);
     if (!msg) return;
@@ -93,9 +103,9 @@ useEffect(() => {
     }
     await updateDoc(doc(db, "messages", msgId), { reactions });
     setShowReactions(null);
+    setLongPressMsg(null);
   };
 
-  // Rasm yuborish
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -116,7 +126,6 @@ useEffect(() => {
     finally { setImageUploading(false); e.target.value = ""; }
   };
 
-  // Video call
   const joinCall = async () => {
     try {
       const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
@@ -212,8 +221,11 @@ useEffect(() => {
       )}
 
       {/* Xabarlar */}
-      <div ref={messagesContainerRef} className={`chat-scroll flex-1 overflow-y-auto rounded-2xl p-4 mb-2 flex flex-col gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}
-        onClick={() => setShowReactions(null)}>
+      <div
+        ref={messagesContainerRef}
+        className={`chat-scroll flex-1 overflow-y-auto rounded-2xl p-4 mb-2 flex flex-col gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}
+        onClick={() => { setShowReactions(null); setLongPressMsg(null); }}
+      >
         {messages.length === 0 && (
           <p className={`text-center text-sm my-auto ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
             Hali xabarlar yo'q. Birinchi bo'lib yozing! 👋
@@ -223,7 +235,13 @@ useEffect(() => {
         {messages.map((msg) => {
           const isMe = msg.uid === user?.uid;
           return (
-            <div key={msg.id} className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+            <div
+              key={msg.id}
+              className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}
+              onTouchStart={() => handleLongPress(msg.id)}
+              onTouchEnd={handleLongPressEnd}
+              onTouchMove={handleLongPressEnd}
+            >
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                 {msg.avatar ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" /> : msg.name?.[0]?.toUpperCase() || "?"}
               </div>
@@ -245,7 +263,7 @@ useEffect(() => {
                     </div>
                   )}
 
-                  {/* Hover amallar */}
+                  {/* PC hover amallar */}
                   <div className={`absolute top-0 ${isMe ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-1`}>
                     <button onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
@@ -294,8 +312,52 @@ useEffect(() => {
             </div>
           );
         })}
-        
       </div>
+
+      {/* Long press menyu — telefon uchun */}
+      {longPressMsg && (() => {
+        const msg = messages.find((m) => m.id === longPressMsg);
+        const isMe = msg?.uid === user?.uid;
+        return (
+          <div
+            className="fixed inset-0 z-9998 bg-black/40 flex items-end justify-center pb-24"
+            onClick={() => setLongPressMsg(null)}
+          >
+            <div
+              className={`w-full max-w-sm rounded-2xl shadow-xl overflow-hidden mx-4 ${darkMode ? "bg-slate-700" : "bg-white"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Reactions */}
+              <div className={`flex justify-around p-4 border-b ${darkMode ? "border-slate-600" : "border-gray-100"}`}>
+                {REACTIONS.map((emoji) => (
+                  <button key={emoji} onClick={() => handleReaction(longPressMsg, emoji)}
+                    className="text-2xl hover:scale-125 transition-transform active:scale-110">
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* O'chirish — faqat o'z xabari */}
+              {isMe && (
+                <button
+                  onClick={() => handleDelete(longPressMsg, msg.uid)}
+                  className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3"
+                >
+                  🗑️ Xabarni o'chirish
+                </button>
+              )}
+
+              {/* Bekor qilish */}
+              <button
+                onClick={() => setLongPressMsg(null)}
+                className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-400 hover:bg-slate-600" : "text-gray-500 hover:bg-gray-50"}`}
+              >
+                ✕ Bekor qilish
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Input */}
       <div className={`rounded-2xl px-4 py-3 flex items-center gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>

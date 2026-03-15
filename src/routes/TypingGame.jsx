@@ -5,25 +5,31 @@ import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp 
 import ScrollReveal from "../components/ScrollReveal";
 
 const WORDS_UZ = [
-  "salom", "dunyo", "kitob", "maktab", "uy", "shahar", "qishloq", "daryo",
-  "tog", "osmon", "quyosh", "oy", "yulduz", "suv", "olov", "havo", "yer",
-  "odam", "bola", "ona", "ota", "aka", "uka", "opa", "singil", "do'st",
-  "ishq", "sevgi", "baxt", "hayot", "vaqt", "kun", "kecha", "tun", "soat",
-  "daqiqa", "soniya", "yil", "hafta", "bugun", "ertaga", "non", "go'sht",
-  "sabzavot", "meva", "olma", "uzum", "shaftoli", "kompyuter", "telefon",
-  "internet", "dastur", "kod", "sayt", "fayl", "react", "javascript",
-  "python", "html", "css", "database", "server", "loyiha", "tizim",
+ "salom", "uka", "opa", "aka", "ota", "ona", "bobo", "buvi", "dost", "yigit",
+"qiz", "bola", "odam", "inson", "xalq", "shahar", "qishloq", "kocha", "yo‘l", "uy",
+"hovli", "deraza", "eshik", "stol", "stul", "divan", "kitob", "daftar", "qalam", "ruchka",
+"sumka", "telefon", "kompyuter", "ekran", "klaviatura", "sichqoncha", "internet", "dastur", "oyna", "soat",
+"vaqt", "tong", "ertalab", "tush", "kech", "kecha", "bugun", "ertaga", "hafta", "oy",
+"yil", "bahor", "yoz", "kuz", "qish", "quyosh", "oy", "yulduz", "osmon", "bulut",
+"yomgir", "qor", "shamol", "issiq", "sovuq", "iliq", "salqin", "non", "ovqat", "suv",
+"choy", "sho‘rva", "osh", "palov", "meva", "sabzi", "kartoshka", "piyoz", "guruch", "go‘sht",
+"tovuq", "baliq", "shakar", "tuz", "asal", "bog‘", "daraxt", "gul", "barg", "mehnat",
+"ish", "dam", "uyqu", "kulgi", "baxt", "quvonch", "sevgi", "do‘stlik", "yordam", "rahmat",
+"iltimos", "uzr", "haqiqat", "orzu", "maqsad", "yo‘l", "tez", "sekin", "katta", "kichik",
+"uzun", "qisqa", "yangi", "eski", "toza", "iflos", "och", "yopiq", "yaxshi", "yomon",
+"oq", "qora", "qizil", "ko‘k", "yashil", "sariq", "jigarrang", "kulrang", "oddiy", "qiziq",
 ];
 
 const WORDS_EN = [
-  "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
-  "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
-  "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
-  "an", "will", "my", "one", "all", "would", "there", "their", "what",
-  "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
-  "when", "make", "can", "like", "time", "no", "just", "him", "know",
-  "take", "people", "into", "year", "your", "good", "some", "could",
-  "react", "javascript", "code", "type", "fast", "speed", "word", "key",
+"hi", "hello", "good", "bad", "day", "night", "sun", "moon", "star", "sky",
+"water", "food", "bread", "tea", "book", "pen", "table", "chair", "house", "school",
+"friend", "boy", "girl", "city", "road", "tree", "flower", "green", "blue", "red",
+"happy", "sad", "fast", "slow", "big", "small", "new", "old", "clean", "open",
+"close", "start", "finish", "learn", "write", "read", "think", "dream", "walk", "run",
+"play", "work", "rest", "laugh", "smile", "light", "dark", "sweet", "fresh", "warm",
+"cool", "river", "mountain", "valley", "field", "forest", "cloud", "rain", "snow", "wind",
+"storm", "summer", "winter", "spring", "autumn", "morning", "evening", "minute", "second", "future",
+"past", "present", "energy", "power", "voice", "sound", "music", "story", "idea", "magic",
 ];
 
 const generateWords = (lang, count = 30) => {

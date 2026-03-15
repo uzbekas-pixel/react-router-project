@@ -6,16 +6,37 @@ import {
 } from "firebase/firestore";
 
 const WORDS_EN = [
-  "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
-  "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
-  "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
-  "react", "javascript", "code", "type", "fast", "speed", "word", "key",
-  "make", "can", "like", "time", "just", "know", "take", "people", "year",
+  "hi", "hello", "good", "bad", "day", "night", "sun", "moon", "star", "sky",
+"water", "food", "bread", "tea", "book", "pen", "table", "chair", "house", "school",
+"friend", "boy", "girl", "city", "road", "tree", "flower", "green", "blue", "red",
+"happy", "sad", "fast", "slow", "big", "small", "new", "old", "clean", "open",
+"close", "start", "finish", "learn", "write", "read", "think", "dream", "walk", "run",
+"play", "work", "rest", "laugh", "smile", "light", "dark", "sweet", "fresh", "warm",
+"cool", "river", "mountain", "valley", "field", "forest", "cloud", "rain", "snow", "wind",
+"storm", "summer", "winter", "spring", "autumn", "morning", "evening", "minute", "second", "future",
+"past", "present", "energy", "power", "voice", "sound", "music", "story", "idea", "magic",
 ];
 
-const generateWords = (count = 40) => {
+const WORDS_UZ = [
+ "salom", "uka", "opa", "aka", "ota", "ona", "bobo", "buvi", "dost", "yigit",
+"qiz", "bola", "odam", "inson", "xalq", "shahar", "qishloq", "kocha", "yo‘l", "uy",
+"hovli", "deraza", "eshik", "stol", "stul", "divan", "kitob", "daftar", "qalam", "ruchka",
+"sumka", "telefon", "kompyuter", "ekran", "klaviatura", "sichqoncha", "internet", "dastur", "oyna", "soat",
+"vaqt", "tong", "ertalab", "tush", "kech", "kecha", "bugun", "ertaga", "hafta", "oy",
+"yil", "bahor", "yoz", "kuz", "qish", "quyosh", "oy", "yulduz", "osmon", "bulut",
+"yomgir", "qor", "shamol", "issiq", "sovuq", "iliq", "salqin", "non", "ovqat", "suv",
+"choy", "sho‘rva", "osh", "palov", "meva", "sabzi", "kartoshka", "piyoz", "guruch", "go‘sht",
+"tovuq", "baliq", "shakar", "tuz", "asal", "bog‘", "daraxt", "gul", "barg", "mehnat",
+"ish", "dam", "uyqu", "kulgi", "baxt", "quvonch", "sevgi", "do‘stlik", "yordam", "rahmat",
+"iltimos", "uzr", "haqiqat", "orzu", "maqsad", "yo‘l", "tez", "sekin", "katta", "kichik",
+"uzun", "qisqa", "yangi", "eski", "toza", "iflos", "och", "yopiq", "yaxshi", "yomon",
+"oq", "qora", "qizil", "ko‘k", "yashil", "sariq", "jigarrang", "kulrang", "oddiy", "qiziq",
+];
+
+const generateWords = (count = 40, lang = "en") => {
+  const list = lang === "uz" ? WORDS_UZ : WORDS_EN;
   return Array.from({ length: count }, () =>
-    WORDS_EN[Math.floor(Math.random() * WORDS_EN.length)]
+    list[Math.floor(Math.random() * list.length)]
   );
 };
 
@@ -32,6 +53,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
   const [words, setWords] = useState([]);
   const [countdown, setCountdown] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [lang, setLang] = useState("en");
   const inputRef = useRef(null);
   const wordsContainerRef = useRef(null);
   const activeWordRef = useRef(null);
@@ -109,9 +131,10 @@ const MultiTyping = ({ darkMode, showToast }) => {
   // Room yaratish
   const createRoom = async () => {
     const id = generateRoomId();
-    const wordsArr = generateWords();
+    const wordsArr = generateWords(40, lang);
     await setDoc(doc(db, "multiTyping", id), {
       words: wordsArr,
+      lang,
       status: "waiting",
       host: { uid: user.uid, name: user.displayName || user.email, progress: 0, wpm: 0, finished: false },
       guest: null,
@@ -218,9 +241,24 @@ const MultiTyping = ({ darkMode, showToast }) => {
             <h1 className={`text-2xl font-extrabold mb-2 text-center ${darkMode ? "text-white" : "text-gray-900"}`}>
               👥 Multiplayer Typing
             </h1>
-            <p className={`text-sm text-center mb-8 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            <p className={`text-sm text-center mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
               Do'stingiz bilan raqobatlashing!
             </p>
+
+            {/* Til tanlash */}
+            <div className="flex justify-center gap-2 mb-6">
+              {["en", "uz"].map((l) => (
+                <button key={l} onClick={() => setLang(l)}
+                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition ${
+                    lang === l
+                      ? "bg-blue-500 text-white"
+                      : darkMode ? "bg-slate-700 text-gray-400 hover:bg-slate-600" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}>
+                  {l === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"}
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-col gap-4">
               <button onClick={createRoom}
                 className="w-full py-4 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition text-lg">
@@ -244,6 +282,9 @@ const MultiTyping = ({ darkMode, showToast }) => {
                   Kirish
                 </button>
               </div>
+              <p className={`text-xs text-center ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+                💡 Til faqat room yaratuvchi tanlaydi
+              </p>
             </div>
           </div>
         )}
@@ -255,8 +296,11 @@ const MultiTyping = ({ darkMode, showToast }) => {
             <h2 className={`text-xl font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
               Raqib kutilmoqda...
             </h2>
-            <p className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            <p className={`text-sm mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
               Do'stingizga shu kodni yuboring:
+            </p>
+            <p className={`text-xs mb-6 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+              {lang === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"} tili tanlangan
             </p>
             <div className={`text-4xl font-extrabold tracking-widest mb-6 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>
               {roomId}
@@ -282,7 +326,9 @@ const MultiTyping = ({ darkMode, showToast }) => {
             )}
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>👥 Raqobat</h2>
+              <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+                👥 Raqobat • {roomData?.lang === "uz" ? "🇺🇿" : "🇬🇧"}
+              </h2>
               <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline">Chiqish</button>
             </div>
 
