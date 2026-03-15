@@ -161,8 +161,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
       {/* Mobile menu */}
       <div className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-96 py-3" : "max-h-0"}`}>
-        {["/", "/about", "/contact", "/products"].map((path, i) => {
-          const labels = ["Home", "About", "Contact", "Products"];
+        {["/", "/about", "/contact", "/products", "/typing"].map((path, i) => {
+          const labels = ["Home", "About", "Contact", "Products", "Typing Game"];
           return (
             <NavLink
               key={path}
