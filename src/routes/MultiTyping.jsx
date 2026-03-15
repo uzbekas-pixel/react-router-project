@@ -139,6 +139,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
     setRoomId(id);
     setWords(data.words || []);
     setScreen("playing");
+    startCountdown();
     showToast("Roomga qo'shildingiz!", "success");
   };
 
@@ -347,7 +348,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                 <>
                   <div className="text-5xl mb-4">{iWon ? "🏆" : "😢"}</div>
                   <h2 className={`text-2xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                    {iWon ? "G'oldingiz!" : "Yutqazdingiz!"}
+                    {iWon ? "G'olib bo'ldingiz!" : "Yutqazdingiz!"}
                   </h2>
                   <p className={`text-sm mb-8 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
                     {iWon ? "Ajoyib! Siz tezroq yozdingiz!" : "Keyingi safar omad!"}
