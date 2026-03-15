@@ -24,6 +24,7 @@ import Chat from "./routes/Chat";
 import { requestNotificationPermission, onMessageListener } from "./hooks/useNotifications";
 import { useAuth } from "./context/useAuth";
 import TypingGame from "./routes/TypingGame";
+import MultiTyping from "./routes/MultiTyping";
 
 function App() {
   const [darkMode, setDarkMode] = useState(
@@ -80,6 +81,11 @@ function App() {
             <Route path="/chat" element={<ProtectedRoute><Chat darkMode={darkMode} /></ProtectedRoute>} />
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
             <Route path="/typing" element={<TypingGame darkMode={darkMode} />} />
+            <Route path="/multiplayer" element={
+              <ProtectedRoute>
+                <MultiTyping darkMode={darkMode} showToast={showToast} />
+              </ProtectedRoute>
+            } />
           </Routes>
         </AnimatePresence>
       </div>
