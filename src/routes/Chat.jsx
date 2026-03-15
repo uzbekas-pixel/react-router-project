@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
@@ -15,7 +15,6 @@ const Chat = ({ darkMode }) => {
   const [text, setText] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [typing, setTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const [showReactions, setShowReactions] = useState(null);
   const bottomRef = useRef(null);
@@ -63,28 +62,40 @@ const Chat = ({ darkMode }) => {
   useEffect(() => {
     return () => {
       if (user) {
-        updateDoc(doc(db, "typing", user.uid), { isTyping: false }).catch(() => {});
+        setDoc(doc(db, "typing", user.uid), { uid: user.uid, isTyping: false }, { merge: true }).catch(() => {});
       }
     };
   }, [user]);
 
-  // Typing — send
+  // Typing yoqish — setDoc ishlatamiz (document yo'q bo'lsa yaratadi)
+  const setTypingStatus = async (isTyping) => {
+    if (!user) return;
+    await setDoc(doc(db, "typing", user.uid), {
+      uid: user.uid,
+      name: user.displayName || user.email,
+      isTyping,
+    }, { merge: true });
+  };
+
   const handleTyping = (e) => {
     setText(e.target.value);
-    if (!typing) {
-      setTyping(true);
-      updateDoc(doc(db, "typing", user.uid), { uid: user.uid, name: user.displayName || user.email, isTyping: true })
-        .catch(() => addDoc(collection(db, "typing"), { uid: user.uid, name: user.displayName || user.email, isTyping: true }));
-    }
+    setTypingStatus(true);
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      setTyping(false);
-      updateDoc(doc(db, "typing", user.uid), { isTyping: false }).catch(() => {});
+      setTypingStatus(false);
     }, 2000);
+  };
+
+  // Input blur — typing o'chirish (Telegram uslubi)
+  const handleBlur = () => {
+    clearTimeout(typingTimeoutRef.current);
+    setTypingStatus(false);
   };
 
   const handleSend = async () => {
     if (!text.trim()) return;
+    clearTimeout(typingTimeoutRef.current);
+    setTypingStatus(false);
     await addDoc(collection(db, "messages"), {
       text,
       uid: user.uid,
@@ -95,8 +106,6 @@ const Chat = ({ darkMode }) => {
       createdAt: serverTimestamp(),
     });
     setText("");
-    setTyping(false);
-    updateDoc(doc(db, "typing", user.uid), { isTyping: false }).catch(() => {});
     setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -197,7 +206,19 @@ const Chat = ({ darkMode }) => {
         <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl">💬</div>
         <div>
           <h2 className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Umumiy chat</h2>
-          <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Barcha foydalanuvchilar</p>
+          {/* Typing indicator — Telegram uslubi: header ostida */}
+          {typingUsers.length > 0 ? (
+            <p className="text-xs text-blue-400 flex items-center gap-1">
+              <span>{typingUsers[0]?.name} yozyapti</span>
+              <span className="flex gap-0.5">
+                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </span>
+            </p>
+          ) : (
+            <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Barcha foydalanuvchilar</p>
+          )}
         </div>
         <div className="ml-auto">
           {!inCall ? (
@@ -329,25 +350,6 @@ const Chat = ({ darkMode }) => {
             </div>
           );
         })}
-
-        {/* Typing indicator */}
-        {typingUsers.length > 0 && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {typingUsers[0]?.name?.[0]?.toUpperCase() || "?"}
-            </div>
-            <div className={`px-4 py-2 rounded-2xl rounded-bl-sm ${darkMode ? "bg-slate-700" : "bg-gray-100"}`}>
-              <div className="flex gap-1 items-center h-4">
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-            <span className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-              {typingUsers[0]?.name} yozyapti...
-            </span>
-          </div>
-        )}
         <div ref={bottomRef} />
       </div>
 
@@ -358,9 +360,15 @@ const Chat = ({ darkMode }) => {
           {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-        <input type="text" placeholder="Xabar yozing..." value={text}
-          onChange={handleTyping} onKeyDown={handleKeyDown}
-          className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`} />
+        <input
+          type="text"
+          placeholder="Xabar yozing..."
+          value={text}
+          onChange={handleTyping}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`}
+        />
         <button onClick={handleSend} disabled={!text.trim()}
           className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
           ➤
