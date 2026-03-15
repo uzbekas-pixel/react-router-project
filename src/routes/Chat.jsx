@@ -132,6 +132,9 @@ const Chat = ({ darkMode }) => {
       clientRef.current = client;
       client.on("user-published", async (remoteUser, mediaType) => {
         await client.subscribe(remoteUser, mediaType);
+        if (mediaType === "audio") {
+          remoteUser.audioTrack?.play();
+        }
         setRemoteUsers((prev) => {
           const exists = prev.find((u) => u.uid === remoteUser.uid);
           if (exists) return prev.map((u) => u.uid === remoteUser.uid ? remoteUser : u);
