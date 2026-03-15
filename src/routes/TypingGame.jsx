@@ -5,10 +5,10 @@ const WORDS_UZ = [
   "tog", "osmon", "quyosh", "oy", "yulduz", "suv", "olov", "havo", "yer",
   "odam", "bola", "ona", "ota", "aka", "uka", "opa", "singil", "do'st",
   "ishq", "sevgi", "baxt", "hayot", "vaqt", "kun", "kecha", "tun", "soat",
-  "daqiqa", "soniya", "yil", "oy", "hafta", "bugun", "ertaga", "kecha",
-  "non", "suv", "go'sht", "sabzavot", "meva", "olma", "uzum", "shaftoli",
-  "kompyuter", "telefon", "internet", "dastur", "kod", "sayt", "fayl",
-  "react", "javascript", "python", "html", "css", "database", "server",
+  "daqiqa", "soniya", "yil", "hafta", "bugun", "ertaga", "non", "go'sht",
+  "sabzavot", "meva", "olma", "uzum", "shaftoli", "kompyuter", "telefon",
+  "internet", "dastur", "kod", "sayt", "fayl", "react", "javascript",
+  "python", "html", "css", "database", "server", "loyiha", "tizim",
 ];
 
 const WORDS_EN = [
@@ -31,7 +31,7 @@ const TypingGame = ({ darkMode }) => {
   const [lang, setLang] = useState("en");
   const [time, setTime] = useState(30);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [words, setWords] = useState(() => generateWords("en"));
+  const [words, setWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [typedWords, setTypedWords] = useState([]);
@@ -39,29 +39,35 @@ const TypingGame = ({ darkMode }) => {
   const [finished, setFinished] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const wordsContainerRef = useRef(null);
   const activeWordRef = useRef(null);
+  const prevLengthRef = useRef(0);
 
-  const reset = useCallback((newLang, newTime) => {
+  // Mobil tekshirish
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
+
+  const reset = useCallback(() => {
     clearInterval(timerRef.current);
-    const targetLang = newLang || lang;
-    const targetTime = newTime !== undefined ? newTime : time;
-    
-    const newWords = generateWords(targetLang);
-    setWords(newWords);
+    setWords(generateWords(lang));
     setCurrentIndex(0);
     setInput("");
     setTypedWords([]);
     setStarted(false);
     setFinished(false);
-    setTimeLeft(targetTime);
+    setTimeLeft(time);
     setCorrectCount(0);
     setWrongCount(0);
+    prevLengthRef.current = 0;
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [lang, time]);
+
+  useEffect(() => { reset(); }, [reset]);
 
   // Active word scroll
   useEffect(() => {
@@ -69,9 +75,7 @@ const TypingGame = ({ darkMode }) => {
       const container = wordsContainerRef.current;
       const word = activeWordRef.current;
       const wordTop = word.offsetTop;
-      const containerScrollTop = container.scrollTop;
-      const containerHeight = container.clientHeight;
-      if (wordTop > containerScrollTop + containerHeight - 60) {
+      if (wordTop > container.scrollTop + container.clientHeight - 60) {
         container.scrollTo({ top: wordTop - 60, behavior: "smooth" });
       }
     }
@@ -92,28 +96,20 @@ const TypingGame = ({ darkMode }) => {
 
   const handleInput = (e) => {
     const val = e.target.value;
-
     if (!started && val.length > 0) {
       setStarted(true);
       startTimer();
     }
-
     if (finished) return;
 
-    // Space — keyingi so'z
     if (val.endsWith(" ")) {
       const typed = val.trim();
       const correct = typed === words[currentIndex];
       setTypedWords((prev) => [...prev, { word: typed, correct }]);
-      if (correct) {
-        setCorrectCount((p) => p + 1);
-      } else {
-        setWrongCount((p) => p + 1);
-      }
+      if (correct) setCorrectCount((p) => p + 1);
+      else setWrongCount((p) => p + 1);
       setCurrentIndex((p) => p + 1);
       setInput("");
-
-      // Yangi so'zlar qo'shish
       if (currentIndex >= words.length - 5) {
         setWords((prev) => [...prev, ...generateWords(lang, 10)]);
       }
@@ -122,8 +118,12 @@ const TypingGame = ({ darkMode }) => {
     }
   };
 
-  const wpm = finished ? Math.round((correctCount / time) * 60) : Math.round((correctCount / Math.max(time - timeLeft, 1)) * 60);
-  const accuracy = typedWords.length > 0 ? Math.round((correctCount / typedWords.length) * 100) : 100;
+  const wpm = finished
+    ? Math.round((correctCount / time) * 60)
+    : Math.round((correctCount / Math.max(time - timeLeft, 1)) * 60);
+  const accuracy = typedWords.length > 0
+    ? Math.round((correctCount / typedWords.length) * 100)
+    : 100;
 
   const getLetterClass = (wordIndex, letterIndex) => {
     if (wordIndex < currentIndex) {
@@ -133,15 +133,16 @@ const TypingGame = ({ darkMode }) => {
         const typedLetter = typed.word[letterIndex];
         const originalLetter = words[wordIndex][letterIndex];
         if (typedLetter === undefined) return "text-red-400 underline";
-        return typedLetter === originalLetter ? (darkMode ? "text-gray-300" : "text-gray-500") : "text-red-400";
+        return typedLetter === originalLetter
+          ? (darkMode ? "text-gray-300" : "text-gray-500")
+          : "text-red-400";
       }
       return darkMode ? "text-gray-300" : "text-gray-500";
     }
     if (wordIndex === currentIndex) {
-      const letter = words[wordIndex][letterIndex];
       const typedLetter = input[letterIndex];
       if (typedLetter === undefined) return darkMode ? "text-white" : "text-gray-900";
-      return typedLetter === letter ? "text-green-400" : "text-red-400";
+      return typedLetter === words[wordIndex][letterIndex] ? "text-green-400" : "text-red-400";
     }
     return darkMode ? "text-gray-500" : "text-gray-400";
   };
@@ -151,33 +152,30 @@ const TypingGame = ({ darkMode }) => {
       <div className="w-full max-w-3xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <h1 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
             ⌨️ Typing Test
           </h1>
-
-          {/* Settings */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Til */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               {["en", "uz"].map((l) => (
-                <button key={l} onClick={() => { setLang(l); reset(l); }}
+                <button key={l} onClick={() => setLang(l)}
                   className={`px-3 py-1.5 text-sm font-semibold transition ${
-                    lang === l
-                      ? "bg-blue-500 text-white"
-                      : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
+                    lang === l ? "bg-blue-500 text-white"
+                    : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
                   }`}>
                   {l === "en" ? "🇬🇧 EN" : "🇺🇿 UZ"}
                 </button>
               ))}
             </div>
-
+            {/* Vaqt */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               {[15, 30, 60].map((t) => (
-                <button key={t} onClick={() => { setTime(t); reset(undefined, t); }}
+                <button key={t} onClick={() => setTime(t)}
                   className={`px-3 py-1.5 text-sm font-semibold transition ${
-                    time === t
-                      ? "bg-blue-500 text-white"
-                      : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
+                    time === t ? "bg-blue-500 text-white"
+                    : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
                   }`}>
                   {t}s
                 </button>
@@ -190,9 +188,7 @@ const TypingGame = ({ darkMode }) => {
           <>
             {/* Timer */}
             <div className="flex items-center justify-between mb-4">
-              <div className={`text-4xl font-extrabold ${
-                timeLeft <= 10 ? "text-red-400" : "text-blue-400"
-              }`}>
+              <div className={`text-4xl font-extrabold ${timeLeft <= 10 ? "text-red-400" : "text-blue-400"}`}>
                 {timeLeft}
               </div>
               {started && (
@@ -212,43 +208,58 @@ const TypingGame = ({ darkMode }) => {
             >
               <div className="flex flex-wrap gap-2">
                 {words.map((word, wi) => (
-                  <span
-                    key={wi}
-                    ref={wi === currentIndex ? activeWordRef : null}
+                  <span key={wi} ref={wi === currentIndex ? activeWordRef : null}
                     className={`relative text-lg font-mono px-0.5 rounded ${
                       wi === currentIndex
-                        ? darkMode ? "bg-slate-700" :  "bg-blue-50 ring-2 ring-blue-400"
+                        ? darkMode ? "bg-slate-700" : "bg-blue-50 ring-2 ring-blue-400"
                         : ""
-                    }`}
-                  >
+                    }`}>
                     {word.split("").map((letter, li) => (
                       <span key={li} className={`transition-colors ${getLetterClass(wi, li)}`}>
-                        {/* Cursor */}
                         {wi === currentIndex && li === input.length && (
                           <span className="absolute inline-block w-0.5 h-5 bg-blue-400 animate-pulse -ml-0.5" />
                         )}
                         {letter}
                       </span>
                     ))}
-                    {/* Extra harflar */}
                     {wi === currentIndex && input.length > word.length && (
-                      <span className="text-red-400">
-                        {input.slice(word.length)}
-                      </span>
+                      <span className="text-red-400">{input.slice(word.length)}</span>
                     )}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Input (yashirin) */}
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={handleInput}
-              autoFocus
-              className="opacity-0 absolute pointer-events-none"
-            />
+            {/* Input — mobilda ko'rinadi, PCda yashirin */}
+            {isMobile ? (
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={handleInput}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                placeholder="Shu yerga yozing..."
+                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition mb-4 ${
+                  darkMode
+                    ? "bg-slate-700 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
+                    : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
+                }`}
+              />
+            ) : (
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={handleInput}
+                autoFocus
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                className="opacity-0 absolute pointer-events-none"
+              />
+            )}
 
             {/* Restart */}
             <div className="flex justify-center">
@@ -267,27 +278,19 @@ const TypingGame = ({ darkMode }) => {
             <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>
               Natijalar
             </h2>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-                <div className="text-3xl font-extrabold text-blue-400">{wpm}</div>
-                <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>WPM</div>
-              </div>
-              <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-                <div className="text-3xl font-extrabold text-green-400">{accuracy}%</div>
-                <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Aniqlik</div>
-              </div>
-              <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-                <div className="text-3xl font-extrabold text-yellow-400">{correctCount}</div>
-                <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>To'g'ri so'z</div>
-              </div>
-              <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-                <div className="text-3xl font-extrabold text-red-400">{wrongCount}</div>
-                <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Xato so'z</div>
-              </div>
+              {[
+                { value: wpm, label: "WPM", color: "text-blue-400" },
+                { value: `${accuracy}%`, label: "Aniqlik", color: "text-green-400" },
+                { value: correctCount, label: "To'g'ri so'z", color: "text-yellow-400" },
+                { value: wrongCount, label: "Xato so'z", color: "text-red-400" },
+              ].map((stat, i) => (
+                <div key={i} className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
+                  <div className={`text-3xl font-extrabold ${stat.color}`}>{stat.value}</div>
+                  <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{stat.label}</div>
+                </div>
+              ))}
             </div>
-
-            {/* WPM baholash */}
             <div className={`mb-6 text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
               {wpm < 20 ? "🐢 Boshlang'ich daraja — mashq qiling!" :
                wpm < 40 ? "🚶 O'rtacha tezlik — yaxshi boshlanish!" :
@@ -295,7 +298,6 @@ const TypingGame = ({ darkMode }) => {
                wpm < 80 ? "🚀 Ajoyib! Professional darajaga yaqin!" :
                "⚡ Ustaxona! Siz professional teruvchisiz!"}
             </div>
-
             <button onClick={reset}
               className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
               🔄 Qayta o'ynash
