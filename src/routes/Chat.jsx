@@ -21,6 +21,7 @@ const Chat = ({ darkMode }) => {
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const prevLengthRef = useRef(0);
 
   // Video call states
   const [inCall, setInCall] = useState(false);
@@ -39,11 +40,15 @@ const Chat = ({ darkMode }) => {
     return () => unsub();
   }, []);
 
+  // Faqat yangi xabar kelganda scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevLengthRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevLengthRef.current = messages.length;
   }, [messages]);
 
-  // Typing indicator — listen
+  // Typing — listen
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "typing"), (snap) => {
       const users = snap.docs
@@ -54,7 +59,16 @@ const Chat = ({ darkMode }) => {
     return () => unsub();
   }, [user]);
 
-  // Typing indicator — send
+  // Sahifadan chiqqanda typing o'chirish
+  useEffect(() => {
+    return () => {
+      if (user) {
+        updateDoc(doc(db, "typing", user.uid), { isTyping: false }).catch(() => {});
+      }
+    };
+  }, [user]);
+
+  // Typing — send
   const handleTyping = (e) => {
     setText(e.target.value);
     if (!typing) {
@@ -83,6 +97,9 @@ const Chat = ({ darkMode }) => {
     setText("");
     setTyping(false);
     updateDoc(doc(db, "typing", user.uid), { isTyping: false }).catch(() => {});
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   const handleKeyDown = (e) => {
@@ -98,7 +115,7 @@ const Chat = ({ darkMode }) => {
     await deleteDoc(doc(db, "messages", msgId));
   };
 
-  // Reaction qo'shish
+  // Reaction
   const handleReaction = async (msgId, emoji) => {
     const msg = messages.find((m) => m.id === msgId);
     if (!msg) return;
@@ -242,27 +259,19 @@ const Chat = ({ darkMode }) => {
           const isMe = msg.uid === user?.uid;
           return (
             <div key={msg.id} className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-
-              {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                 {msg.avatar ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" /> : msg.name?.[0]?.toUpperCase() || "?"}
               </div>
-
               <div className={`max-w-[70%] flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
                 {!isMe && <span className={`text-xs font-semibold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{msg.name}</span>}
-
                 <div className="relative">
-                  {/* Xabar */}
                   {msg.type === "text" && (
                     <div className={`px-4 py-2 rounded-2xl text-sm ${
                       isMe ? "bg-blue-500 text-white rounded-br-sm"
                       : darkMode ? "bg-slate-700 text-white rounded-bl-sm"
                       : "bg-gray-100 text-gray-900 rounded-bl-sm"
-                    }`}>
-                      {msg.text}
-                    </div>
+                    }`}>{msg.text}</div>
                   )}
-
                   {msg.type === "image" && (
                     <div className={`rounded-2xl overflow-hidden ${isMe ? "rounded-br-sm" : "rounded-bl-sm"}`}>
                       <img src={msg.imageUrl} alt="rasm"
@@ -271,15 +280,12 @@ const Chat = ({ darkMode }) => {
                     </div>
                   )}
 
-                  {/* Amallar — hover da chiqadi */}
+                  {/* Hover amallar */}
                   <div className={`absolute top-0 ${isMe ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-1`}>
-                    {/* Reaction tugmasi */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
+                    <button onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
                       😊
                     </button>
-                    {/* O'chirish — faqat o'z xabari */}
                     {isMe && (
                       <button onClick={() => handleDelete(msg.id, msg.uid)}
                         className="w-7 h-7 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center text-white text-xs transition">
@@ -290,14 +296,11 @@ const Chat = ({ darkMode }) => {
 
                   {/* Reaction picker */}
                   {showReactions === msg.id && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
+                    <div onClick={(e) => e.stopPropagation()}
                       className={`absolute bottom-full mb-1 ${isMe ? "right-0" : "left-0"} flex gap-1 p-2 rounded-2xl shadow-xl z-50 ${darkMode ? "bg-slate-700" : "bg-white border border-gray-100"}`}>
                       {REACTIONS.map((emoji) => (
                         <button key={emoji} onClick={() => handleReaction(msg.id, emoji)}
-                          className="text-xl hover:scale-125 transition-transform">
-                          {emoji}
-                        </button>
+                          className="text-xl hover:scale-125 transition-transform">{emoji}</button>
                       ))}
                     </div>
                   )}
@@ -310,9 +313,7 @@ const Chat = ({ darkMode }) => {
                       uids.length > 0 ? (
                         <button key={emoji} onClick={() => handleReaction(msg.id, emoji)}
                           className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs transition ${
-                            uids.includes(user.uid)
-                              ? "bg-blue-500 text-white"
-                              : darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-700"
+                            uids.includes(user.uid) ? "bg-blue-500 text-white" : darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-700"
                           }`}>
                           {emoji} {uids.length}
                         </button>
@@ -332,7 +333,7 @@ const Chat = ({ darkMode }) => {
         {/* Typing indicator */}
         {typingUsers.length > 0 && (
           <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+            <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {typingUsers[0]?.name?.[0]?.toUpperCase() || "?"}
             </div>
             <div className={`px-4 py-2 rounded-2xl rounded-bl-sm ${darkMode ? "bg-slate-700" : "bg-gray-100"}`}>
@@ -347,7 +348,6 @@ const Chat = ({ darkMode }) => {
             </span>
           </div>
         )}
-
         <div ref={bottomRef} />
       </div>
 
@@ -358,11 +358,9 @@ const Chat = ({ darkMode }) => {
           {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-
         <input type="text" placeholder="Xabar yozing..." value={text}
           onChange={handleTyping} onKeyDown={handleKeyDown}
           className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`} />
-
         <button onClick={handleSend} disabled={!text.trim()}
           className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
           ➤
