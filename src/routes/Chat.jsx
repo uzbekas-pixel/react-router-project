@@ -241,6 +241,7 @@ const Chat = ({ darkMode }) => {
               onTouchStart={() => handleLongPress(msg.id)}
               onTouchEnd={handleLongPressEnd}
               onTouchMove={handleLongPressEnd}
+              onContextMenu={(e) => e.preventDefault()}
             >
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                 {msg.avatar ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" /> : msg.name?.[0]?.toUpperCase() || "?"}

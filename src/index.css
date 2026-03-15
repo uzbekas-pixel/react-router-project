@@ -38,3 +38,15 @@
 .chat-scroll::-webkit-scrollbar-thumb:hover {
   background: #60a5fa;
 }
+/* Long press native menyu o'chirish */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Lekin inputlarda yozish ishlashi kerak */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
