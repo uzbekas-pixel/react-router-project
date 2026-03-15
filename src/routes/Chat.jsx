@@ -384,10 +384,14 @@ const handleSend = async () => {
           onBlur={handleBlur}
           className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`}
         />
-        <button onClick={handleSend} disabled={!text.trim()}
-          className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
-          ➤
-        </button>
+        <button 
+  onMouseDown={(e) => e.preventDefault()} // ← blur oldini oladi
+  onClick={handleSend} 
+  disabled={!text.trim()}
+  className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition"
+>
+  ➤
+</button>
       </div>
 
       {/* Rasm preview */}
