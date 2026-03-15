@@ -69,16 +69,16 @@ function App() {
       <div className="mt-16 pb-16">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<ProtectedRoute><Home darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} /></ProtectedRoute>} />
-            <Route path="/about" element={<ProtectedRoute><About darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/products" element={<ProtectedRoute><Products darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/contact" element={<ProtectedRoute><Contact darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} /></ProtectedRoute>} />
+            <Route path="/" element={<Home darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/about" element={<About darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/products" element={<Products darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/contact" element={<Contact darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
             <Route path="/login" element={<Login darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
             <Route path="/register" element={<Register darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
             <Route path="/forgot-password" element={<ForgotPassword darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/profile" element={<ProtectedRoute><Profile darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} /></ProtectedRoute>} />
+            <Route path="/profile" element={<Profile darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
             <Route path="/admin" element={<AdminRoute><Admin darkMode={darkMode} showToast={showToast} /></AdminRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><Chat darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/chat" element={<Chat darkMode={darkMode} />} />
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
             <Route path="/typing" element={<TypingGame darkMode={darkMode} />} />
             <Route path="/multiplayer" element={
