@@ -18,7 +18,7 @@ const ScrollToTop = ({ darkMode }) => {
   return (
     <button
       onClick={scrollUp}
-      className={`fixed bottom-8 right-8 z-50 w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+      className={`fixed bottom-20 right-8 z-50 w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
       } ${darkMode ? "bg-blue-500 hover:bg-blue-400" : "bg-slate-700 hover:bg-slate-600"}`}
     >

@@ -50,3 +50,34 @@ input, textarea {
   -webkit-user-select: text;
   user-select: text;
 }
+/* Code editor scroll */
+textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
+}
+
+/* iframe scroll */
+iframe::-webkit-scrollbar {
+  width: 4px;
+}
+
+iframe::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+iframe::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}

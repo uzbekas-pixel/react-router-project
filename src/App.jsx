@@ -27,6 +27,8 @@ import TypingGame from "./routes/TypingGame";
 import MultiTyping from "./routes/MultiTyping";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import BottomNav from "./components/BottomNav";
+import Games from "./routes/Games";
+import CodeEditor from "./routes/CodeEditor";
 
 
 function App() {
@@ -84,7 +86,8 @@ function App() {
             <Route path="/chat" element={<Chat darkMode={darkMode} />} />
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
             <Route path="/typing" element={<TypingGame darkMode={darkMode} />} />
-           
+           <Route path="/games" element={<ProtectedRoute><Games darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+<Route path="/code" element={<ProtectedRoute><CodeEditor darkMode={darkMode} /></ProtectedRoute>} />
             <Route path="/multiplayer" element={
               <ProtectedRoute>
                 <MultiTyping darkMode={darkMode} showToast={showToast} />

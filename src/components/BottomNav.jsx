@@ -6,9 +6,9 @@ const BottomNav = ({ darkMode }) => {
 
   const tabs = [
     { path: "/", icon: "🏠", label: "Bosh" },
-    { path: "/typing", icon: "⌨️", label: "Typing" },
+    { path: "/code", icon: "💻", label: "Code" },
     { path: "/chat", icon: "💬", label: "Chat" },
-    { path: "/multiplayer", icon: "👥", label: "Multi" },
+    { path: "/games", icon: "🎮", label: "Games" },
     {
       path: "/profile",
       icon: (
@@ -28,24 +28,18 @@ const BottomNav = ({ darkMode }) => {
     }`}>
       <div className="flex items-center justify-around px-2 py-1">
         {tabs.map((tab) => (
-          <NavLink
-            key={tab.path}
-            to={tab.path}
-            end={tab.path === "/"}
+          <NavLink key={tab.path} to={tab.path} end={tab.path === "/"}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition ${
                 isActive ? "text-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"
               }`
-            }
-          >
+            }>
             {({ isActive }) => (
               <>
                 <span className={`text-2xl transition-transform duration-200 ${isActive ? "scale-110" : "scale-100"}`}>
                   {tab.icon}
                 </span>
-                <span className={`text-[10px] font-medium transition-colors ${
-                  isActive ? "text-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"
-                }`}>
+                <span className={`text-[10px] font-medium ${isActive ? "text-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"}`}>
                   {tab.label}
                 </span>
               </>

@@ -36,8 +36,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-5">
-          {["/", "/about", "/contact", "/products", "/typing", "/multiplayer", "/chat"].map((path, i) => {
-            const labels = ["Home", "About", "Contact", "Products", "⌨️", "👥", "💬"];
+        {["/", "/about", "/contact", "/products", "/code", "/games", "/chat"].map((path, i) => {
+  const labels = ["Home", "About", "Contact", "Products", "💻 Code", "🎮 Games", "💬"];
             return (
               <NavLink key={path} to={path} end={path === "/"}
                 onClick={onNavClick}
