@@ -36,8 +36,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-5">
-        {["/", "/about", "/contact", "/products", "/code", "/games", "/chat"].map((path, i) => {
-  const labels = ["Home", "About", "Contact", "Products", "💻 Code", "🎮 Games", "💬"];
+          {["/", "/about", "/contact", "/products", "/code", "/games", "/chat"].map((path, i) => {
+            const labels = ["Home", "About", "Contact", "Products", "💻 Code", "🎮 Games", "💬"];
             return (
               <NavLink key={path} to={path} end={path === "/"}
                 onClick={onNavClick}
@@ -100,7 +100,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
           </div>
         </div>
 
-        {/* Mobile: til + dark mode + burger (faqat admin uchun) */}
+        {/* Mobile: til + dark mode + burger */}
         <div className="flex md:hidden items-center gap-3">
           <button onClick={() => setLang(lang === "en" ? "uz" : "en")}
             className="text-xs font-semibold text-white border border-slate-500 px-2 py-1 rounded-lg">
@@ -114,18 +114,33 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>🌙</span>
           </div>
 
-          {/* Faqat admin uchun burger */}
-          {isAdmin && (
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-3xl">
-              {menuOpen ? <HiX /> : <HiMenu />}
-            </button>
-          )}
+          <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-3xl">
+            {menuOpen ? <HiX /> : <HiMenu />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile admin menu — faqat admin uchun */}
-      {isAdmin && (
-        <div className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-24 py-3" : "max-h-0"}`}>
+      {/* Mobile menu */}
+      <div className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-96 py-3" : "max-h-0"}`}>
+
+        {/* About, Contact, Products */}
+        {["/about", "/contact", "/products"].map((path, i) => {
+          const labels = ["About", "Contact", "Products"];
+          return (
+            <NavLink key={path} to={path}
+              onClick={() => { onNavClick(); setMenuOpen(false); }}
+              className={({ isActive }) =>
+                `block py-2 px-8 text-lg font-light transition duration-300 ${
+                  isActive ? "text-sky-300 bg-slate-700 font-semibold" : "text-white hover:text-sky-300 hover:bg-slate-700"
+                }`
+              }>
+              {labels[i]}
+            </NavLink>
+          );
+        })}
+
+        {/* Admin */}
+        {isAdmin && (
           <NavLink to="/admin"
             onClick={() => { onNavClick(); setMenuOpen(false); }}
             className={({ isActive }) =>
@@ -135,8 +150,39 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             }>
             🛡️ Admin
           </NavLink>
+        )}
+
+        {/* User info */}
+        <div className="px-8 py-3 border-t border-slate-700 mt-2">
+          {user ? (
+            <>
+              <Link to="/profile"
+                onClick={() => { onNavClick(); setMenuOpen(false); }}
+                className="flex items-center gap-3 mb-3 hover:opacity-80 transition">
+                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-blue-400">
+                  {user.photoURL
+                    ? <img src={user.photoURL} alt="avatar" className="w-full h-full object-cover" />
+                    : user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{user.displayName || "Foydalanuvchi"}</p>
+                  <p className="text-gray-400 text-xs">{user.email}</p>
+                </div>
+              </Link>
+              <button onClick={() => { logout(); setMenuOpen(false); }}
+                className="text-sm text-red-400 border border-red-400 px-3 py-1 rounded-xl hover:bg-red-400 hover:text-white transition">
+                Chiqish
+              </button>
+            </>
+          ) : (
+            <Link to="/login"
+              onClick={() => { onNavClick(); setMenuOpen(false); }}
+              className="block text-lg font-light text-blue-400 hover:text-blue-300 transition">
+              Kirish
+            </Link>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   );
 };

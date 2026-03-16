@@ -12,12 +12,12 @@ const WORDS_UZ = [
 "vaqt", "tong", "ertalab", "tush", "kech", "kecha", "bugun", "ertaga", "hafta", "oy",
 "yil", "bahor", "yoz", "kuz", "qish", "quyosh", "oy", "yulduz", "osmon", "bulut",
 "yomgir", "qor", "shamol", "issiq", "sovuq", "iliq", "salqin", "non", "ovqat", "suv",
-"choy", "sho‘rva", "osh", "palov", "meva", "sabzi", "kartoshka", "piyoz", "guruch", "go‘sht",
-"tovuq", "baliq", "shakar", "tuz", "asal", "bog‘", "daraxt", "gul", "barg", "mehnat",
-"ish", "dam", "uyqu", "kulgi", "baxt", "quvonch", "sevgi", "do‘stlik", "yordam", "rahmat",
-"iltimos", "uzr", "haqiqat", "orzu", "maqsad", "yo‘l", "tez", "sekin", "katta", "kichik",
+"choy", "sho'rva", "osh", "palov", "meva", "sabzi", "kartoshka", "piyoz", "guruch", "go'sht",
+"tovuq", "baliq", "shakar", "tuz", "asal", "bog'", "daraxt", "gul", "barg", "mehnat",
+"ish", "dam", "uyqu", "kulgi", "baxt", "quvonch", "sevgi", "do'stlik", "yordam", "rahmat",
+"iltimos", "uzr", "haqiqat", "orzu", "maqsad", "yo'l", "tez", "sekin", "katta", "kichik",
 "uzun", "qisqa", "yangi", "eski", "toza", "iflos", "och", "yopiq", "yaxshi", "yomon",
-"oq", "qora", "qizil", "ko‘k", "yashil", "sariq", "jigarrang", "kulrang", "oddiy", "qiziq",
+"oq", "qora", "qizil", "ko'k", "yashil", "sariq", "jigarrang", "kulrang", "oddiy", "qiziq",
 ];
 
 const WORDS_EN = [
