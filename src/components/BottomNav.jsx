@@ -6,9 +6,10 @@ const BottomNav = ({ darkMode }) => {
 
   const tabs = [
     { path: "/", icon: "🏠", label: "Bosh" },
-    { path: "/code", icon: "💻", label: "Code" },
     { path: "/chat", icon: "💬", label: "Chat" },
     { path: "/games", icon: "🎮", label: "Games" },
+    { path: "/code", icon: "💻", label: "Code" },
+    { path: "/story", icon: "📸", label: "Story" },
     {
       path: "/profile",
       icon: (

@@ -5,6 +5,7 @@ import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import { ref, onValue } from "firebase/database";
+import { useNavigate } from "react-router-dom";
 
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
@@ -12,6 +13,7 @@ const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢"];
 
 const Chat = ({ darkMode }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLang();
   const [messages, setMessages] = useState([]);
@@ -203,7 +205,14 @@ const Chat = ({ darkMode }) => {
             <button onClick={leaveCall} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm font-semibold rounded-xl transition">
               {t.leaveCall}
             </button>
+            
           )}
+          <button onClick={() => navigate("/dm")}
+  className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition ${
+    darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+  }`}>
+  ✉️ DM
+</button>
         </div>
       </div>
 
