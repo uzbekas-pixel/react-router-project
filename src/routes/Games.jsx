@@ -8,7 +8,7 @@ import { useLang } from "../context/useLang";
 
 const BackButton = ({ onClick, darkMode, t }) => (
   <button onClick={onClick}
-    className={`fixed top-16 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition mt-2 ${
+    className={`fixed top-8 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition mt-2 ${
       darkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-gray-700 hover:bg-gray-100 shadow"
     }`}>
     {t.back}

@@ -203,7 +203,7 @@ const SnakeGame = ({ darkMode }) => {
     <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-4 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
 
       {/* Score */}
-      <div className="flex items-center justify-between w-full max-w-xs mb-4">
+      <div className="flex items-center justify-between w-full max-w-xs mb-4 mt-6">
         <h2 className={`text-xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>🐍 Snake</h2>
         <div className="flex items-center gap-3">
           <span className={`text-sm font-bold ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
@@ -216,7 +216,7 @@ const SnakeGame = ({ darkMode }) => {
       </div>
 
       {/* Canvas */}
-      <div className="relative border-2 border-blue-500 rounded-xl overflow-hidden shadow-xl"
+      <div className="relative border-2 border-blue-500 rounded-xl overflow-hidden shadow-xl mt-2"
         style={{ width: GRID * CELL, height: GRID * CELL }}
         onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
         onTouchEnd={(e) => {
