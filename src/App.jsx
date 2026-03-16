@@ -25,6 +25,8 @@ import { requestNotificationPermission, onMessageListener } from "./hooks/useNot
 import { useAuth } from "./context/useAuth";
 import TypingGame from "./routes/TypingGame";
 import MultiTyping from "./routes/MultiTyping";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import BottomNav from "./components/BottomNav";
 
 
 function App() {
@@ -39,7 +41,7 @@ function App() {
   const [confetti, setConfetti] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
-
+  useOnlineStatus(user?.uid);
   const showToast = (message, type = "success") => setToast({ message, type });
   const showConfetti = () => setConfetti(true);
   const handleNavClick = () => {};
@@ -67,7 +69,7 @@ function App() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
       <Navbar darkMode={darkMode} setDarkMode={toggleDarkMode} onNavClick={handleNavClick} />
-      <div className="mt-16 pb-16">
+      <div className="mt-16 pb-20">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Home darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
@@ -92,6 +94,7 @@ function App() {
         </AnimatePresence>
       </div>
       <ScrollToTop darkMode={darkMode} />
+      <BottomNav darkMode={darkMode} />
       <Footer darkMode={darkMode} />
     </div>
   );
