@@ -4,6 +4,7 @@ import MultiTyping from "./MultiTyping";
 import SnakeGame from "../components/games/SnakeGame";
 import FlappyBird from "../components/games/FlappyBird";
 import TicTacToe from "../components/games/TicTacToe";
+import Tetris from "../components/games/Tetris";
 import { useLang } from "../context/useLang";
 
 const BackButton = ({ onClick, darkMode, t }) => (
@@ -24,6 +25,7 @@ const Games = ({ darkMode, showToast }) => {
     { id: "snake", icon: "🐍", title: "Snake", desc: t.snakeDesc, color: "from-green-500 to-emerald-600" },
     { id: "flappy", icon: "🐦", title: "Flappy Bird", desc: t.flappyDesc, color: "from-yellow-500 to-orange-500" },
     { id: "tictactoe", icon: "❌", title: "Tic-Tac-Toe", desc: t.ticDesc, color: "from-purple-500 to-pink-500" },
+    { id: "tetris", icon: "🧱", title: "Tetris", desc: t.tetrisDesc, color: "from-red-500 to-rose-500" },
   ];
 
 
@@ -47,6 +49,12 @@ const Games = ({ darkMode, showToast }) => {
       <div className="pt-12"><TicTacToe darkMode={darkMode} /></div>
     </div>
   );
+  if (screen === "tetris") return (
+  <div className="page-transition">
+    <BackButton onClick={() => setScreen("home")} darkMode={darkMode} t={t} />
+    <div className="pt-12"><Tetris darkMode={darkMode} /></div>
+  </div>
+);
 
   return (
     <div className={`page-transition min-h-[calc(100vh-64px)] px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>

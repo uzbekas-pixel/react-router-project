@@ -228,6 +228,7 @@ export const translations = {
     pcControls: "PC: WASD yoki ← → ↑ ↓",
     mobileControls: "Telefon: swipe yoki tugmalar",
     flappyControls: "PC: Space | Telefon: Bosing",
+    tetrisDesc: "Bloklarni joylashtir, qatorlarni to'ldir!",
 
     // Footer
     footerDesc: "O'rganish maqsadida yaratilgan React Router loyihasi.",
@@ -483,6 +484,7 @@ export const translations = {
     pcControls: "PC: WASD or ← → ↑ ↓",
     mobileControls: "Mobile: swipe or buttons",
     flappyControls: "PC: Space | Mobile: Tap",
+    tetrisDesc: "Place blocks, complete lines!",
 
     // Footer
     footerDesc: "A React Router project created for learning purposes.",
