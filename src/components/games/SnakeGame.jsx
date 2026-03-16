@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
 
 const GRID = 20;
-const CELL = 20;
+const CELL = 18;
 
 const SnakeGame = ({ darkMode }) => {
   const { t } = useLang();

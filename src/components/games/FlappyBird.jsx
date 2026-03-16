@@ -146,8 +146,7 @@ const FlappyBird = ({ darkMode }) => {
 
       <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-blue-400"
         style={{ width: W, height: H }}
-        onClick={jump}
-        onTouchStart={(e) => { e.preventDefault(); jump(); }}>
+        onPointerDown={(e) => { e.preventDefault(); jump(); }}>
         <canvas ref={canvasRef} width={W} height={H} />
 
         {!display.running && !display.gameOver && (
