@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
-import { saveScore } from "./Leaderboard";
+import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
 import { useAuth } from "../../context/useAuth";
 
