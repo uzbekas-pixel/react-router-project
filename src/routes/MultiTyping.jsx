@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import {
   doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc
 } from "firebase/firestore";
+import { useLang } from "../context/useLang";
 
 const WORDS_EN = [
   "hi", "hello", "good", "bad", "day", "night", "sun", "moon", "star", "sky",
@@ -43,6 +44,7 @@ const generateWords = (count = 40, lang = "en") => {
 const generateRoomId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
 const MultiTyping = ({ darkMode, showToast }) => {
+  const { t } = useLang();
   const { user } = useAuth();
   const [screen, setScreen] = useState("lobby");
   const [roomId, setRoomId] = useState("");
@@ -68,7 +70,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
   const opponentProgress = roomData?.[opponentKey]?.progress || 0;
   const myWpm = roomData?.[myKey]?.wpm || 0;
   const opponentWpm = roomData?.[opponentKey]?.wpm || 0;
-  const opponentName = roomData?.[opponentKey]?.name || "Raqib";
+  const opponentName = roomData?.[opponentKey]?.name || t.opponent;
 
   // Active word scroll
   useEffect(() => {
@@ -107,7 +109,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
       if (!snap.exists()) {
         setScreen("lobby");
         setRoomId("");
-        showToast("Room o'chirildi!", "error");
+        showToast(t.roomDeleted, "error");
         return;
       }
       const data = snap.data();
@@ -126,7 +128,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
     });
     unsubRef.current = unsub;
     return () => unsub();
-  }, [roomId, screen, showToast, startCountdown]);
+  }, [roomId, screen, showToast, startCountdown, t]);
 
   // Room yaratish
   const createRoom = async () => {
@@ -142,7 +144,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
     });
     setRoomId(id);
     setScreen("waiting");
-    showToast(`Room yaratildi: ${id}`, "success");
+    showToast(`${t.roomCreated} ${id}`, "success");
   };
 
   // Roomga qo'shilish
@@ -150,10 +152,10 @@ const MultiTyping = ({ darkMode, showToast }) => {
     if (!joinInput.trim()) return;
     const id = joinInput.toUpperCase().trim();
     const snap = await getDoc(doc(db, "multiTyping", id));
-    if (!snap.exists()) { showToast("Room topilmadi!", "error"); return; }
+    if (!snap.exists()) { showToast(t.roomNotFound, "error"); return; }
     const data = snap.data();
-    if (data.guest) { showToast("Room to'liq!", "error"); return; }
-    if (data.host?.uid === user.uid) { showToast("O'z roomingizga kira olmaysiz!", "error"); return; }
+    if (data.guest) { showToast(t.roomFull, "error"); return; }
+    if (data.host?.uid === user.uid) { showToast(t.ownRoom, "error"); return; }
 
     await updateDoc(doc(db, "multiTyping", id), {
       guest: { uid: user.uid, name: user.displayName || user.email, progress: 0, wpm: 0, finished: false },
@@ -163,7 +165,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
     setWords(data.words || []);
     setScreen("playing");
     startCountdown();
-    showToast("Roomga qo'shildingiz!", "success");
+    showToast(t.roomJoined, "success");
   };
 
   // Typing
@@ -239,10 +241,10 @@ const MultiTyping = ({ darkMode, showToast }) => {
         {screen === "lobby" && (
           <div className={`rounded-2xl p-8 shadow-xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
             <h1 className={`text-2xl font-extrabold mb-2 text-center ${darkMode ? "text-white" : "text-gray-900"}`}>
-              👥 Multiplayer Typing
+              {t.multiTitle}
             </h1>
             <p className={`text-sm text-center mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              Do'stingiz bilan raqobatlashing!
+              {t.multiSub}
             </p>
 
             {/* Til tanlash */}
@@ -262,7 +264,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
             <div className="flex flex-col gap-4">
               <button onClick={createRoom}
                 className="w-full py-4 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition text-lg">
-                🏠 Yangi room yaratish
+                {t.createRoom}
               </button>
               <div className="flex items-center gap-3">
                 <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
@@ -270,7 +272,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                 <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
               </div>
               <div className="flex gap-2">
-                <input type="text" placeholder="Room ID kiriting (masalan: ABC123)"
+                <input type="text" placeholder={t.roomIdPlaceholder}
                   value={joinInput} onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && joinRoom()} maxLength={6}
                   className={`flex-1 px-4 py-3 rounded-xl border text-sm outline-none transition ${
@@ -283,7 +285,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                 </button>
               </div>
               <p className={`text-xs text-center ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-                💡 Til faqat room yaratuvchi tanlaydi
+                {t.langNote}
               </p>
             </div>
           </div>
@@ -294,24 +296,24 @@ const MultiTyping = ({ darkMode, showToast }) => {
           <div className={`rounded-2xl p-8 shadow-xl text-center ${darkMode ? "bg-slate-800" : "bg-white"}`}>
             <div className="text-5xl mb-4">⏳</div>
             <h2 className={`text-xl font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              Raqib kutilmoqda...
+              {t.waitingTitle}
             </h2>
             <p className={`text-sm mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              Do'stingizga shu kodni yuboring:
+              {t.waitingText}
             </p>
             <p className={`text-xs mb-6 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-              {lang === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"} tili tanlangan
+              {lang === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"} {t.langSelected}
             </p>
             <div className={`text-4xl font-extrabold tracking-widest mb-6 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>
               {roomId}
             </div>
-            <button onClick={() => { navigator.clipboard.writeText(roomId); showToast("Nusxalandi!", "success"); }}
+            <button onClick={() => { navigator.clipboard.writeText(roomId); showToast(t.copied, "success"); }}
               className={`px-6 py-2 rounded-xl text-sm font-semibold mb-4 transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-              📋 Nusxalash
+              {t.copyCode}
             </button>
             <br />
             <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline mt-2">
-              Bekor qilish
+              {t.cancelRoom}
             </button>
           </div>
         )}
@@ -327,16 +329,16 @@ const MultiTyping = ({ darkMode, showToast }) => {
 
             <div className="flex items-center justify-between mb-4">
               <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
-                👥 Raqobat • {roomData?.lang === "uz" ? "🇺🇿" : "🇬🇧"}
+                {t.competition} • {roomData?.lang === "uz" ? "🇺🇿" : "🇬🇧"}
               </h2>
-              <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline">Chiqish</button>
+              <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline">{t.leaveGame}</button>
             </div>
 
             {/* Progress barlar */}
             <div className={`rounded-2xl p-4 mb-4 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
               <div className="mb-3">
                 <div className="flex justify-between text-xs mb-1">
-                  <span className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}>👤 Siz</span>
+                  <span className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}>👤 {t.you}</span>
                   <span className="text-blue-400">{myWpm} WPM • {myProgress}%</span>
                 </div>
                 <div className={`h-3 rounded-full overflow-hidden ${darkMode ? "bg-slate-700" : "bg-gray-100"}`}>
@@ -394,15 +396,15 @@ const MultiTyping = ({ darkMode, showToast }) => {
                 <>
                   <div className="text-5xl mb-4">{iWon ? "🏆" : "😢"}</div>
                   <h2 className={`text-2xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                    {iWon ? "G'olib bo'ldingiz!" : "Yutqazdingiz!"}
+                    {iWon ? t.won : t.lost}
                   </h2>
                   <p className={`text-sm mb-8 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                    {iWon ? "Ajoyib! Siz tezroq yozdingiz!" : "Keyingi safar omad!"}
+                    {iWon ? t.wonText : t.lostText}
                   </p>
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
                       <div className="text-3xl font-extrabold text-blue-400">{myWpm}</div>
-                      <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Sizning WPM</div>
+                      <div className={`text-xs mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.yourWpm}</div>
                     </div>
                     <div className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
                       <div className="text-3xl font-extrabold text-green-400">{opponentWpm}</div>
@@ -411,7 +413,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                   </div>
                   <button onClick={leaveRoom}
                     className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-                    🔄 Qayta o'ynash
+                    {t.playAgain}
                   </button>
                 </>
               );

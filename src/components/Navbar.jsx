@@ -124,8 +124,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
       <div className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-96 py-3" : "max-h-0"}`}>
 
         {/* About, Contact, Products */}
-        {["/about", "/contact", "/products"].map((path, i) => {
-          const labels = ["About", "Contact", "Products"];
+        {["/", "/about", "/contact", "/products"].map((path, i) => {
+          const labels = ["Home", "About", "Contact", "Products"];
           return (
             <NavLink key={path} to={path}
               onClick={() => { onNavClick(); setMenuOpen(false); }}

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLang } from "../../context/useLang";
 
 const TicTacToe = ({ darkMode }) => {
+  const { t } = useLang();
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isX, setIsX] = useState(true);
   const [winner, setWinner] = useState(null);
@@ -33,7 +35,9 @@ const TicTacToe = ({ darkMode }) => {
       </h2>
 
       <div className={`text-center mb-4 font-semibold ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-        {winner ? (winner === "Draw" ? "🤝 Durrang!" : `🏆 ${winner} yutdi!`) : `Navbat: ${isX ? "❌" : "⭕"}`}
+        {winner
+          ? (winner === "Draw" ? t.draw : `🏆 ${winner} ${t.wins}`)
+          : `${t.turn} ${isX ? "❌" : "⭕"}`}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -54,7 +58,7 @@ const TicTacToe = ({ darkMode }) => {
         className={`px-8 py-3 rounded-xl font-semibold transition ${
           darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
         }`}>
-        🔄 Qayta
+        {t.again}
       </button>
     </div>
   );

@@ -4,9 +4,11 @@ import { auth, db } from "../firebase/config";
 import { updateProfile, updatePassword } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 
 const Profile = ({ darkMode, showToast, showConfetti }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [activeTab, setActiveTab] = useState("profile");
   const [form, setForm] = useState({
     displayName: user?.displayName || "",
@@ -18,7 +20,6 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
   const [loading, setLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(null);
 
-  // Firestore dan ma'lumotlarni yuklash
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -38,7 +39,6 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
     loadProfile();
   }, [user]);
 
-  // Avatar tanlash
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -48,16 +48,10 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
     }
   };
 
-  // Profil saqlash
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      // Firebase Auth yangilash
-      await updateProfile(auth.currentUser, {
-        displayName: form.displayName,
-      });
-
-      // Firestore ga saqlash
+      await updateProfile(auth.currentUser, { displayName: form.displayName });
       await setDoc(doc(db, "users", user.uid), {
         displayName: form.displayName,
         phone: form.phone,
@@ -66,57 +60,49 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
         email: user.email,
         updatedAt: new Date().toISOString(),
       });
-
       showConfetti();
-      showToast("Profil yangilandi! 🎉", "success");
+      showToast(t.profileUpdated, "success");
     } catch {
-      showToast("Xatolik yuz berdi!", "error");
+      showToast(t.updateError, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Parol yangilash
   const handleChangePassword = async () => {
     if (form.newPassword !== form.confirmPassword) {
-      showToast("Parollar mos kelmadi!", "error");
-      return;
+      showToast(t.passwordMismatchMsg, "error"); return;
     }
     if (form.newPassword.length < 6) {
-      showToast("Parol kamida 6 ta belgi!", "error");
-      return;
+      showToast(t.passwordShort, "error"); return;
     }
     setLoading(true);
     try {
       await updatePassword(auth.currentUser, form.newPassword);
-      showToast("Parol yangilandi! ✅", "success");
+      showToast(t.passwordUpdated, "success");
       setForm({ ...form, newPassword: "", confirmPassword: "" });
     } catch {
-      showToast("Parolni yangilash uchun qayta kiring!", "error");
+      showToast(t.passwordUpdateError, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const inputClass = `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
-    darkMode
-      ? "bg-slate-700 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
-      : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
+    darkMode ? "bg-slate-700 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
+    : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
   }`;
 
   const tabs = [
-    { id: "profile", label: "👤 Profil" },
-    { id: "security", label: "🔐 Xavfsizlik" },
+    { id: "profile", label: t.profileTab },
+    { id: "security", label: t.securityTab },
   ];
 
   return (
     <div className={`page-transition w-full max-w-2xl mx-auto px-6 py-10 mt-10 ${darkMode ? "text-white" : "text-gray-900"}`}>
-
       <ScrollReveal direction="up">
         <div className={`rounded-2xl p-8 shadow-lg mb-6 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
           <div className="flex flex-col sm:flex-row items-center gap-6">
-
-            {/* Avatar */}
             <div className="relative">
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-400 shadow-lg">
                 {avatarPreview ? (
@@ -132,104 +118,91 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                 <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
               </label>
             </div>
-
-            {/* Ism va email */}
             <div>
               <h2 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
-                {form.displayName || user?.displayName || "Foydalanuvchi"}
+                {form.displayName || user?.displayName || t.unknown}
               </h2>
               <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{user?.email}</p>
               {form.phone && <p className={`text-sm mt-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>📞 {form.phone}</p>}
               {form.bio && <p className={`text-sm mt-1 italic ${darkMode ? "text-gray-400" : "text-gray-500"}`}>"{form.bio}"</p>}
-              <span className="mt-2 inline-block text-xs bg-blue-400/20 text-blue-400 px-3 py-1 rounded-full">✅ Faol hisob</span>
+              <span className="mt-2 inline-block text-xs bg-blue-400/20 text-blue-400 px-3 py-1 rounded-full">{t.activeAccount}</span>
             </div>
           </div>
         </div>
       </ScrollReveal>
 
-      {/* Tablar */}
       <ScrollReveal direction="up" delay={100}>
         <div className="flex gap-2 mb-6">
           {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                activeTab === tab.id
-                  ? "bg-blue-500 text-white"
-                  : darkMode
-                  ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
-                  : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
-              }`}
-            >
+                activeTab === tab.id ? "bg-blue-500 text-white"
+                : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
+                : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
+              }`}>
               {tab.label}
             </button>
           ))}
         </div>
       </ScrollReveal>
 
-      {/* Profil tab */}
       {activeTab === "profile" && (
         <ScrollReveal direction="up" delay={200}>
           <div className={`rounded-2xl p-8 shadow-lg ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <h3 className={`text-lg font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              Profil ma'lumotlari
-            </h3>
+            <h3 className={`text-lg font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.profileTitle}</h3>
             <div className="flex flex-col gap-4">
               <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Ism familiya</label>
-                <input type="text" placeholder="Ismingiz" value={form.displayName}
+                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.fullName}</label>
+                <input type="text" placeholder={t.namePlaceholder} value={form.displayName}
                   onChange={(e) => setForm({ ...form, displayName: e.target.value })}
                   className={inputClass} />
               </div>
               <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Telefon raqam</label>
-                <input type="tel" placeholder="+998 90 123 45 67" value={form.phone}
+                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.phone}</label>
+                <input type="tel" placeholder={t.phonePlaceholder} value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className={inputClass} />
               </div>
               <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Bio / Taxallus</label>
-                <textarea rows={3} placeholder="O'zingiz haqingizda..." value={form.bio}
+                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.bio}</label>
+                <textarea rows={3} placeholder={t.bioPlaceholder} value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
                   className={inputClass + " resize-none"} />
               </div>
               <button onClick={handleSaveProfile} disabled={loading}
                 className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300">
-                {loading ? "Saqlanmoqda..." : "Saqlash ✅"}
+                {loading ? t.saving : t.save}
               </button>
             </div>
           </div>
         </ScrollReveal>
       )}
 
-      {/* Xavfsizlik tab */}
       {activeTab === "security" && (
         <ScrollReveal direction="up" delay={200}>
           <div className={`rounded-2xl p-8 shadow-lg ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <h3 className={`text-lg font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>Parolni yangilash</h3>
+            <h3 className={`text-lg font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.securityTab}</h3>
             <div className="flex flex-col gap-4">
               <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Yangi parol</label>
+                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.newPassword}</label>
                 <input type="password" placeholder="••••••••" value={form.newPassword}
                   onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
                   className={inputClass} />
               </div>
               <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Parolni tasdiqlang</label>
+                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.confirmPasswordLabel}</label>
                 <input type="password" placeholder="••••••••" value={form.confirmPassword}
                   onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                   className={inputClass} />
               </div>
               <button onClick={handleChangePassword} disabled={loading}
                 className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300">
-                {loading ? "Yangilanmoqda..." : "Parolni yangilash 🔐"}
+                {loading ? t.updating : t.updatePassword}
               </button>
             </div>
           </div>
         </ScrollReveal>
       )}
-
     </div>
   );
 };

@@ -3,10 +3,11 @@ import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 
 const WORDS_UZ = [
  "salom", "uka", "opa", "aka", "ota", "ona", "bobo", "buvi", "dost", "yigit",
-"qiz", "bola", "odam", "inson", "xalq", "shahar", "qishloq", "kocha", "yo‘l", "uy",
+"qiz", "bola", "odam", "inson", "xalq", "shahar", "qishloq", "kocha", "yo'l", "uy",
 "hovli", "deraza", "eshik", "stol", "stul", "divan", "kitob", "daftar", "qalam", "ruchka",
 "sumka", "telefon", "kompyuter", "ekran", "klaviatura", "sichqoncha", "internet", "dastur", "oyna", "soat",
 "vaqt", "tong", "ertalab", "tush", "kech", "kecha", "bugun", "ertaga", "hafta", "oy",
@@ -56,7 +57,7 @@ const TypingGame = ({ darkMode }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scores, setScores] = useState([]);
   const [filterTime, setFilterTime] = useState("all");
-
+  const { t } = useLang();
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const wordsContainerRef = useRef(null);
@@ -177,7 +178,7 @@ const TypingGame = ({ darkMode }) => {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h1 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
-            ⌨️ Typing Test
+            {t.typingTitle}
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Leaderboard tugmasi */}
@@ -188,7 +189,7 @@ const TypingGame = ({ darkMode }) => {
                   ? "bg-yellow-500 text-white"
                   : darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}>
-              🏆 Top 10
+              {t.top10}
             </button>
             {/* Til */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
@@ -222,9 +223,9 @@ const TypingGame = ({ darkMode }) => {
           <ScrollReveal direction="up">
             <div className={`rounded-2xl p-4 mb-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>🏆 Top 10</h2>
+                <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>{t.top10}</h2>
                 <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-                  {[["all", "Barchasi"], ["15", "15s"], ["30", "30s"], ["60", "60s"]].map(([val, label]) => (
+                  {[["all", t.all], ["15", "15s"], ["30", "30s"], ["60", "60s"]].map(([val, label]) => (
                     <button key={val} onClick={() => setFilterTime(val)}
                       className={`px-2 py-1 text-xs font-semibold transition ${
                         filterTime === val ? "bg-blue-500 text-white"
@@ -238,7 +239,7 @@ const TypingGame = ({ darkMode }) => {
 
               {scores.length === 0 ? (
                 <p className={`text-center text-sm py-4 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-                  Hali natijalar yo'q!
+                  {t.noScores}
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
@@ -264,7 +265,7 @@ const TypingGame = ({ darkMode }) => {
                         <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
                           {score.name}
                           {score.uid === user?.uid && (
-                            <span className="ml-1 text-xs text-blue-400">(Siz)</span>
+                            <span className="ml-1 text-xs text-blue-400">({t.you})</span>
                           )}
                         </p>
                         <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
@@ -323,7 +324,7 @@ const TypingGame = ({ darkMode }) => {
             {isMobile ? (
               <input ref={inputRef} value={input} onChange={handleInput}
                 autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false"
-                placeholder="Shu yerga yozing..."
+                placeholder={t.typeHere}
                 className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition mb-4 ${
                   darkMode ? "bg-slate-700 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
                   : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
@@ -339,20 +340,20 @@ const TypingGame = ({ darkMode }) => {
                 className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold transition ${
                   darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}>
-                🔄 Qayta boshlash
+                {t.restart}
               </button>
             </div>
           </>
         ) : (
           <div className={`rounded-2xl p-8 shadow-xl text-center ${darkMode ? "bg-slate-800" : "bg-white"}`}>
             <div className="text-5xl mb-4">🎉</div>
-            <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>Natijalar</h2>
+            <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.results}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
                 { value: wpm, label: "WPM", color: "text-blue-400" },
-                { value: `${accuracy}%`, label: "Aniqlik", color: "text-green-400" },
-                { value: correctCount, label: "To'g'ri so'z", color: "text-yellow-400" },
-                { value: wrongCount, label: "Xato so'z", color: "text-red-400" },
+                { value: `${accuracy}%`, label: t.accuracy, color: "text-green-400" },
+                { value: correctCount, label: t.correctWords, color: "text-yellow-400" },
+                { value: wrongCount, label: t.wrongWords, color: "text-red-400" },
               ].map((stat, i) => (
                 <div key={i} className={`rounded-xl p-4 ${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
                   <div className={`text-3xl font-extrabold ${stat.color}`}>{stat.value}</div>
@@ -361,20 +362,20 @@ const TypingGame = ({ darkMode }) => {
               ))}
             </div>
             <div className={`mb-6 text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              {wpm < 20 ? "🐢 Boshlang'ich daraja — mashq qiling!" :
-               wpm < 40 ? "🚶 O'rtacha tezlik — yaxshi boshlanish!" :
-               wpm < 60 ? "🏃 Yaxshi tezlik — davom eting!" :
-               wpm < 80 ? "🚀 Ajoyib! Professional darajaga yaqin!" :
-               "⚡ Ustaxona! Siz professional teruvchisiz!"}
+              {wpm < 20 ? t.beginner :
+               wpm < 40 ? t.average :
+               wpm < 60 ? t.good :
+               wpm < 80 ? t.great :
+               t.pro}
             </div>
             <div className="flex gap-3 justify-center">
               <button onClick={() => reset()}
                 className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-                🔄 Qayta o'ynash
+                {t.playAgain}
               </button>
               <button onClick={() => setShowLeaderboard(true)}
                 className={`px-6 py-3 rounded-xl font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                🏆 Top 10
+                {t.top10}
               </button>
             </div>
           </div>

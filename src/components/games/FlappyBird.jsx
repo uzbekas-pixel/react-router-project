@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLang } from "../../context/useLang";
 
 const W = 320;
 const H = 480;
@@ -7,10 +8,11 @@ const BIRD_R = 12;
 const PIPE_W = 50;
 const GAP = 140;
 const GRAVITY = 0.5;
-const JUMP = -9;
+const JUMP = -8;
 const PIPE_SPEED = 3;
 
 const FlappyBird = ({ darkMode }) => {
+  const { t } = useLang();
   const canvasRef = useRef(null);
   const state = useRef({
     bird: { y: H / 2, vy: 0 },
@@ -151,26 +153,26 @@ const FlappyBird = ({ darkMode }) => {
         {!display.running && !display.gameOver && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-3">
             <p className="text-white text-2xl font-extrabold">🐦 Flappy Bird</p>
-            <p className="text-gray-300 text-sm">Bosing yoki SPACE</p>
+            <p className="text-gray-300 text-sm">{t.clickOrSpace}</p>
             <button onClick={jump} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
-              ▶ Boshlash
+              {t.start}
             </button>
           </div>
         )}
 
         {display.gameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-            <p className="text-white text-2xl font-extrabold">💀 Game Over</p>
-            <p className="text-yellow-400 text-lg font-bold">Score: {display.score}</p>
+            <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
+            <p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
             <button onClick={reset} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
-              🔄 Qayta
+              {t.again}
             </button>
           </div>
         )}
       </div>
 
       <p className={`mt-3 text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-        PC: Space | Telefon: Bosing
+        {t.pcControls} | {t.mobileControls}
       </p>
     </div>
   );

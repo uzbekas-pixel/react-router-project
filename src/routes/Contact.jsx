@@ -24,10 +24,10 @@ const Contact = ({ darkMode, showToast, showConfetti }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.name.trim()) newErrors.name = "Ism kiritilmadi";
-    if (!form.email.trim()) newErrors.email = "Email kiritilmadi";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Emailga @gmail.com qo'shing";
-    if (!form.message.trim()) newErrors.message = "Xabar kiritilmadi";
+    if (!form.name.trim()) newErrors.name = t.nameError;
+    if (!form.email.trim()) newErrors.email = t.emailError;
+    else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = t.emailInvalid;
+    if (!form.message.trim()) newErrors.message = t.messageError;
     return newErrors;
   };
 
@@ -35,12 +35,12 @@ const Contact = ({ darkMode, showToast, showConfetti }) => {
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      showToast("Iltimos, barcha maydonlarni to'ldiring!", "error");
+      showToast(t.fillAll, "error");
     } else {
       setErrors({});
       setForm({ name: "", email: "", message: "" });
       showConfetti();
-      showToast("Xabaringiz yuborildi! 🎉", "success");
+      showToast(t.messageSent, "success");
     }
   };
 
@@ -50,8 +50,6 @@ const Contact = ({ darkMode, showToast, showConfetti }) => {
 
   return (
     <div className="page-transition w-full max-w-4xl mx-auto px-10 py-16 pb-24 translate-y-20">
-
-    
       <ScrollReveal direction="up">
         <p className="text-green-500 text-sm font-medium mb-2">{t.testimonials}</p>
         <h2 className={`text-3xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.contactTitle}</h2>
@@ -74,61 +72,37 @@ const Contact = ({ darkMode, showToast, showConfetti }) => {
         ))}
       </div>
 
-     
       <ScrollReveal direction="up" delay={200}>
         <div className={`rounded-2xl p-8 shadow-lg ${darkMode ? "bg-slate-800" : "bg-white"}`}>
           <h3 className={`text-xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
-            📩 Xabar yuborish
+            📩 {t.sendMessage}
           </h3>
-
           <div className="flex flex-col gap-4">
-          
             <div>
-              <input
-                type="text"
-                placeholder="Ismingiz"
-                value={form.name}
+              <input type="text" placeholder={t.namePlaceholder} value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={inputClass("name")}
-              />
+                className={inputClass("name")} />
               {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
             </div>
-
-          
             <div>
-              <input
-                type="email"
-                placeholder="Email"
-                value={form.email}
+              <input type="email" placeholder={t.emailPlaceholder} value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className={inputClass("email")}
-              />
+                className={inputClass("email")} />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
             </div>
-
-           
             <div>
-              <textarea
-                rows={4}
-                placeholder="Xabaringiz..."
-                value={form.message}
+              <textarea rows={4} placeholder={t.messagePlaceholder} value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                className={inputClass("message") + " resize-none"}
-              />
+                className={inputClass("message") + " resize-none"} />
               {errors.message && <p className="text-red-400 text-xs mt-1">{errors.message}</p>}
             </div>
-
-            
-            <button
-              onClick={handleSubmit}
-              className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30"
-            >
-              Yuborish →
+            <button onClick={handleSubmit}
+              className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30">
+              {t.send}
             </button>
           </div>
         </div>
       </ScrollReveal>
-
     </div>
   );
 };

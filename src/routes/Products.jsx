@@ -23,10 +23,10 @@ const Products = ({ darkMode, showToast }) => {
   const toggleFavorite = (id) => {
     if (favorites.includes(id)) {
       setFavorites(favorites.filter((f) => f !== id));
-      showToast("Saqlangan'dan olib tashlandi", "error");
+      showToast(t.removed, "error");
     } else {
       setFavorites([...favorites, id]);
-      showToast("Saqlandi! ❤️", "success");
+      showToast(t.saved, "success");
     }
   };
 
@@ -40,60 +40,43 @@ const Products = ({ darkMode, showToast }) => {
 
   return (
     <div className="page-transition w-full max-w-5xl mx-auto px-10 py-12 pb-24 translate-y-20">
-
       <ScrollReveal direction="up">
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>{t.productsTitle}</h2>
           <div className="flex items-center gap-3">
-            {/* Favorites filter tugmasi */}
-            <button
-              onClick={() => setShowFavOnly(!showFavOnly)}
+            <button onClick={() => setShowFavOnly(!showFavOnly)}
               className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl border transition-all duration-300 ${
-                showFavOnly
-                  ? "bg-red-500 text-white border-red-500"
-                  : darkMode
-                  ? "border-slate-600 text-gray-400 hover:border-red-400 hover:text-red-400"
-                  : "border-gray-200 text-gray-500 hover:border-red-400 hover:text-red-400"
-              }`}
-            >
+                showFavOnly ? "bg-red-500 text-white border-red-500"
+                : darkMode ? "border-slate-600 text-gray-400 hover:border-red-400 hover:text-red-400"
+                : "border-gray-200 text-gray-500 hover:border-red-400 hover:text-red-400"
+              }`}>
               {showFavOnly ? "❤️" : "🤍"} {favorites.length > 0 && `(${favorites.length})`}
             </button>
             <a href="#" className="text-purple-400 text-sm font-medium hover:underline">{t.viewAll} →</a>
           </div>
         </div>
 
-        {/* Search + Filter */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-            <input
-              type="text"
-              placeholder="Qidirish..."
-              value={search}
+            <input type="text" placeholder={t.search} value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full pl-10 pr-4 py-2 rounded-xl border text-sm outline-none transition-all duration-300 ${
-                darkMode
-                  ? "bg-slate-800 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
-                  : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
-              }`}
-            />
+                darkMode ? "bg-slate-800 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
+                : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
+              }`} />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
             )}
           </div>
           <div className="flex gap-2">
             {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
+              <button key={cat} onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  activeCategory === cat
-                    ? "bg-blue-500 text-white"
-                    : darkMode
-                    ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
-                    : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
+                  activeCategory === cat ? "bg-blue-500 text-white"
+                  : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
+                  : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
+                }`}>
                 {cat}
               </button>
             ))}
@@ -101,28 +84,20 @@ const Products = ({ darkMode, showToast }) => {
         </div>
       </ScrollReveal>
 
-      {/* Kartalar */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {filtered.map((post, index) => (
             <ScrollReveal key={post.id} direction="up" delay={index * 150}>
               <div className={`relative flex gap-5 p-4 rounded-2xl transition-all duration-300 ${darkMode ? "bg-slate-800 hover:bg-slate-700" : "bg-white hover:shadow-md"}`}>
-
-                {/* Favorite tugmasi */}
-                <button
-                  onClick={() => toggleFavorite(post.id)}
-                  className="absolute top-3 right-3 text-xl transition-transform duration-200 hover:scale-125"
-                >
+                <button onClick={() => toggleFavorite(post.id)}
+                  className="absolute top-3 right-3 text-xl transition-transform duration-200 hover:scale-125">
                   {favorites.includes(post.id) ? "❤️" : "🤍"}
                 </button>
-
                 <div className="w-[140px] h-[180px] rounded-xl overflow-hidden shrink-0">
                   <img src={post.img} alt={post.title} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col justify-between py-1 pr-6">
-                  <span className="text-xs font-semibold text-blue-400 bg-blue-400/10 px-2 py-1 rounded-lg w-fit mb-2">
-                    {post.category}
-                  </span>
+                  <span className="text-xs font-semibold text-blue-400 bg-blue-400/10 px-2 py-1 rounded-lg w-fit mb-2">{post.category}</span>
                   <div>
                     <h3 className={`text-base font-bold mb-2 leading-snug ${darkMode ? "text-white" : "text-gray-900"}`}>{post.title}</h3>
                     <p className={`text-xs leading-relaxed ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{post.text}</p>
@@ -141,13 +116,11 @@ const Products = ({ darkMode, showToast }) => {
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <span className="text-5xl">{showFavOnly ? "🤍" : "🔍"}</span>
           <p className={`text-lg font-semibold ${darkMode ? "text-white" : "text-gray-700"}`}>
-            {showFavOnly ? "Saqlangan postlar yo'q" : "Hech narsa topilmadi"}
+            {showFavOnly ? t.noFavorites : t.noResults}
           </p>
-          <button
-            onClick={() => { setSearch(""); setActiveCategory("All"); setShowFavOnly(false); }}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded-xl hover:bg-blue-400 transition"
-          >
-            Tozalash
+          <button onClick={() => { setSearch(""); setActiveCategory("All"); setShowFavOnly(false); }}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded-xl hover:bg-blue-400 transition">
+            {t.clear}
           </button>
         </div>
       )}

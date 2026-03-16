@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLang } from "../../context/useLang";
 
 const GRID = 20;
 const CELL = 20;
 
 const SnakeGame = ({ darkMode }) => {
+  const { t } = useLang();
   const canvasRef = useRef(null);
   const stateRef = useRef({
     snake: [{ x: 10, y: 10 }],
@@ -205,7 +207,7 @@ const SnakeGame = ({ darkMode }) => {
         <h2 className={`text-xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>🐍 Snake</h2>
         <div className="flex items-center gap-3">
           <span className={`text-sm font-bold ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-            Score: {display.score}
+            {t.score}: {display.score}
           </span>
           <span className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
             {Math.round(1000 / display.speed)}x
@@ -232,11 +234,11 @@ const SnakeGame = ({ darkMode }) => {
         {!display.running && !display.gameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
             <p className="text-white text-xl font-extrabold">🐍 Snake</p>
-            <p className="text-gray-400 text-xs">PC: WASD yoki ← → ↑ ↓</p>
-            <p className="text-gray-400 text-xs">Telefon: swipe yoki tugmalar</p>
+<p className="text-gray-400 text-xs">{t.pcControls}</p>
+<p className="text-gray-400 text-xs">{t.mobileControls}</p>
             <button onClick={reset}
               className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition">
-              ▶ Boshlash
+             {t.start}
             </button>
           </div>
         )}
@@ -244,11 +246,11 @@ const SnakeGame = ({ darkMode }) => {
         {/* Game over overlay */}
         {display.gameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-            <p className="text-white text-2xl font-extrabold">💀 Game Over</p>
-            <p className="text-yellow-400 text-lg font-bold">Score: {display.score}</p>
+            <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
+<p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
             <button onClick={reset}
               className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition">
-              🔄 Qayta
+              {t.again}
             </button>
           </div>
         )}
