@@ -65,6 +65,8 @@ const clearLines = (board) => {
   return { board: [...newRows, ...cleared], lines: linesCleared };
 };
 
+const SCORES = [0, 100, 300, 500, 800];
+
 const Tetris = ({ darkMode }) => {
   const { t } = useLang();
   const [board, setBoard] = useState(emptyBoard());
@@ -90,7 +92,6 @@ const Tetris = ({ darkMode }) => {
   runningRef.current = running;
   pausedRef.current = paused;
 
-  const SCORES = [0, 100, 300, 500, 800];
 
   // Canvas chizish
   const draw = useCallback(() => {
@@ -310,10 +311,10 @@ const Tetris = ({ darkMode }) => {
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-4 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-2 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <h2 className={`text-xl font-extrabold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>🎮 Tetris</h2>
 
-      <div className="flex gap-4 items-start">
+      <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
         {/* Canvas */}
         <div className="relative border-2 border-blue-500 rounded-xl overflow-hidden shadow-xl"
           onTouchStart={handleTouchStart}
@@ -352,38 +353,42 @@ const Tetris = ({ darkMode }) => {
         </div>
 
         {/* Side panel */}
-        <div className="flex flex-col gap-4 min-w-[100px]">
+        <div className="flex flex-row md:flex-col gap-3 md:gap-4 w-full md:w-40 justify-center md:justify-start flex-wrap md:flex-nowrap">
           {/* Next piece */}
-          <div className={`rounded-xl p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow`}>
-            <p className={`text-xs font-semibold mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>NEXT</p>
-            <canvas ref={nextCanvasRef} width={96} height={96} className="rounded-lg" />
+          <div className={`rounded-xl p-2 md:p-4 ${darkMode ? "bg-slate-800" : "bg-white"} shadow flex flex-col items-center w-auto md:w-full`}>
+            <p className={`text-[10px] md:text-xs font-semibold mb-1 md:mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>NEXT</p>
+            <canvas ref={nextCanvasRef} width={72} height={72} className="rounded-lg md:w-28 md:h-28" />
           </div>
 
-          {/* Stats */}
-          <div className={`rounded-xl p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow`}>
-            <p className={`text-xs font-semibold mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.score}</p>
-            <p className="text-blue-400 font-extrabold text-lg">{score}</p>
-          </div>
-          <div className={`rounded-xl p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow`}>
-            <p className={`text-xs font-semibold mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LINES</p>
-            <p className="text-green-400 font-extrabold text-lg">{lines}</p>
-          </div>
-          <div className={`rounded-xl p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow`}>
-            <p className={`text-xs font-semibold mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LEVEL</p>
-            <p className="text-yellow-400 font-extrabold text-lg">{level}</p>
+          {/* Stats group */}
+          <div className="flex flex-row md:flex-col gap-2 md:gap-4 w-auto md:w-full">
+            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
+              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.score}</p>
+              <p className="text-blue-400 font-extrabold text-sm md:text-lg">{score}</p>
+            </div>
+            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
+              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LINES</p>
+              <p className="text-green-400 font-extrabold text-sm md:text-lg">{lines}</p>
+            </div>
+            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
+              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LEVEL</p>
+              <p className="text-yellow-400 font-extrabold text-sm md:text-lg">{level}</p>
+            </div>
           </div>
 
           {/* Tugmalar */}
-          {running && (
-            <button onClick={() => setPaused((p) => !p)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-              {paused ? "▶" : "⏸"}
+          <div className="flex flex-row md:flex-col gap-2 w-full md:w-full">
+            {running && (
+              <button onClick={() => setPaused((p) => !p)}
+                className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                {paused ? "▶" : "⏸"}
+              </button>
+            )}
+            <button onClick={reset}
+              className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              {t.again}
             </button>
-          )}
-          <button onClick={reset}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-            {t.again}
-          </button>
+          </div>
         </div>
       </div>
 
@@ -417,10 +422,10 @@ const Tetris = ({ darkMode }) => {
             <div key={`${ri}-${ci}`} className="flex items-center justify-center">
               {btn ? (
                 <button onTouchStart={(e) => { e.preventDefault(); btn.action(); }}
-                  className={`w-14 h-14 rounded-xl text-xl flex items-center justify-center active:scale-95 transition ${darkMode ? "bg-slate-700 text-white" : "bg-gray-200 text-gray-700"}`}>
+                  className={`w-16 h-16 rounded-2xl text-2xl flex items-center justify-center active:scale-90 active:bg-blue-500/20 shadow-lg transition ${darkMode ? "bg-slate-700 text-white" : "bg-white text-gray-700"}`}>
                   {btn.label}
                 </button>
-              ) : <div className="w-14 h-14" />}
+              ) : <div className="w-16 h-16" />}
             </div>
           )))}
         </div>
