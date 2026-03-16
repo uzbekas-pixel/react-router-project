@@ -1,11 +1,13 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 
 const BottomNav = ({ darkMode }) => {
   const { user } = useAuth();
+  const { t } = useLang();
 
   const tabs = [
-    { path: "/", icon: "🏠", label: "Bosh" },
+    { path: "/", icon: "🏠", label: t.home },
     { path: "/chat", icon: "💬", label: "Chat" },
     { path: "/games", icon: "🎮", label: "Games" },
     { path: "/code", icon: "💻", label: "Code" },
@@ -19,7 +21,7 @@ const BottomNav = ({ darkMode }) => {
             : user?.displayName?.[0]?.toUpperCase() || "?"}
         </div>
       ),
-      label: "Profil"
+      label: t.profile
     },
   ];
 

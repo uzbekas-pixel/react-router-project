@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
+import { saveScore } from "./Leaderboard";
+import Leaderboard from "./Leaderboard";
+import { useAuth } from "../../context/useAuth";
 
 const GRID = 20;
 const CELL = 18;
 
 const SnakeGame = ({ darkMode }) => {
   const { t } = useLang();
+  const { user } = useAuth();
   const canvasRef = useRef(null);
   const stateRef = useRef({
     snake: [{ x: 10, y: 10 }],
@@ -246,12 +250,21 @@ const SnakeGame = ({ darkMode }) => {
         {/* Game over overlay */}
         {display.gameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
+            <Leaderboard game="snake" />
             <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
 <p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
             <button onClick={reset}
               className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition">
               {t.again}
             </button>
+            {user && (
+              <button
+                onClick={() => saveScore(user, "snake", display.score)}
+                className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl"
+              >
+                {t.saveScore}
+              </button>
+            )}
           </div>
         )}
       </div>

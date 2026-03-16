@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
-const STORY_EXPIRE = 24 * 60 * 60 * 1000; // 24 soat
+const STORY_EXPIRE = 24 * 60 * 60 * 1000;
 
 const Story = ({ darkMode, showToast }) => {
   const { user } = useAuth();
@@ -16,10 +16,8 @@ const Story = ({ darkMode, showToast }) => {
   const [viewIndex, setViewIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef(null);
-  const progressRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Storiylarni yuklash
   useEffect(() => {
     const unsub = onSnapshot(
       query(collection(db, "stories"), orderBy("createdAt", "desc")),
@@ -28,15 +26,17 @@ const Story = ({ darkMode, showToast }) => {
         const list = snap.docs
           .map((d) => ({ id: d.id, ...d.data() }))
           .filter((s) => {
-            const created = s.createdAt?.toDate?.()?.getTime() || 0;
+            // serverTimestamp() pending bo'lsa, yangi yuklangan — ko'rsatamiz
+            if (!s.createdAt) return true;
+            const created = s.createdAt?.toDate?.()?.getTime?.() ?? Date.now();
             return now - created < STORY_EXPIRE;
           });
         setStories(list);
 
-        // Eskirgan storiylarni o'chirish
+        // Eskirganlarni o'chirish
         snap.docs.forEach((d) => {
-          const created = d.data().createdAt?.toDate?.()?.getTime() || 0;
-          if (now - created >= STORY_EXPIRE) {
+          const created = d.data().createdAt?.toDate?.()?.getTime?.();
+          if (created && now - created >= STORY_EXPIRE) {
             deleteDoc(doc(db, "stories", d.id)).catch(() => {});
           }
         });
@@ -45,7 +45,6 @@ const Story = ({ darkMode, showToast }) => {
     return () => unsub();
   }, []);
 
-  // Story yuklash
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -66,11 +65,14 @@ const Story = ({ darkMode, showToast }) => {
         createdAt: serverTimestamp(),
       });
       showToast("Story qo'shildi! 🎉", "success");
-    } catch { showToast(t.imageError, "error"); }
-    finally { setUploading(false); e.target.value = ""; }
+    } catch {
+      showToast(t.imageError, "error");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
-  // Story ko'rish
   const openStory = (userStories, index = 0) => {
     setViewing(userStories);
     setViewIndex(index);
@@ -101,7 +103,6 @@ const Story = ({ darkMode, showToast }) => {
     return () => clearInterval(timerRef.current);
   }, []);
 
-  // Foydalanuvchilar bo'yicha guruhlash
   const grouped = stories.reduce((acc, story) => {
     if (!acc[story.uid]) acc[story.uid] = { uid: story.uid, name: story.name, avatar: story.avatar, stories: [] };
     acc[story.uid].stories.push(story);
@@ -117,7 +118,6 @@ const Story = ({ darkMode, showToast }) => {
         📸 Stories
       </h1>
 
-      {/* Story qo'shish + ko'rish */}
       <div className="flex gap-4 overflow-x-auto pb-4 mb-6">
         {/* O'z story */}
         <div className="flex flex-col items-center gap-2 shrink-0">
@@ -125,7 +125,7 @@ const Story = ({ darkMode, showToast }) => {
             onClick={() => myStories.length > 0 ? openStory(myStories) : fileInputRef.current?.click()}
             className={`relative w-16 h-16 rounded-full border-2 ${
               myStories.length > 0 ? "border-blue-500" : "border-dashed border-gray-400"
-            } flex items-center justify-center overflow-hidden transition hover:scale-105`}>
+            } flex items-center justify-center overflow-hidden transition`}>
             {user.photoURL ? (
               <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -148,14 +148,12 @@ const Story = ({ darkMode, showToast }) => {
             {myStories.length > 0 ? "Sizning" : "Qo'shish"}
           </span>
           {!myStories.length && (
-            <button onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-blue-400 hover:underline">+ Story</button>
+            <button onClick={() => fileInputRef.current?.click()} className="text-xs text-blue-400">+ Story</button>
           )}
         </div>
 
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
 
-        {/* Boshqalar */}
         {groupedList.filter((g) => g.uid !== user.uid).map((group) => (
           <div key={group.uid} className="flex flex-col items-center gap-2 shrink-0">
             <button onClick={() => openStory(group.stories)}
@@ -188,17 +186,15 @@ const Story = ({ darkMode, showToast }) => {
           <div className="relative w-full max-w-sm h-full max-h-[700px]"
             onClick={(e) => e.stopPropagation()}>
 
-            {/* Progress bars */}
             <div className="absolute top-4 left-4 right-4 z-10 flex gap-1">
               {viewing.map((_, i) => (
                 <div key={i} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
-                  <div className="h-full bg-white transition-none rounded-full"
-                    style={{ width: i < viewIndex ? "100%" : i === viewIndex ? `${progress}%` : "0%" }} />
+                  <div className="h-full bg-white rounded-full"
+                    style={{ width: i < viewIndex ? "100%" : i === viewIndex ? `${progress}%` : "0%", transition: "none" }} />
                 </div>
               ))}
             </div>
 
-            {/* User info */}
             <div className="absolute top-8 left-4 z-10 flex items-center gap-2">
               <div className="w-8 h-8 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
                 {viewing[viewIndex]?.avatar
@@ -208,15 +204,12 @@ const Story = ({ darkMode, showToast }) => {
               <span className="text-white text-sm font-semibold">{viewing[viewIndex]?.name}</span>
             </div>
 
-            {/* Close */}
             <button onClick={() => { clearInterval(timerRef.current); setViewing(null); }}
               className="absolute top-8 right-4 z-10 text-white text-2xl hover:opacity-70">✕</button>
 
-            {/* Image */}
             <img src={viewing[viewIndex]?.imageUrl} alt="story"
               className="w-full h-full object-contain rounded-2xl" />
 
-            {/* Prev/Next */}
             <button className="absolute left-0 top-0 bottom-0 w-1/3"
               onClick={(e) => {
                 e.stopPropagation();
@@ -232,12 +225,6 @@ const Story = ({ darkMode, showToast }) => {
           </div>
         </div>
       )}
-
-      {/* Story qo'shish tugmasi */}
-      <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-blue-500 hover:bg-blue-400 text-white rounded-full shadow-xl flex items-center justify-center text-2xl transition">
-        {uploading ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "📸"}
-      </button>
     </div>
   );
 };

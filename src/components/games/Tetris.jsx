@@ -324,8 +324,8 @@ const Tetris = ({ darkMode }) => {
           {!running && !gameOver && (
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
               <p className="text-white text-xl font-extrabold">🎮 Tetris</p>
-              <p className="text-gray-400 text-xs">PC: ← → ↓ ↑(rotate) Space(drop)</p>
-              <p className="text-gray-400 text-xs">Telefon: swipe, tap(rotate)</p>
+              <p className="text-gray-400 text-xs">{t.pcTetris}</p>
+              <p className="text-gray-400 text-xs">{t.mobileTetris}</p>
               <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
                 {t.start}
               </button>
@@ -334,9 +334,9 @@ const Tetris = ({ darkMode }) => {
 
           {paused && running && (
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-              <p className="text-white text-2xl font-extrabold">⏸ Pauza</p>
+              <p className="text-white text-2xl font-extrabold">⏸ {t.gamePaused}</p>
               <button onClick={() => setPaused(false)} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-                ▶ Davom etish
+                ▶ {t.resume}
               </button>
             </div>
           )}
@@ -356,7 +356,7 @@ const Tetris = ({ darkMode }) => {
         <div className="flex flex-row md:flex-col gap-3 md:gap-4 w-full md:w-40 justify-center md:justify-start flex-wrap md:flex-nowrap">
           {/* Next piece */}
           <div className={`rounded-xl p-2 md:p-4 ${darkMode ? "bg-slate-800" : "bg-white"} shadow flex flex-col items-center w-auto md:w-full`}>
-            <p className={`text-[10px] md:text-xs font-semibold mb-1 md:mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>NEXT</p>
+            <p className={`text-[10px] md:text-xs font-semibold mb-1 md:mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.next}</p>
             <canvas ref={nextCanvasRef} width={72} height={72} className="rounded-lg md:w-28 md:h-28" />
           </div>
 
@@ -367,11 +367,11 @@ const Tetris = ({ darkMode }) => {
               <p className="text-blue-400 font-extrabold text-sm md:text-lg">{score}</p>
             </div>
             <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
-              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LINES</p>
+              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.lines}</p>
               <p className="text-green-400 font-extrabold text-sm md:text-lg">{lines}</p>
             </div>
             <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
-              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>LEVEL</p>
+              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.level}</p>
               <p className="text-yellow-400 font-extrabold text-sm md:text-lg">{level}</p>
             </div>
           </div>

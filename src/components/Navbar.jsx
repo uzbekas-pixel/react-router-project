@@ -8,7 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
 const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,7 +51,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
           {/* Desktop links — faqat asosiylar */}
           <div className="hidden md:flex items-center gap-3">
             {["/", "/about", "/contact", "/products"].map((path, i) => {
-              const labels = ["Home", "About", "Contact", "Products"];
+              const labels = [t.home, t.about, t.contact, t.products];
               return (
                 <NavLink key={path} to={path} end={path === "/"}
                   onClick={onNavClick}
@@ -81,20 +81,12 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
             {/* User */}
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link to="/profile" onClick={onNavClick}
-                  className="flex items-center gap-2 hover:opacity-80 transition">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold overflow-hidden border-2 border-blue-400">
-                    {user.photoURL
-                      ? <img src={user.photoURL} alt="avatar" className="w-full h-full object-cover" />
-                      : user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
-                  </div>
-                </Link>
+             
                 <button onClick={logout}
                   className="py-1 px-3 text-sm text-red-400 border border-red-400 rounded-xl hover:bg-red-400 hover:text-white transition duration-300">
                   Chiqish
                 </button>
-              </div>
+              
             ) : (
               <Link to="/login" onClick={onNavClick}
                 className="py-1 px-3 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-400 rounded-xl transition duration-300">
@@ -130,7 +122,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         {/* Mobile menu */}
         <div className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-96 py-3" : "max-h-0"}`}>
           {["/", "/about", "/contact", "/products"].map((path, i) => {
-            const labels = ["Home", "About", "Contact", "Products"];
+            const labels = [t.home, t.about, t.contact, t.products];
             return (
               <NavLink key={path} to={path}
                 onClick={() => { onNavClick(); setMenuOpen(false); }}

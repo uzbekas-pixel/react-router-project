@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
+import { saveScore } from "./Leaderboard";
+import Leaderboard from "./Leaderboard";
+import { useAuth } from "../../context/useAuth";
 
 const W = 320;
 const H = 480;
@@ -24,6 +27,7 @@ const FlappyBird = ({ darkMode }) => {
   });
   const rafRef = useRef(null);
   const [display, setDisplay] = useState({ score: 0, running: false, gameOver: false });
+  const { user } = useAuth();
 
   const jump = useCallback(() => {
     const s = state.current;
@@ -91,6 +95,9 @@ const FlappyBird = ({ darkMode }) => {
               s.running = false;
               s.gameOver = true;
               setDisplay({ score: s.score, running: false, gameOver: true });
+              if (user) {
+                saveScore(user, "flappy", s.score);
+              }
             }
           }
         });
@@ -128,7 +135,7 @@ const FlappyBird = ({ darkMode }) => {
 
     rafRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [darkMode]);
+  }, [darkMode, user]);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -160,16 +167,26 @@ const FlappyBird = ({ darkMode }) => {
         )}
 
         {display.gameOver && (
+          
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
             <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
             <p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
+            {user && (
+
+              <button
+                onClick={() => saveScore(user, "flappy", display.score)}
+                className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl"
+              >
+                {t.saveScore}
+              </button>
+            )}
             <button onClick={reset} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
               {t.again}
             </button>
           </div>
         )}
       </div>
-
+      <Leaderboard darkMode={darkMode} game="flappy" />
       <p className={`mt-3 text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
         {t.pcControls} | {t.mobileControls}
       </p>

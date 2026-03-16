@@ -5,6 +5,9 @@ import SnakeGame from "../components/games/SnakeGame";
 import FlappyBird from "../components/games/FlappyBird";
 import TicTacToe from "../components/games/TicTacToe";
 import Tetris from "../components/games/Tetris";
+import Game2048 from "../components/games/Game2048";
+import Wordle from "../components/games/Wordle";
+import MemoryCard from "../components/games/MemoryCard";
 import { useLang } from "../context/useLang";
 
 const BackButton = ({ onClick, darkMode, t }) => (
@@ -26,6 +29,9 @@ const Games = ({ darkMode, showToast }) => {
     { id: "flappy", icon: "🐦", title: "Flappy Bird", desc: t.flappyDesc, color: "from-yellow-500 to-orange-500" },
     { id: "tictactoe", icon: "❌", title: "Tic-Tac-Toe", desc: t.ticDesc, color: "from-purple-500 to-pink-500" },
     { id: "tetris", icon: "🧱", title: "Tetris", desc: t.tetrisDesc, color: "from-red-500 to-rose-500" },
+    { id: "2048", icon: "🔢", title: "2048", desc: "Raqamlarni birlashtiring", color: "from-blue-500 to-cyan-500" },
+    { id: "wordle", icon: "🔤", title: "Wordle", desc: "So'zni toping", color: "from-green-500 to-emerald-600" },
+    { id: "memory", icon: "🧠", title: "Memory Card", desc: "Eslab qolish o'yini", color: "from-purple-500 to-pink-500" },
   ];
 
 
@@ -53,6 +59,24 @@ const Games = ({ darkMode, showToast }) => {
   <div className="page-transition">
     <BackButton onClick={() => setScreen("home")} darkMode={darkMode} t={t} />
     <div className="pt-12"><Tetris darkMode={darkMode} /></div>
+  </div>
+);
+if (screen === "2048") return (
+  <div className="page-transition">
+    <BackButton onClick={() => setScreen("home")} darkMode={darkMode} t={t} />
+    <div className="pt-12"><Game2048 darkMode={darkMode} /></div>
+  </div>
+);
+if (screen === "wordle") return (
+  <div className="page-transition">
+    <BackButton onClick={() => setScreen("home")} darkMode={darkMode} t={t} />
+    <div className="pt-12"><Wordle darkMode={darkMode} /></div>
+  </div>
+);
+if (screen === "memory") return (
+  <div className="page-transition">
+    <BackButton onClick={() => setScreen("home")} darkMode={darkMode} t={t} />
+    <div className="pt-12"><MemoryCard darkMode={darkMode} /></div>
   </div>
 );
 

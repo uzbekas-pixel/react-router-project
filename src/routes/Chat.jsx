@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db, rtdb } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
@@ -11,6 +11,7 @@ const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢"];
+const MSG_EXPIRE = 24 * 60 * 60 * 1000; // 24 soat
 
 const Chat = ({ darkMode }) => {
   const navigate = useNavigate();
@@ -25,7 +26,10 @@ const Chat = ({ darkMode }) => {
   const [recording, setRecording] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState({});
   const [inputMode, setInputMode] = useState("text");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
   const messagesContainerRef = useRef(null);
+  const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const prevLengthRef = useRef(0);
   const longPressTimer = useRef(null);
@@ -38,17 +42,46 @@ const Chat = ({ darkMode }) => {
   const [camOn, setCamOn] = useState(true);
   const clientRef = useRef(null);
 
+  // Admin tekshirish
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const snap = await getDoc(doc(db, "admins", user.uid));
+      setIsAdmin(snap.exists() && snap.data().isAdmin === true);
+    };
+    checkAdmin();
+  }, [user]);
+
+  // Xabarlarni yuklash + 24 soat eski xabarlarni o'chirish
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt"));
     const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const now = Date.now();
+      const list = [];
+
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const created = data.createdAt?.toDate?.()?.getTime?.();
+
+        // 24 soatdan eski bo'lsa o'chir
+        if (created && now - created > MSG_EXPIRE) {
+          deleteDoc(doc(db, "messages", d.id)).catch(() => {});
+        } else {
+          list.push({ id: d.id, ...data });
+        }
+      });
+
+      setMessages(list);
     });
     return () => unsub();
   }, []);
 
+  // Oxirgi xabarga scroll
   useEffect(() => {
     if (messages.length > prevLengthRef.current) {
-      messagesContainerRef.current?.scrollTo({ top: messagesContainerRef.current.scrollHeight, behavior: "smooth" });
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
     }
     prevLengthRef.current = messages.length;
   }, [messages]);
@@ -66,12 +99,15 @@ const Chat = ({ darkMode }) => {
   const handleSend = async () => {
     if (!text.trim()) return;
     const sendText = text;
+    const replyData = replyTo;
     setText("");
+    setReplyTo(null);
     await addDoc(collection(db, "messages"), {
       text: sendText, uid: user.uid,
       name: user.displayName || user.email,
       avatar: user.photoURL || null,
       type: "text", reactions: {},
+      replyTo: replyData || null,
       createdAt: serverTimestamp(),
     });
   };
@@ -80,8 +116,9 @@ const Chat = ({ darkMode }) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
+  // O'z xabarini o'chirish + admin istalgan xabarni o'chira oladi
   const handleDelete = async (msgId, msgUid) => {
-    if (msgUid !== user.uid) return;
+    if (msgUid !== user.uid && !isAdmin) return;
     await deleteDoc(doc(db, "messages", msgId));
     setLongPressMsg(null);
   };
@@ -132,7 +169,7 @@ const Chat = ({ darkMode }) => {
       mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        if (blob.size > 1 * 1024 * 1024) { alert(t.audioSizeError); stream.getTracks().forEach((t) => t.stop()); return; }
+        if (blob.size > 1 * 1024 * 1024) { alert(t.audioSizeError); stream.getTracks().forEach((tr) => tr.stop()); return; }
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onloadend = async () => {
@@ -144,7 +181,7 @@ const Chat = ({ darkMode }) => {
             createdAt: serverTimestamp(),
           });
         };
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((tr) => tr.stop());
       };
       mediaRecorder.start();
       setRecording(true);
@@ -196,7 +233,7 @@ const Chat = ({ darkMode }) => {
           <h2 className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>{t.chatTitle}</h2>
           <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.chatSub}</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           {!inCall ? (
             <button onClick={joinCall} className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white text-sm font-semibold rounded-xl transition">
               {t.videoCall}
@@ -205,14 +242,13 @@ const Chat = ({ darkMode }) => {
             <button onClick={leaveCall} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm font-semibold rounded-xl transition">
               {t.leaveCall}
             </button>
-            
           )}
           <button onClick={() => navigate("/dm")}
-  className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition ${
-    darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-  }`}>
-  ✉️ DM
-</button>
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition ${
+              darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}>
+            ✉️ DM
+          </button>
         </div>
       </div>
 
@@ -251,7 +287,8 @@ const Chat = ({ darkMode }) => {
       )}
 
       {/* Xabarlar */}
-      <div ref={messagesContainerRef}
+      <div
+        ref={messagesContainerRef}
         className={`chat-scroll flex-1 overflow-y-auto rounded-2xl p-4 mb-2 flex flex-col gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}
         onClick={() => { setShowReactions(null); setLongPressMsg(null); }}>
         {messages.length === 0 && (
@@ -262,6 +299,7 @@ const Chat = ({ darkMode }) => {
 
         {messages.map((msg) => {
           const isMe = msg.uid === user?.uid;
+          const canDelete = isMe || isAdmin;
           return (
             <div key={msg.id}
               className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}
@@ -281,6 +319,17 @@ const Chat = ({ darkMode }) => {
               <div className={`max-w-[70%] flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
                 {!isMe && <span className={`text-xs font-semibold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{msg.name}</span>}
                 <div className="relative">
+                  {/* Reply preview xabar ichida */}
+                  {msg.replyTo && (
+                    <div className={`mb-1 px-3 py-1.5 rounded-xl text-xs border-l-2 border-blue-400 ${
+                      isMe ? "bg-blue-600/40 text-blue-100" : darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"
+                    }`}>
+                      <span className="font-semibold text-blue-400">{msg.replyTo.name}</span>
+                      <p className="truncate mt-0.5">
+                        {msg.replyTo.type === "image" ? "📷 Rasm" : msg.replyTo.type === "audio" ? "🎙️ Ovozli xabar" : msg.replyTo.text}
+                      </p>
+                    </div>
+                  )}
                   {msg.type === "text" && (
                     <div className={`px-4 py-2 rounded-2xl text-sm ${
                       isMe ? "bg-blue-500 text-white rounded-br-sm"
@@ -302,15 +351,27 @@ const Chat = ({ darkMode }) => {
                   )}
 
                   <div className={`absolute top-0 ${isMe ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-1`}>
+                    {/* Reply tugmasi */}
+                    <button onClick={(e) => {
+                      e.stopPropagation();
+                      setReplyTo({ id: msg.id, name: msg.name, text: msg.text, type: msg.type });
+                      inputRef.current?.focus();
+                    }}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
+                      ↩️
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
                       😊
                     </button>
-                    {isMe && (
+                    {canDelete && (
                       <button onClick={() => handleDelete(msg.id, msg.uid)}
                         className="w-7 h-7 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center text-white text-xs transition">
                         🗑️
                       </button>
+                    )}
+                    {isAdmin && !isMe && (
+                      <span className="text-xs bg-yellow-500 text-white px-1.5 py-0.5 rounded-full">A</span>
                     )}
                   </div>
 
@@ -353,6 +414,7 @@ const Chat = ({ darkMode }) => {
       {longPressMsg && (() => {
         const msg = messages.find((m) => m.id === longPressMsg);
         const isMe = msg?.uid === user?.uid;
+        const canDelete = isMe || isAdmin;
         return (
           <div className="fixed inset-0 z-9998 bg-black/40 flex items-end justify-center pb-24"
             onClick={() => setLongPressMsg(null)}>
@@ -364,7 +426,15 @@ const Chat = ({ darkMode }) => {
                     className="text-2xl hover:scale-125 transition-transform active:scale-110">{emoji}</button>
                 ))}
               </div>
-              {isMe && (
+              <button onClick={() => {
+                setReplyTo({ id: msg.id, name: msg.name, text: msg.text, type: msg.type });
+                setLongPressMsg(null);
+                inputRef.current?.focus();
+              }}
+                className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-300 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-50"}`}>
+                ↩️ Javob berish
+              </button>
+              {canDelete && (
                 <button onClick={() => handleDelete(longPressMsg, msg.uid)}
                   className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3">
                   {t.deleteMessage}
@@ -380,7 +450,23 @@ const Chat = ({ darkMode }) => {
       })()}
 
       {/* Input */}
-      <div className={`rounded-2xl px-4 py-3 flex items-center gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+      <div className={`rounded-2xl px-4 py-3 flex flex-col gap-2 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+        {/* Reply preview */}
+        {replyTo && (
+          <div className={`flex items-center justify-between px-3 py-2 rounded-xl border-l-2 border-blue-400 ${darkMode ? "bg-slate-700" : "bg-blue-50"}`}>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-blue-400">{replyTo.name}</span>
+              <p className={`text-xs truncate mt-0.5 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                {replyTo.type === "image" ? "📷 Rasm" : replyTo.type === "audio" ? "🎙️ Ovozli xabar" : replyTo.text}
+              </p>
+            </div>
+            <button onClick={() => setReplyTo(null)}
+              className={`ml-2 text-lg shrink-0 ${darkMode ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}>
+              ✕
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
         <button onClick={() => setInputMode(inputMode === "text" ? "voice" : "text")}
           className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${
             inputMode === "voice" ? "bg-blue-500 text-white"
@@ -396,7 +482,7 @@ const Chat = ({ darkMode }) => {
               {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            <input type="text" placeholder={t.messagePlaceholderChat} value={text}
+            <input ref={inputRef} type="text" placeholder={t.messagePlaceholderChat} value={text}
               onChange={handleTyping} onKeyDown={handleKeyDown}
               className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`} />
             <button onClick={handleSend} disabled={!text.trim()}
@@ -419,6 +505,7 @@ const Chat = ({ darkMode }) => {
             </button>
           </>
         )}
+        </div>
       </div>
 
       {previewImage && (
