@@ -6,12 +6,13 @@ import { useLang } from "../context/useLang";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import { ref, onValue } from "firebase/database";
 import { useNavigate } from "react-router-dom";
+import { useChatSound } from "../hooks/useChatSound";
 
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢"];
-const MSG_EXPIRE = 24 * 60 * 60 * 1000; // 24 soat
+const MSG_EXPIRE = 24 * 60 * 60 * 1000;
 
 const Chat = ({ darkMode }) => {
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ const Chat = ({ darkMode }) => {
   const [inputMode, setInputMode] = useState("text");
   const [isAdmin, setIsAdmin] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
+  const [soundOn, setSoundOn] = useState(() => localStorage.getItem("chat_sound") !== "false");
+  const { playMessage, playSend, playNotification } = useChatSound(soundOn);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -76,15 +79,20 @@ const Chat = ({ darkMode }) => {
     return () => unsub();
   }, []);
 
-  // Oxirgi xabarga scroll
+  // Oxirgi xabarga scroll + ovoz
   useEffect(() => {
     if (messages.length > prevLengthRef.current) {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
+      // Faqat boshqalar xabariga ovoz
+      const lastMsg = messages[messages.length - 1];
+      if (prevLengthRef.current > 0 && lastMsg && lastMsg.uid !== user?.uid) {
+        playMessage();
+      }
     }
     prevLengthRef.current = messages.length;
-  }, [messages]);
+  }, [messages, user, playMessage]);
 
   useEffect(() => {
     const onlineRef = ref(rtdb, "online");
@@ -102,6 +110,7 @@ const Chat = ({ darkMode }) => {
     const replyData = replyTo;
     setText("");
     setReplyTo(null);
+    playSend();
     await addDoc(collection(db, "messages"), {
       text: sendText, uid: user.uid,
       name: user.displayName || user.email,
@@ -234,6 +243,19 @@ const Chat = ({ darkMode }) => {
           <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.chatSub}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {/* Ovoz on/off */}
+          <button onClick={() => {
+            const next = !soundOn;
+            setSoundOn(next);
+            localStorage.setItem("chat_sound", next);
+            if (next) playNotification();
+          }}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition text-lg ${
+              darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-100 hover:bg-gray-200"
+            }`}
+            title={soundOn ? "Ovozni o'chirish" : "Ovozni yoqish"}>
+            {soundOn ? "🔔" : "🔕"}
+          </button>
           {!inCall ? (
             <button onClick={joinCall} className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white text-sm font-semibold rounded-xl transition">
               {t.videoCall}
