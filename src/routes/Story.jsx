@@ -86,7 +86,7 @@ const Story = ({ darkMode, showToast }) => {
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { showToast(t.imageSizeError, "error"); return; }
+    if (file.size > 20 * 1080 * 2400) { showToast(t.imageSizeError, "error"); return; }
     setUploading(true);
     try {
       const formData = new FormData();
@@ -112,7 +112,7 @@ const Story = ({ darkMode, showToast }) => {
   const handleUploadVideo = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 20 * 1024 * 1024) { showToast("Video 20MB dan kichik bo'lishi kerak!", "error"); return; }
+    if (file.size > 1000 * 1080 * 2400) { showToast("Video 1000MB dan kichik bo'lishi kerak!", "error"); return; }
     setUploading(true);
     try {
       const reader = new FileReader();
