@@ -95,3 +95,16 @@ iframe::-webkit-scrollbar-thumb {
 .dm-scroll::-webkit-scrollbar-thumb:hover {
   background: #60a5fa;
 }
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
+}

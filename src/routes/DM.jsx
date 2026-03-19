@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where, deleteDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where, deleteDoc, doc, getDoc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
@@ -20,11 +20,14 @@ const DM = ({ darkMode, showToast }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [inputMode, setInputMode] = useState("text");
   const [recording, setRecording] = useState(false);
+  // ── Unread counts: { [otherUserId]: number } ──
+  const [unreadCounts, setUnreadCounts] = useState({});
+
   const messagesContainerRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const messagesEndRef = useRef(null);
+  const fileInputRef         = useRef(null);
+  const mediaRecorderRef     = useRef(null);
+  const audioChunksRef       = useRef([]);
+  const messagesEndRef       = useRef(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -35,6 +38,7 @@ const DM = ({ darkMode, showToast }) => {
     checkAdmin();
   }, [user]);
 
+  // ── Barcha foydalanuvchilarni olish ──────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(collection(db, "users"), (snap) => {
@@ -46,6 +50,31 @@ const DM = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
+  // ── O'qilmagan xabarlarni real-time kuzatish ─────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    // Menga yuborilgan, o'qilmagan barcha DM xabarlarini kuzat
+    const q = query(
+      collection(db, "dmMessages"),
+      where("toUid", "==", user.uid),
+      where("read", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const counts = {};
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const senderId = data.uid;
+        counts[senderId] = (counts[senderId] || 0) + 1;
+      });
+      setUnreadCounts(counts);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  // ── Tanlangan foydalanuvchi bilan xabarlar ────────────────────────────────
   useEffect(() => {
     if (!selectedUser) return;
     const dmId = [user.uid, selectedUser.id].sort().join("_");
@@ -71,11 +100,32 @@ const DM = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [selectedUser, user]);
 
- useEffect(() => {
-  if (messagesContainerRef.current) {
-    messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-  }
-}, [messages]);
+  // ── Foydalanuvchi tanlanganda o'qilmagan xabarlarni o'qilgan qil ─────────
+  useEffect(() => {
+    if (!selectedUser || !user) return;
+
+    const markAsRead = async () => {
+      const q = query(
+        collection(db, "dmMessages"),
+        where("dmId", "==", [user.uid, selectedUser.id].sort().join("_")),
+        where("toUid", "==", user.uid),
+        where("read", "==", false)
+      );
+      const snap = await import("firebase/firestore").then(({ getDocs }) => getDocs(q));
+      if (snap.empty) return;
+      const batch = writeBatch(db);
+      snap.docs.forEach((d) => batch.update(d.ref, { read: true }));
+      await batch.commit();
+    };
+
+    markAsRead();
+  }, [selectedUser, messages, user]);
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const getDmId = () => [user.uid, selectedUser.id].sort().join("_");
 
@@ -84,12 +134,14 @@ const DM = ({ darkMode, showToast }) => {
     const sendText = text;
     setText("");
     await addDoc(collection(db, "dmMessages"), {
-      dmId: getDmId(),
-      text: sendText,
-      uid: user.uid,
-      name: user.displayName || user.email,
-      avatar: user.photoURL || null,
-      type: "text",
+      dmId:      getDmId(),
+      text:      sendText,
+      uid:       user.uid,
+      toUid:     selectedUser.id,   // ← kimga yuborilgan
+      read:      false,              // ← o'qilmagan
+      name:      user.displayName || user.email,
+      avatar:    user.photoURL || null,
+      type:      "text",
       createdAt: serverTimestamp(),
     });
   };
@@ -110,13 +162,15 @@ const DM = ({ darkMode, showToast }) => {
       const data = await response.json();
       if (!data.success) throw new Error();
       await addDoc(collection(db, "dmMessages"), {
-        dmId: getDmId(),
-        text: "",
-        imageUrl: data.data.url,
-        uid: user.uid,
-        name: user.displayName || user.email,
-        avatar: user.photoURL || null,
-        type: "image",
+        dmId:      getDmId(),
+        text:      "",
+        imageUrl:  data.data.url,
+        uid:       user.uid,
+        toUid:     selectedUser.id,
+        read:      false,
+        name:      user.displayName || user.email,
+        avatar:    user.photoURL || null,
+        type:      "image",
         createdAt: serverTimestamp(),
       });
     } catch { showToast(t.imageError, "error"); }
@@ -128,7 +182,7 @@ const DM = ({ darkMode, showToast }) => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      audioChunksRef.current   = [];
       mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
@@ -137,13 +191,15 @@ const DM = ({ darkMode, showToast }) => {
         reader.readAsDataURL(blob);
         reader.onloadend = async () => {
           await addDoc(collection(db, "dmMessages"), {
-            dmId: getDmId(),
-            text: "",
+            dmId:      getDmId(),
+            text:      "",
             audioData: reader.result,
-            uid: user.uid,
-            name: user.displayName || user.email,
-            avatar: user.photoURL || null,
-            type: "audio",
+            uid:       user.uid,
+            toUid:     selectedUser.id,
+            read:      false,
+            name:      user.displayName || user.email,
+            avatar:    user.photoURL || null,
+            type:      "audio",
             createdAt: serverTimestamp(),
           });
         };
@@ -165,6 +221,8 @@ const DM = ({ darkMode, showToast }) => {
     (u.displayName || u.email || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+
   const selectUser = (u) => {
     setSelectedUser(u);
     setMobileView("chat");
@@ -176,7 +234,7 @@ const DM = ({ darkMode, showToast }) => {
     setMessages([]);
   };
 
-  // Users list JSX
+  // ── Users list ────────────────────────────────────────────────────────────
   const usersListJSX = (
     <div className={`flex flex-col h-full ${darkMode ? "bg-slate-800" : "bg-white"} rounded-2xl shadow overflow-hidden`}>
       <div className={`p-3 border-b shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
@@ -196,32 +254,88 @@ const DM = ({ darkMode, showToast }) => {
             Foydalanuvchilar yo'q
           </p>
         ) : (
-          filteredUsers.map((u) => (
-            <button key={u.id} onClick={() => selectUser(u)}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition ${
-                selectedUser?.id === u.id
-                  ? darkMode ? "bg-slate-700" : "bg-blue-50"
-                  : darkMode ? "hover:bg-slate-700" : "hover:bg-gray-50"
-              }`}>
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                {u.avatarUrl
-                  ? <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : u.displayName?.[0]?.toUpperCase() || "?"}
-              </div>
-              <div className="text-left min-w-0">
-                <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
-                  {u.displayName || u.email}
-                </p>
-                <p className={`text-xs truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{u.email}</p>
-              </div>
-            </button>
-          ))
+          filteredUsers.map((u) => {
+            const unread = unreadCounts[u.id] || 0;
+            const isSelected = selectedUser?.id === u.id;
+            return (
+              <button key={u.id} onClick={() => selectUser(u)}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition relative ${
+                  isSelected
+                    ? darkMode ? "bg-slate-700" : "bg-blue-50"
+                    : darkMode ? "hover:bg-slate-700" : "hover:bg-gray-50"
+                }`}>
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
+                    {u.avatarUrl
+                      ? <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      : u.displayName?.[0]?.toUpperCase() || "?"}
+                  </div>
+                  {/* Unread badge — avatar ustida */}
+                  {unread > 0 && (
+                    <span style={{
+                      position: "absolute",
+                      top: -3, right: -3,
+                      background: "#ef4444",
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 4px",
+                      border: `2px solid ${darkMode ? "#1e293b" : "#fff"}`,
+                      lineHeight: 1,
+                    }}>
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-left min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className={`text-sm truncate ${
+                      unread > 0
+                        ? "font-bold " + (darkMode ? "text-white" : "text-gray-900")
+                        : "font-semibold " + (darkMode ? "text-white" : "text-gray-900")
+                    }`}>
+                      {u.displayName || u.email}
+                    </p>
+                    {/* O'qilmagan badge — o'ngda */}
+                    {unread > 0 && !isSelected && (
+                      <span style={{
+                        background: "#3b82f6",
+                        color: "#fff",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        minWidth: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "0 5px",
+                        flexShrink: 0,
+                        marginLeft: 6,
+                      }}>
+                        {unread}
+                      </span>
+                    )}
+                  </div>
+                  <p className={`text-xs truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{u.email}</p>
+                </div>
+              </button>
+            );
+          })
         )}
       </div>
     </div>
   );
 
-  // Chat area JSX
+  // ── Chat area ─────────────────────────────────────────────────────────────
   const chatAreaJSX = (
     <div className={`flex flex-col h-full ${darkMode ? "bg-slate-800" : "bg-white"} rounded-2xl shadow overflow-hidden`}>
       {selectedUser ? (
@@ -237,12 +351,19 @@ const DM = ({ darkMode, showToast }) => {
                 ? <img src={selectedUser.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : selectedUser.displayName?.[0]?.toUpperCase() || "?"}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
                 {selectedUser.displayName || selectedUser.email}
               </p>
               <p className={`text-xs truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{selectedUser.email}</p>
             </div>
+            {/* Online indicator */}
+            {selectedUser.isOnline && (
+              <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:"#10b981" }}/>
+                <span style={{ fontSize:11, color:"#10b981", fontWeight:600 }}>Online</span>
+              </div>
+            )}
           </div>
 
           {/* Messages */}
@@ -264,9 +385,10 @@ const DM = ({ darkMode, showToast }) => {
                   <div className={`max-w-[70%] flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
                     {msg.type === "text" && (
                       <div className={`px-4 py-2 rounded-2xl text-sm ${
-                        isMe ? "bg-blue-500 text-white rounded-br-sm"
-                        : darkMode ? "bg-slate-700 text-white rounded-bl-sm"
-                        : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                        isMe
+                          ? "bg-blue-500 text-white rounded-br-sm"
+                          : darkMode ? "bg-slate-700 text-white rounded-bl-sm"
+                          : "bg-gray-100 text-gray-900 rounded-bl-sm"
                       }`}>{msg.text}</div>
                     )}
                     {msg.type === "image" && (
@@ -284,9 +406,17 @@ const DM = ({ darkMode, showToast }) => {
                         🗑️
                       </button>
                     )}
-                    <span className={`text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>
-                      {msg.createdAt?.toDate?.()?.toLocaleTimeString("uz", { hour: "2-digit", minute: "2-digit" }) || ""}
-                    </span>
+                    <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                      <span className={`text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>
+                        {msg.createdAt?.toDate?.()?.toLocaleTimeString("uz", { hour:"2-digit", minute:"2-digit" }) || ""}
+                      </span>
+                      {/* O'qilgan belgisi */}
+                      {isMe && (
+                        <span style={{ fontSize:10, color: msg.read ? "#3b82f6" : "#6b7280" }}>
+                          {msg.read ? "✓✓" : "✓"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -296,7 +426,6 @@ const DM = ({ darkMode, showToast }) => {
 
           {/* Input */}
           <div className={`px-3 py-3 border-t flex items-center gap-2 shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-            {/* Rejim almashtirish */}
             <button onClick={() => setInputMode(inputMode === "text" ? "voice" : "text")}
               className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
                 inputMode === "voice" ? "bg-blue-500 text-white"
@@ -360,9 +489,24 @@ const DM = ({ darkMode, showToast }) => {
   return (
     <div className={`page-transition w-full max-w-5xl mx-auto px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
       style={{ height: "calc(100vh - 130px)" }}>
-      <h1 className={`text-2xl font-extrabold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        💬 Direct Messages
-      </h1>
+      <div className="flex items-center gap-3 mb-4">
+        <h1 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
+          💬 Direct Messages
+        </h1>
+        {/* Umumiy o'qilmagan badge */}
+        {totalUnread > 0 && (
+          <span style={{
+            background: "#ef4444",
+            color: "#fff",
+            fontSize: 12,
+            fontWeight: 700,
+            padding: "2px 8px",
+            borderRadius: 12,
+          }}>
+            {totalUnread} yangi
+          </span>
+        )}
+      </div>
 
       {/* Desktop */}
       <div className="hidden md:flex gap-4" style={{ height: "calc(100% - 56px)" }}>

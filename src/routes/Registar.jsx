@@ -4,9 +4,37 @@ import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "
 import { auth, googleProvider, githubProvider } from "../firebase/config";
 import { useLang } from "../context/useLang";
 
+// Firebase xato kodlarini o'zbek tiliga tarjima
+const getFirebaseError = (err, t) => {
+  switch (err?.code) {
+    case "auth/email-already-in-use":
+      return t.emailInUse;
+    case "auth/weak-password":
+      return t.passwordMin;
+    case "auth/invalid-email":
+      return t.emailInvalidMsg;
+    case "auth/too-many-requests":
+      return "Juda ko'p urinish! Biroz kuting.";
+    case "auth/popup-closed-by-user":
+      return "Kirish oynasi yopildi. Qayta urinib ko'ring.";
+    case "auth/popup-blocked":
+      return "Popup bloklandi. Brauzer sozlamalarini tekshiring.";
+    case "auth/cancelled-popup-request":
+      return null; // jimgina o'tkazib yuborish
+    case "auth/account-exists-with-different-credential":
+      return "Bu email allaqachon boshqa usul bilan ro'yxatdan o'tgan. Email/parol yoki Google bilan kiring.";
+    case "auth/network-request-failed":
+      return "Internet aloqasi yo'q. Tekshirib qayta urinib ko'ring.";
+    case "auth/credential-already-in-use":
+      return "Bu hisob allaqachon ishlatilmoqda.";
+    default:
+      return t.errorOccurred;
+  }
+};
+
 const Register = ({ darkMode, showToast, showConfetti }) => {
   const { t } = useLang();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm]     = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,51 +57,62 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
     try {
       const res = await createUserWithEmailAndPassword(auth, form.email, form.password);
       await updateProfile(res.user, { displayName: form.name });
-      showConfetti();
+      showConfetti && showConfetti();
       showToast(`${t.registerSuccess}, ${form.name}! 🎉`, "success");
       navigate("/");
     } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        showToast(t.emailInUse, "error");
-      } else {
-        showToast(t.errorOccurred, "error");
-      }
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      showConfetti();
+      showConfetti && showConfetti();
       showToast(t.loginSuccess, "success");
       navigate("/");
-    } catch {
-      showToast(t.googleError, "error");
+    } catch (err) {
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGithub = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await signInWithPopup(auth, githubProvider);
-      showConfetti();
+      showConfetti && showConfetti();
       showToast(t.loginSuccess, "success");
       navigate("/");
-    } catch {
-      showToast(t.githubError, "error");
+    } catch (err) {
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass = (field) => `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
-    errors[field] ? "border-red-400" : darkMode ? "border-slate-600 focus:border-blue-400" : "border-gray-200 focus:border-blue-400"
-  } ${darkMode ? "bg-slate-800 text-white placeholder-gray-500" : "bg-white text-gray-900 placeholder-gray-400"}`;
+  const inputClass = (field) =>
+    `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
+      errors[field]
+        ? "border-red-400"
+        : darkMode
+        ? "border-slate-600 focus:border-blue-400"
+        : "border-gray-200 focus:border-blue-400"
+    } ${darkMode ? "bg-slate-800 text-white placeholder-gray-500" : "bg-white text-gray-900 placeholder-gray-400"}`;
+
+  const setField = (field, val) => {
+    setForm({ ...form, [field]: val });
+    setErrors({ ...errors, [field]: null });
+  };
 
   return (
     <div className={`page-transition min-h-[calc(100vh-64px)] flex items-center justify-center px-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
@@ -84,31 +123,39 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
         </div>
 
         <div className="flex flex-col gap-4">
+          {/* Ism */}
           <div>
             <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.name}</label>
             <input type="text" placeholder={t.namePlaceholder} value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => setField("name", e.target.value)}
               className={inputClass("name")} />
             {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
           </div>
+
+          {/* Email */}
           <div>
             <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.email}</label>
             <input type="email" placeholder="example@email.com" value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onChange={(e) => setField("email", e.target.value)}
               className={inputClass("email")} />
             {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
           </div>
+
+          {/* Parol */}
           <div>
             <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.password}</label>
             <input type="password" placeholder="••••••••" value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={(e) => setField("password", e.target.value)}
               className={inputClass("password")} />
             {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
           </div>
+
+          {/* Parolni tasdiqlash */}
           <div>
             <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.confirmPassword}</label>
             <input type="password" placeholder="••••••••" value={form.confirm}
-              onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+              onChange={(e) => setField("confirm", e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className={inputClass("confirm")} />
             {errors.confirm && <p className="text-red-400 text-xs mt-1">{errors.confirm}</p>}
           </div>
@@ -124,6 +171,7 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
             <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
           </div>
 
+          {/* Google */}
           <button onClick={handleGoogle} disabled={loading}
             className={`w-full py-3 flex items-center justify-center gap-3 rounded-xl border font-semibold text-sm transition-all duration-300 ${
               darkMode ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -137,6 +185,7 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
             {t.googleRegister}
           </button>
 
+          {/* GitHub */}
           <button onClick={handleGithub} disabled={loading}
             className={`w-full py-3 flex items-center justify-center gap-3 rounded-xl border font-semibold text-sm transition-all duration-300 ${
               darkMode ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"

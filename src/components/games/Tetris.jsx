@@ -6,13 +6,13 @@ const ROWS = 20;
 const CELL = 28;
 
 const PIECES = [
-  { shape: [[1,1,1,1]], color: "#06b6d4" },           // I
-  { shape: [[1,1],[1,1]], color: "#eab308" },           // O
-  { shape: [[0,1,0],[1,1,1]], color: "#a855f7" },       // T
-  { shape: [[1,0,0],[1,1,1]], color: "#3b82f6" },       // J
-  { shape: [[0,0,1],[1,1,1]], color: "#f97316" },       // L
-  { shape: [[0,1,1],[1,1,0]], color: "#22c55e" },       // S
-  { shape: [[1,1,0],[0,1,1]], color: "#ef4444" },       // Z
+  { shape: [[1,1,1,1]], color: "#06b6d4" },
+  { shape: [[1,1],[1,1]], color: "#eab308" },
+  { shape: [[0,1,0],[1,1,1]], color: "#a855f7" },
+  { shape: [[1,0,0],[1,1,1]], color: "#3b82f6" },
+  { shape: [[0,0,1],[1,1,1]], color: "#f97316" },
+  { shape: [[0,1,1],[1,1,0]], color: "#22c55e" },
+  { shape: [[1,1,0],[0,1,1]], color: "#ef4444" },
 ];
 
 const emptyBoard = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -78,22 +78,24 @@ const Tetris = ({ darkMode }) => {
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [paused, setPaused] = useState(false);
-  const canvasRef = useRef(null);
+
+  const canvasRef     = useRef(null);
   const nextCanvasRef = useRef(null);
-  const boardRef = useRef(board);
-  const pieceRef = useRef(piece);
-  const runningRef = useRef(running);
-  const pausedRef = useRef(paused);
-  const intervalRef = useRef(null);
+  const boardRef      = useRef(board);
+  const pieceRef      = useRef(piece);
+  const runningRef    = useRef(running);
+  const pausedRef     = useRef(paused);
+  const intervalRef   = useRef(null);
   const touchStartRef = useRef(null);
 
-  boardRef.current = board;
-  pieceRef.current = piece;
+  boardRef.current   = board;
+  pieceRef.current   = piece;
   runningRef.current = running;
-  pausedRef.current = paused;
+  pausedRef.current  = paused;
 
+  // touch scroll faqat canvas ustida bloklanadi (body emas)
 
-  // Canvas chizish
+  // ─── Canvas chizish ───────────────────────────────────────────────────────
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -101,7 +103,6 @@ const Tetris = ({ darkMode }) => {
     ctx.fillStyle = darkMode ? "#0f172a" : "#f1f5f9";
     ctx.fillRect(0, 0, COLS * CELL, ROWS * CELL);
 
-    // Grid
     ctx.strokeStyle = darkMode ? "#1e293b" : "#e2e8f0";
     ctx.lineWidth = 0.5;
     for (let r = 0; r <= ROWS; r++) {
@@ -111,7 +112,6 @@ const Tetris = ({ darkMode }) => {
       ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, ROWS * CELL); ctx.stroke();
     }
 
-    // Board
     boardRef.current.forEach((row, r) => {
       row.forEach((cell, c) => {
         if (cell) {
@@ -123,7 +123,6 @@ const Tetris = ({ darkMode }) => {
       });
     });
 
-    // Ghost piece
     const p = pieceRef.current;
     if (p) {
       let ghostY = p.y;
@@ -136,8 +135,6 @@ const Tetris = ({ darkMode }) => {
           }
         });
       });
-
-      // Current piece
       p.shape.forEach((row, r) => {
         row.forEach((cell, c) => {
           if (cell) {
@@ -151,11 +148,10 @@ const Tetris = ({ darkMode }) => {
     }
   }, [darkMode]);
 
-  // Next piece canvas
   const drawNext = useCallback(() => {
     const canvas = nextCanvasRef.current;
     if (!canvas || !next) return;
-    const ctx = canvas.getContext("2d");
+    const ctx  = canvas.getContext("2d");
     const size = 24;
     ctx.fillStyle = darkMode ? "#1e293b" : "#f8fafc";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -173,12 +169,12 @@ const Tetris = ({ darkMode }) => {
     });
   }, [next, darkMode]);
 
-  useEffect(() => { draw(); }, [board, piece, draw]);
+  useEffect(() => { draw(); },     [board, piece, draw]);
   useEffect(() => { drawNext(); }, [next, drawNext]);
 
   const spawnPiece = useCallback((currentBoard, nextPiece) => {
     const newPiece = nextPiece || randomPiece();
-    const newNext = randomPiece();
+    const newNext  = randomPiece();
     if (!isValid(currentBoard, newPiece.shape, newPiece.x, newPiece.y)) {
       setRunning(false);
       setGameOver(true);
@@ -225,9 +221,9 @@ const Tetris = ({ darkMode }) => {
 
   const reset = useCallback(() => {
     clearInterval(intervalRef.current);
-    const newBoard = emptyBoard();
-    const firstPiece = randomPiece();
-    const firstNext = randomPiece();
+    const newBoard    = emptyBoard();
+    const firstPiece  = randomPiece();
+    const firstNext   = randomPiece();
     setBoard(newBoard);
     setPiece(firstPiece);
     setNext(firstNext);
@@ -239,7 +235,7 @@ const Tetris = ({ darkMode }) => {
     setRunning(true);
   }, []);
 
-  // Keyboard
+  // ─── Keyboard ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const handleKey = (e) => {
       if (!runningRef.current || pausedRef.current) return;
@@ -261,7 +257,6 @@ const Tetris = ({ darkMode }) => {
         if (isValid(boardRef.current, rotated, p.x, p.y)) setPiece((prev) => ({ ...prev, shape: rotated }));
       } else if (e.key === " ") {
         e.preventDefault();
-        // Hard drop
         let newY = p.y;
         while (isValid(boardRef.current, p.shape, p.x, newY + 1)) newY++;
         setPiece((prev) => ({ ...prev, y: newY }));
@@ -274,25 +269,36 @@ const Tetris = ({ darkMode }) => {
     return () => window.removeEventListener("keydown", handleKey);
   }, [lockPiece]);
 
-  // Touch controls
+  // ─── Touch — sahifa scrollini bloklaydi ───────────────────────────────────
   const handleTouchStart = (e) => {
-    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+    e.preventDefault(); // scroll blok
+    touchStartRef.current = {
+      x:    e.touches[0].clientX,
+      y:    e.touches[0].clientY,
+      time: Date.now(),
+    };
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault(); // scroll blok
   };
 
   const handleTouchEnd = (e) => {
+    e.preventDefault(); // scroll blok
     if (!touchStartRef.current || !runningRef.current || pausedRef.current) return;
     const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
     const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
     const dt = Date.now() - touchStartRef.current.time;
-    const p = pieceRef.current;
+    const p  = pieceRef.current;
     if (!p) return;
 
     if (dt < 200 && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-      // Tap — rotate
+      // Tap → rotate
       const rotated = rotate(p.shape);
-      if (isValid(boardRef.current, rotated, p.x, p.y)) setPiece((prev) => ({ ...prev, shape: rotated }));
+      if (isValid(boardRef.current, rotated, p.x, p.y))
+        setPiece((prev) => ({ ...prev, shape: rotated }));
     } else if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal swipe
+      // Gorizontal swipe
       const steps = Math.round(dx / CELL);
       let newX = p.x;
       for (let i = 0; i < Math.abs(steps); i++) {
@@ -300,32 +306,42 @@ const Tetris = ({ darkMode }) => {
         if (isValid(boardRef.current, p.shape, nx, p.y)) newX = nx;
       }
       if (newX !== p.x) setPiece((prev) => ({ ...prev, x: newX }));
-    } else if (dy > 50) {
-      // Swipe down — hard drop
+    } else if (dy > 40) {
+      // Pastga swipe → hard drop
       let newY = p.y;
       while (isValid(boardRef.current, p.shape, p.x, newY + 1)) newY++;
       setPiece((prev) => ({ ...prev, y: newY }));
       setTimeout(lockPiece, 0);
+    } else if (dy < -40) {
+      // Tepaga swipe → pause
+      setPaused((prev) => !prev);
     }
     touchStartRef.current = null;
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-2 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div
+      className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-2 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+      style={{ touchAction: "none" }} // browser touch scrollini ham bloklaymiz
+    >
       <h2 className={`text-xl font-extrabold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>🎮 Tetris</h2>
 
       <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
         {/* Canvas */}
-        <div className="relative border-2 border-blue-500 rounded-xl overflow-hidden shadow-xl"
+        <div
+          className="relative border-2 border-blue-500 rounded-xl overflow-hidden shadow-xl"
           onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}>
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ touchAction: "none" }}
+        >
           <canvas ref={canvasRef} width={COLS * CELL} height={ROWS * CELL} />
 
           {!running && !gameOver && (
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
               <p className="text-white text-xl font-extrabold">🎮 Tetris</p>
-              <p className="text-gray-400 text-xs">{t.pcTetris}</p>
-              <p className="text-gray-400 text-xs">{t.mobileTetris}</p>
+              <p className="text-gray-400 text-xs text-center px-4">{t.pcTetris}</p>
+              <p className="text-gray-400 text-xs text-center px-4">{t.mobileTetris}</p>
               <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
                 {t.start}
               </button>
@@ -360,20 +376,18 @@ const Tetris = ({ darkMode }) => {
             <canvas ref={nextCanvasRef} width={72} height={72} className="rounded-lg md:w-28 md:h-28" />
           </div>
 
-          {/* Stats group */}
+          {/* Stats */}
           <div className="flex flex-row md:flex-col gap-2 md:gap-4 w-auto md:w-full">
-            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
-              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.score}</p>
-              <p className="text-blue-400 font-extrabold text-sm md:text-lg">{score}</p>
-            </div>
-            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
-              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.lines}</p>
-              <p className="text-green-400 font-extrabold text-sm md:text-lg">{lines}</p>
-            </div>
-            <div className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
-              <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.level}</p>
-              <p className="text-yellow-400 font-extrabold text-sm md:text-lg">{level}</p>
-            </div>
+            {[
+              { label: t.score, value: score,  color: "text-blue-400"   },
+              { label: t.lines, value: lines,  color: "text-green-400"  },
+              { label: t.level, value: level,  color: "text-yellow-400" },
+            ].map((s, i) => (
+              <div key={i} className={`rounded-xl p-2 md:p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow min-w-[70px] md:min-w-0 md:w-full`}>
+                <p className={`text-[10px] md:text-xs font-semibold mb-0 md:mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{s.label}</p>
+                <p className={`${s.color} font-extrabold text-sm md:text-lg`}>{s.value}</p>
+              </div>
+            ))}
           </div>
 
           {/* Tugmalar */}
@@ -389,45 +403,16 @@ const Tetris = ({ darkMode }) => {
               {t.again}
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* Mobile controls */}
-      <div className="mt-4 md:hidden">
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            [null, { label: "↑", action: () => {
-              const p = pieceRef.current;
-              if (!p || !runningRef.current || pausedRef.current) return;
-              const rotated = rotate(p.shape);
-              if (isValid(boardRef.current, rotated, p.x, p.y)) setPiece((prev) => ({ ...prev, shape: rotated }));
-            }}, null],
-            [{ label: "←", action: () => {
-              const p = pieceRef.current;
-              if (!p || !runningRef.current || pausedRef.current) return;
-              if (isValid(boardRef.current, p.shape, p.x - 1, p.y)) setPiece((prev) => ({ ...prev, x: prev.x - 1 }));
-            }}, { label: "⬇", action: () => {
-              const p = pieceRef.current;
-              if (!p || !runningRef.current || pausedRef.current) return;
-              let newY = p.y;
-              while (isValid(boardRef.current, p.shape, p.x, newY + 1)) newY++;
-              setPiece((prev) => ({ ...prev, y: newY }));
-              setTimeout(lockPiece, 0);
-            }}, { label: "→", action: () => {
-              const p = pieceRef.current;
-              if (!p || !runningRef.current || pausedRef.current) return;
-              if (isValid(boardRef.current, p.shape, p.x + 1, p.y)) setPiece((prev) => ({ ...prev, x: prev.x + 1 }));
-            }}],
-          ].map((row, ri) => row.map((btn, ci) => (
-            <div key={`${ri}-${ci}`} className="flex items-center justify-center">
-              {btn ? (
-                <button onTouchStart={(e) => { e.preventDefault(); btn.action(); }}
-                  className={`w-16 h-16 rounded-2xl text-2xl flex items-center justify-center active:scale-90 active:bg-blue-500/20 shadow-lg transition ${darkMode ? "bg-slate-700 text-white" : "bg-white text-gray-700"}`}>
-                  {btn.label}
-                </button>
-              ) : <div className="w-16 h-16" />}
-            </div>
-          )))}
+          {/* Telefon uchun qo'llanma */}
+          <div className={`md:hidden rounded-xl p-3 ${darkMode ? "bg-slate-800" : "bg-white"} shadow w-full text-center`}>
+            <p className={`text-[10px] ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              👆 Tap → burish<br/>
+              👈 👉 Swipe → harakat<br/>
+              👇 Swipe → tushirish<br/>
+              👆 Swipe yuqoriga → pauza
+            </p>
+          </div>
         </div>
       </div>
     </div>

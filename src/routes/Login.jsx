@@ -4,9 +4,36 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "../firebase/config";
 import { useLang } from "../context/useLang";
 
+// Firebase xato kodlarini o'zbek tiliga tarjima qilish
+const getFirebaseError = (err, t) => {
+  switch (err?.code) {
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+    case "auth/invalid-email":
+      return t.loginError;
+    case "auth/too-many-requests":
+      return "Juda ko'p urinish! Biroz kuting yoki parolni tiklang.";
+    case "auth/user-disabled":
+      return "Bu hisob o'chirib qo'yilgan.";
+    case "auth/popup-closed-by-user":
+      return "Kirish oynasi yopildi. Qayta urinib ko'ring.";
+    case "auth/popup-blocked":
+      return "Popup bloklandi. Brauzer sozlamalarini tekshiring.";
+    case "auth/cancelled-popup-request":
+      return null; // jimgina o'tkazib yuborish
+    case "auth/account-exists-with-different-credential":
+      return "Bu email boshqa usul bilan ro'yxatdan o'tgan. Email/parol bilan kiring.";
+    case "auth/network-request-failed":
+      return "Internet aloqasi yo'q. Tekshirib qayta urinib ko'ring.";
+    default:
+      return t.googleError;
+  }
+};
+
 const Login = ({ darkMode, showToast, showConfetti }) => {
   const { t } = useLang();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm]     = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -25,46 +52,57 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, form.email, form.password);
+      showConfetti && showConfetti();
       showToast(t.loginSuccess, "success");
       navigate("/");
-    } catch {
-      showToast(t.loginError, "error");
+    } catch (err) {
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      showConfetti();
+      showConfetti && showConfetti();
       showToast(t.loginSuccess, "success");
       navigate("/");
-    } catch {
-      showToast(t.googleError, "error");
+    } catch (err) {
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGithub = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await signInWithPopup(auth, githubProvider);
-      showConfetti();
+      showConfetti && showConfetti();
       showToast(t.loginSuccess, "success");
       navigate("/");
-    } catch {
-      showToast(t.githubError, "error");
+    } catch (err) {
+      const msg = getFirebaseError(err, t);
+      if (msg) showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass = (field) => `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
-    errors[field] ? "border-red-400" : darkMode ? "border-slate-600 focus:border-blue-400" : "border-gray-200 focus:border-blue-400"
-  } ${darkMode ? "bg-slate-800 text-white placeholder-gray-500" : "bg-white text-gray-900 placeholder-gray-400"}`;
+  const inputClass = (field) =>
+    `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
+      errors[field]
+        ? "border-red-400"
+        : darkMode
+        ? "border-slate-600 focus:border-blue-400"
+        : "border-gray-200 focus:border-blue-400"
+    } ${darkMode ? "bg-slate-800 text-white placeholder-gray-500" : "bg-white text-gray-900 placeholder-gray-400"}`;
 
   return (
     <div className={`page-transition min-h-[calc(100vh-64px)] flex items-center justify-center px-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
@@ -78,7 +116,8 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
           <div>
             <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{t.email}</label>
             <input type="email" placeholder="example@email.com" value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onChange={(e) => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: null }); }}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className={inputClass("email")} />
             {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
           </div>
@@ -89,7 +128,8 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
               <Link to="/forgot-password" className="text-xs text-blue-400 hover:underline">{t.forgotPassword}</Link>
             </div>
             <input type="password" placeholder="••••••••" value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={(e) => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: null }); }}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className={inputClass("password")} />
             {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
           </div>
@@ -105,6 +145,7 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
             <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
           </div>
 
+          {/* Google */}
           <button onClick={handleGoogle} disabled={loading}
             className={`w-full py-3 flex items-center justify-center gap-3 rounded-xl border font-semibold text-sm transition-all duration-300 ${
               darkMode ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -118,6 +159,7 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
             {t.googleLogin}
           </button>
 
+          {/* GitHub */}
           <button onClick={handleGithub} disabled={loading}
             className={`w-full py-3 flex items-center justify-center gap-3 rounded-xl border font-semibold text-sm transition-all duration-300 ${
               darkMode ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"

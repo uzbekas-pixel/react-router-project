@@ -7,7 +7,7 @@ const BottomNav = ({ darkMode }) => {
   const { t } = useLang();
 
   const tabs = [
-    { path: "/", icon: "🏠", label: t.home },
+    { path: "/", icon: "🎓", label: "Kurslar" },
     { path: "/chat", icon: "💬", label: "Chat" },
     { path: "/games", icon: "🎮", label: "Games" },
     { path: "/code", icon: "💻", label: "Code" },
