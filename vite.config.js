@@ -7,6 +7,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [react(),tailwindcss(), VitePWA({
     registerType: "autoUpdate",
+    workbox: {
+        maximumFileSizeToCacheInBytes: 3000000, 
+      },
     includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
     manifest: {
       name: "Uzbekas Pixel",
