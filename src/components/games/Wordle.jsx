@@ -165,7 +165,7 @@ const Wordle = ({ darkMode }) => {
     <div className={`flex flex-col items-center justify-start min-h-[calc(100vh-130px)] px-4 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
 
       {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-sm mb-4">
+      <div className="flex items-center justify-between w-full max-w-sm mb-4 mt-10">
         <h2 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
           🔤 Wordle
         </h2>

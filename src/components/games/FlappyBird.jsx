@@ -186,8 +186,10 @@ const FlappyBird = ({ darkMode }) => {
           </div>
         )}
       </div>
-      <Leaderboard darkMode={darkMode} game="flappy" />
-      <p className={`mt-3 text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+      <div className="mt-6 w-full max-w-xs">
+        <Leaderboard darkMode={darkMode} game="flappy" />
+      </div>
+      <p className={`mt-3 mb-6 text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
         {t.pcControls} | {t.mobileControls}
       </p>
     </div>

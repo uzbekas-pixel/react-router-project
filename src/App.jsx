@@ -49,15 +49,15 @@ if ("serviceWorker" in navigator) {
 function App() {
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
   const toggleDarkMode = () => { setDarkMode(!darkMode); localStorage.setItem("darkMode", !darkMode); };
-  const [toast, setToast]     = useState(null);
+  const [toast, setToast]       = useState(null);
   const [confetti, setConfetti] = useState(false);
   const location  = useLocation();
   const { user }  = useAuth();
   const { show: showOnboarding, hide: hideOnboarding } = useOnboarding();
 
   useOnlineStatus(user?.uid);
-  const showToast     = (message, type = "success") => setToast({ message, type });
-  const showConfetti  = () => setConfetti(true);
+  const showToast    = (message, type = "success") => setToast({ message, type });
+  const showConfetti = () => setConfetti(true);
   const handleNavClick = () => {};
 
   useEffect(() => { if (user) requestNotificationPermission(); }, [user]);
@@ -66,6 +66,16 @@ function App() {
       if (payload?.notification) showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "info");
     }).catch(() => {});
   }, []);
+
+  // Footer ko'rinmaydigan sahifalar (to'liq ekran sahifalar)
+  const hideFooter = [
+    "/ai-tutor",
+    "/chat",
+    "/dm",
+    "/code",
+    "/multiplayer",
+    "/games"
+  ].includes(location.pathname);
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
@@ -99,20 +109,20 @@ function App() {
             <Route path="/create-course"element={<CreateCourse darkMode={darkMode} showToast={showToast} />} />
 
             {/* ── Auth ── */}
-            <Route path="/login"          element={<Login         darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/register"       element={<Register      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/forgot-password"element={<ForgotPassword darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/login"           element={<Login          darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/register"        element={<Register       darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/forgot-password" element={<ForgotPassword darkMode={darkMode} showToast={showToast} />} />
 
             {/* ── Protected ── */}
-            <Route path="/profile"      element={<Profile      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/admin"        element={<AdminRoute><Admin darkMode={darkMode} showToast={showToast} /></AdminRoute>} />
-            <Route path="/chat"         element={<Chat         darkMode={darkMode} />} />
-            <Route path="/typing"       element={<TypingGame   darkMode={darkMode} />} />
-            <Route path="/games"        element={<ProtectedRoute><Games     darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/code"         element={<ProtectedRoute><CodeEditor darkMode={darkMode} /></ProtectedRoute>} />
-            <Route path="/story"        element={<ProtectedRoute><Story     darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/dm"           element={<ProtectedRoute><DM        darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/multiplayer"  element={<ProtectedRoute><MultiTyping darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/profile"     element={<Profile      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/admin"       element={<AdminRoute><Admin darkMode={darkMode} showToast={showToast} /></AdminRoute>} />
+            <Route path="/chat"        element={<Chat         darkMode={darkMode} />} />
+            <Route path="/typing"      element={<TypingGame   darkMode={darkMode} />} />
+            <Route path="/games"       element={<ProtectedRoute><Games      darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/code"        element={<ProtectedRoute><CodeEditor darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/story"       element={<ProtectedRoute><Story      darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/dm"          element={<ProtectedRoute><DM         darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/multiplayer" element={<ProtectedRoute><MultiTyping darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
           </Routes>
@@ -121,7 +131,7 @@ function App() {
 
       <ScrollToTop darkMode={darkMode} />
       <BottomNav darkMode={darkMode} />
-      <Footer darkMode={darkMode} />
+      {!hideFooter && <Footer darkMode={darkMode} />}
     </div>
   );
 }

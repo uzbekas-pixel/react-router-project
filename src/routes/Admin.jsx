@@ -46,7 +46,7 @@ const Admin = ({ darkMode, showToast }) => {
       finally { setLoading(false); }
     };
     fetchUsers();
-  }, []);
+  }, [showToast, t.loadError]);
 
   // ── Promo kodlar ───────────────────────────────────────────────────────────
   const fetchPromoCodes = useCallback(async () => {
@@ -66,7 +66,9 @@ const Admin = ({ darkMode, showToast }) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       list.sort((a, b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
       setSentHistory(list);
-    } catch {}
+    } catch (err) {
+       console.error(err);
+    }
     setHistLoading(false);
   }, []);
 

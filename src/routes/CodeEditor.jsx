@@ -3,15 +3,15 @@ import { useLang } from "../context/useLang";
 
 const LANGUAGES = [
   { id: "html", label: "HTML", default: `<!DOCTYPE html>\n<html>\n<head>\n  <title>Hello</title>\n</head>\n<body>\n  <h1>Hello World!</h1>\n  <p>Bu mening birinchi sahifam</p>\n</body>\n</html>` },
-  { id: "css", label: "HTML + CSS", default: `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; background: #1e1e2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }\n  h1 { color: #89b4fa; }\n  button { background: #89b4fa; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }\n</style>\n</head>\n<body>\n  <div>\n    <h1>Salom Dunyo!</h1>\n    <button onclick="alert('Bosildi!')">Bosing</button>\n  </div>\n</body>\n</html>` },
-  { id: "js", label: "JS", default: `// JavaScript misoli\nconst numbers = [1, 2, 3, 4, 5];\n\nconst evens = numbers.filter(n => n % 2 === 0);\nconsole.log("Juft sonlar:", evens);\n\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log("Yig'indi:", sum);\n\nconst greet = (name) => \`Salom, \${name}!\`;\nconsole.log(greet("Dunyo"));` },
+  { id: "css",  label: "HTML + CSS", default: `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; background: #1e1e2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }\n  h1 { color: #89b4fa; }\n  button { background: #89b4fa; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }\n</style>\n</head>\n<body>\n  <div>\n    <h1>Salom Dunyo!</h1>\n    <button onclick="alert('Bosildi!')">Bosing</button>\n  </div>\n</body>\n</html>` },
+  { id: "js",   label: "JS", default: `// JavaScript misoli\nconst numbers = [1, 2, 3, 4, 5];\n\nconst evens = numbers.filter(n => n % 2 === 0);\nconsole.log("Juft sonlar:", evens);\n\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log("Yig'indi:", sum);\n\nconst greet = (name) => \`Salom, \${name}!\`;\nconsole.log(greet("Dunyo"));` },
 ];
 
 const CodeEditor = ({ darkMode }) => {
   const { t } = useLang();
-  const [lang, setLang] = useState("html");
-  const [code, setCode] = useState(LANGUAGES[0].default);
-  const [output, setOutput] = useState("");
+  const [lang, setLang]         = useState("html");
+  const [code, setCode]         = useState(LANGUAGES[0].default);
+  const [output, setOutput]     = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("editor");
 
@@ -26,14 +26,10 @@ const CodeEditor = ({ darkMode }) => {
     setTimeout(() => {
       if (lang === "html" || lang === "css") {
         setOutput(code);
-      } else if (lang === "js") {
+      } else {
         const html = `<!DOCTYPE html><html><body><script>
-          const originalLog = console.log;
           const logs = [];
-          console.log = (...args) => {
-            logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-            originalLog(...args);
-          };
+          console.log = (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
           try {
             ${code}
             document.body.innerHTML = '<pre style="font-family:monospace;padding:16px;color:#a6e3a1;background:#1e1e2e;margin:0;min-height:100vh">' + logs.join('\\n') + '</pre>';
@@ -51,11 +47,10 @@ const CodeEditor = ({ darkMode }) => {
   const handleKeyDown = (e) => {
     if (e.key === "Tab") {
       e.preventDefault();
-      const start = e.target.selectionStart;
-      const end = e.target.selectionEnd;
-      const newCode = code.substring(0, start) + "  " + code.substring(end);
-      setCode(newCode);
-      setTimeout(() => { e.target.selectionStart = start + 2; e.target.selectionEnd = start + 2; }, 0);
+      const s = e.target.selectionStart, en = e.target.selectionEnd;
+      const nc = code.substring(0, s) + "  " + code.substring(en);
+      setCode(nc);
+      setTimeout(() => { e.target.selectionStart = s + 2; e.target.selectionEnd = s + 2; }, 0);
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runCode();
   };
@@ -63,46 +58,58 @@ const CodeEditor = ({ darkMode }) => {
   return (
     <div className={`page-transition min-h-[calc(100vh-64px)] flex flex-col mt-7 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
 
-      {/* Header */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
-        <span className="text-lg font-bold text-blue-400">{t.codeTitle}</span>
-        <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-600" : "border-gray-200"}`}>
+      {/* ── Header ── */}
+      <div className={`flex flex-col gap-2 px-4 py-3 border-b ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+
+        {/* 1-qator: sarlavha + Run tugmasi */}
+        <div className="flex items-center justify-between">
+          <span className="text-base font-bold text-blue-400">{t.codeTitle}</span>
+          <button onClick={runCode} disabled={isRunning}
+            className="flex items-center gap-2 px-5 py-2 bg-green-500 hover:bg-green-400 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition">
+            {isRunning
+              ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t.running}</>
+              : <> {t.runCode}</>
+            }
+          </button>
+        </div>
+
+        {/* 2-qator: til tanlash */}
+        <div className={`flex rounded-xl overflow-hidden border self-start ${darkMode ? "border-slate-600" : "border-gray-200"}`}>
           {LANGUAGES.map((l) => (
             <button key={l.id} onClick={() => handleLangChange(l.id)}
-              className={`px-3 py-1.5 text-xs font-semibold transition ${
-                lang === l.id ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
+              className={`px-4 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                lang === l.id
+                  ? "bg-blue-500 text-white"
+                  : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
               }`}>
               {l.label}
             </button>
           ))}
         </div>
-        <button onClick={runCode} disabled={isRunning}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition">
-          {isRunning ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "▶"}
-          {isRunning ? t.running : t.runCode}
-        </button>
       </div>
 
-      {/* Mobile tab */}
+      {/* ── Mobile tab ── */}
       <div className={`md:hidden flex border-b ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
         <button onClick={() => setActiveTab("editor")}
           className={`flex-1 py-2 text-sm font-semibold transition ${activeTab === "editor" ? "text-blue-500 border-b-2 border-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"}`}>
-          📝 {t.codeTitle}
+          {t.codeTitle}
         </button>
         <button onClick={() => setActiveTab("output")}
           className={`flex-1 py-2 text-sm font-semibold transition ${activeTab === "output" ? "text-blue-500 border-b-2 border-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"}`}>
-          ▶ {t.output}
+          {t.output}
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
+      {/* ── Editor + Output ── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 210px)" }}>
+
         {/* Editor */}
         <div className={`${activeTab === "output" ? "hidden" : "flex"} md:flex flex-col w-full md:w-1/2 border-r ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
           <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs ${darkMode ? "bg-slate-900 border-slate-700 text-gray-400" : "bg-gray-100 border-gray-200 text-gray-500"}`}>
             <span className="w-3 h-3 rounded-full bg-red-400" />
             <span className="w-3 h-3 rounded-full bg-yellow-400" />
             <span className="w-3 h-3 rounded-full bg-green-400" />
-            <span className="ml-2">{lang === "html" ? "index.html" : lang === "css" ? "style.html" : "script.js"}</span>
+            <span className="ml-2">{lang === "js" ? "script.js" : lang === "css" ? "style.html" : "index.html"}</span>
             <span className={`ml-auto text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>{t.shortcut}</span>
           </div>
           <div className="flex flex-1 overflow-hidden">
