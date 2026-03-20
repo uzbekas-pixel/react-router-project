@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useLocation } from "react-router";
 import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
@@ -57,7 +57,7 @@ function App() {
   const { show: showOnboarding, hide: hideOnboarding } = useOnboarding();
 
   useOnlineStatus(user?.uid);
-  const showToast    = (message, type = "success") => setToast({ message, type });
+  const showToast    = useCallback((message, type = "success") => setToast({ message, type }), []);
   const showConfetti = () => setConfetti(true);
   const handleNavClick = () => {};
 
@@ -66,7 +66,7 @@ function App() {
     onMessageListener().then((payload) => {
       if (payload?.notification) showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "info");
     }).catch(() => {});
-  }, []);
+  }, [showToast]);
 
   // Footer ko'rinmaydigan sahifalar (to'liq ekran sahifalar)
   const hideFooter = [

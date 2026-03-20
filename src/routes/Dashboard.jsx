@@ -111,7 +111,7 @@ const Dashboard = ({ darkMode, showToast }) => {
     };
 
     init();
-  }, [user]);
+  }, [user, showToast]);
 
   // ─── Dars belgilash ───────────────────────────────────────────────────────
   const markLesson = async (courseId) => {

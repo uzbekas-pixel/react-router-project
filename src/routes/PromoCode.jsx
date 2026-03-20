@@ -228,7 +228,7 @@ const PromoCode = ({ darkMode, showToast }) => {
                 value={code}
                 onChange={(e)=>{ setCode(e.target.value.toUpperCase()); setResult(null); }}
                 onKeyDown={(e)=>e.key==="Enter"&&handleApply()}
-                placeholder="Masalan: EDUZONE25"
+                placeholder="Masalan: UZBEKASPIXEL"
                 style={inputStyle}
               />
               <button onClick={handleApply} disabled={loading||!code.trim()||!user}
