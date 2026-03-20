@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
 import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
@@ -35,6 +36,7 @@ const MiniBar = ({ value, max, color, darkMode }) => {
 
 const Dashboard = ({ darkMode, showToast }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [activeTab, setActiveTab]   = useState("overview");
   const [loading, setLoading]       = useState(true);
   const [courses, setCourses]       = useState([]);
@@ -105,12 +107,13 @@ const Dashboard = ({ darkMode, showToast }) => {
 
       } catch (err) {
         console.error(err);
-        showToast && showToast("Ma'lumot olishda xato", "error");
+        showToast && showToast(t.dataError, "error");
       }
       setLoading(false);
     };
 
     init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, showToast]);
 
   // ─── Dars belgilash ───────────────────────────────────────────────────────
@@ -147,9 +150,9 @@ const Dashboard = ({ darkMode, showToast }) => {
     // Yutuq
     if (newProgress === 100) {
       await unlockAchievement("firstCourse");
-      showToast && showToast(`🎉 ${course.title} tugatildi!`, "success");
+      showToast && showToast(`🎉 ${course.title} ${t.courseCompleted}`, "success");
     } else {
-      showToast && showToast(`✅ Dars ${newCompleted} belgilandi`, "success");
+      showToast && showToast(`✅ ${t.lessonMarked}`, "success");
     }
 
     // Haftalik +30 daqiqa qo'shish (demo)
@@ -166,7 +169,7 @@ const Dashboard = ({ darkMode, showToast }) => {
     const newAch = { ...achievements, [key]: true };
     await setDoc(doc(db, "users", user.uid, "data", "achievements"), newAch);
     setAchievements(newAch);
-    showToast && showToast("🏆 Yangi yutuq qo'lga kiritildi!", "success");
+    showToast && showToast(t.newAchievement, "success");
   };
 
   // ─── Computed ─────────────────────────────────────────────────────────────
@@ -175,22 +178,22 @@ const Dashboard = ({ darkMode, showToast }) => {
   const totalMin   = weeklyArr.reduce((a, d) => a + d.minutes, 0);
   const completed  = courses.filter((c) => c.progress === 100).length;
 
-  const displayName = user?.displayName || user?.email?.split("@")[0] || "Foydalanuvchi";
+  const displayName = user?.displayName || user?.email?.split("@")[0] || t.user;
   const photoURL    = user?.photoURL || null;
   const initials    = displayName.slice(0, 2).toUpperCase();
 
   const statCards = [
-    { icon: "📚", label: "Yozilgan kurslar",  value: courses.length,                        color: "#3b82f6" },
-    { icon: "✅", label: "Tugatilgan",         value: completed,                             color: "#10b981" },
-    { icon: "⏱", label: "Bu hafta",           value: `${Math.round(totalMin / 60)}h`,       color: "#f59e0b" },
-    { icon: "🎯", label: "Quiz ball (o'rt.)",  value: stats.quizAvg > 0 ? `${stats.quizAvg}%` : "—", color: "#8b5cf6" },
+    { icon: "📚", label: t.enrolledCourses,  value: courses.length,                        color: "#3b82f6" },
+    { icon: "✅", label: t.completedCourses,  value: completed,                             color: "#10b981" },
+    { icon: "⏱", label: t.thisWeek,          value: `${Math.round(totalMin / 60)}h`,       color: "#f59e0b" },
+    { icon: "🎯", label: t.quizAvg,           value: stats.quizAvg > 0 ? `${stats.quizAvg}%` : "—", color: "#8b5cf6" },
   ];
 
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", flexDirection: "column", gap: 16 }}>
       <div style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #3b82f6", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-      <p style={{ color: "#6b7280", fontSize: 14 }}>Yuklanmoqda...</p>
+      <p style={{ color: "#6b7280", fontSize: 14 }}>{t.loadingData}</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -209,9 +212,9 @@ const Dashboard = ({ darkMode, showToast }) => {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
           <div>
             <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
-              📊 Shaxsiy kabinet
+              {t.dashboardBadge}
             </span>
-            <h2 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>Dashboard</h2>
+            <h2 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>{t.dashboardTitle}</h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", background: darkMode ? "#1e293b" : "#fff", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 12 }}>
             <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 15, overflow: "hidden", flexShrink: 0 }}>
@@ -240,7 +243,7 @@ const Dashboard = ({ darkMode, showToast }) => {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-        {[{ id: "overview", label: "📈 Umumiy" }, { id: "courses", label: "📚 Kurslar" }, { id: "achievements", label: "🏆 Yutuqlar" }].map((tab) => (
+        {[{ id: "overview", label: t.overviewTab }, { id: "courses", label: t.coursesTab }, { id: "achievements", label: t.achievementsTab }].map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             padding: "10px 16px", background: "none", border: "none", cursor: "pointer",
             fontSize: 13, fontWeight: 600,
@@ -256,10 +259,10 @@ const Dashboard = ({ darkMode, showToast }) => {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
           <ScrollReveal direction="up">
             {card(<>
-              <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>Haftalik faollik</p>
-              <p style={{ margin: "0 0 20px", fontSize: 12, color: "#6b7280" }}>Jami: {totalMin} daqiqa</p>
+              <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>{t.weeklyActivity}</p>
+              <p style={{ margin: "0 0 20px", fontSize: 12, color: "#6b7280" }}>{t.totalMinutes}: {totalMin} {t.minutes}</p>
               {totalMin === 0
-                ? <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "20px 0" }}>Hali faollik yo'q</p>
+                ? <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "20px 0" }}>{t.noActivity}</p>
                 : <div style={{ display: "flex", gap: 8, alignItems: "flex-end", justifyContent: "space-between" }}>
                     {weeklyArr.map((d, i) => (
                       <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
@@ -275,9 +278,9 @@ const Dashboard = ({ darkMode, showToast }) => {
 
           <ScrollReveal direction="up" delay={100}>
             {card(<>
-              <p style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>So'nggi faollik</p>
+              <p style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>{t.recentActivity}</p>
               {activity.length === 0
-                ? <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "20px 0" }}>Hali faollik yo'q. Kurslarni boshlang! 🚀</p>
+                ? <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "20px 0" }}>{t.startCourses}</p>
                 : activity.slice(0, 5).map((a, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, paddingBottom: i < 4 ? 12 : 0, borderBottom: i < 4 ? `1px solid ${darkMode ? "#334155" : "#f3f4f6"}` : "none", marginBottom: i < 4 ? 12 : 0 }}>
                       <span style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: (a.color || "#3b82f6") + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{a.icon}</span>
@@ -311,8 +314,8 @@ const Dashboard = ({ darkMode, showToast }) => {
                   <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{c.completed}/{c.total} dars</p>
                 </div>
                 {c.progress < 100
-                  ? <button onClick={() => markLesson(c.id)} style={{ padding: "7px 14px", borderRadius: 8, background: c.color, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>+1 dars ✓</button>
-                  : <span style={{ padding: "6px 12px", borderRadius: 20, background: "#d1fae5", color: "#065f46", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>✅ Tugatildi</span>
+                  ? <button onClick={() => markLesson(c.id)} style={{ padding: "7px 14px", borderRadius: 8, background: c.color, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>{t.markLesson}</button>
+                  : <span style={{ padding: "6px 12px", borderRadius: 20, background: "#d1fae5", color: "#065f46", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>✅ {t.completedCourses}</span>
                 }
               </div>
             </ScrollReveal>
@@ -330,7 +333,7 @@ const Dashboard = ({ darkMode, showToast }) => {
                 <div style={{ background: darkMode ? "#1e293b" : "#fff", border: `1px solid ${earned ? "#f59e0b44" : darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 14, padding: "20px 16px", textAlign: "center", opacity: earned ? 1 : 0.5 }}>
                   <div style={{ fontSize: 36, marginBottom: 8, filter: earned ? "none" : "grayscale(100%)" }}>{ach.icon}</div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: darkMode ? "#f1f5f9" : "#111" }}>{ach.label}</p>
-                  <p style={{ margin: "4px 0 0", fontSize: 10, color: earned ? "#f59e0b" : "#9ca3af" }}>{earned ? "✓ Qo'lga kiritildi" : "Qulfli"}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 10, color: earned ? "#f59e0b" : "#9ca3af" }}>{earned ? t.achievementEarned : t.achievementLocked}</p>
                 </div>
               </ScrollReveal>
             );

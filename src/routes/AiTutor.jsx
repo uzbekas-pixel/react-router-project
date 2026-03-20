@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 
 const quickTopics = [
   { icon: "🌐", label: "HTML",       prompt: "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?" },
@@ -70,9 +71,10 @@ const MessageBubble = ({ msg, darkMode }) => {
 
 const AiTutor = ({ darkMode, showToast }) => {
   const { user: _user } = useAuth();
+  const { t } = useLang();
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: `Salom! 👋 Men sizning AI o'qituvchingizman.\n\nQuyidagi mavzularda yordam bera olaman:\n\n🌐 HTML, CSS, JavaScript, React\n🇬🇧 Ingliz tili, 🇷🇺 Rus tili, 🇫🇷 Fransuz tili\n🔥 Firebase, Git, API va boshqalar\n\nQanday savol bor? Bemalol so'rang! 😊`,
+    content: `${t.aiTutorWelcome}`,
   }]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
@@ -100,7 +102,7 @@ const AiTutor = ({ darkMode, showToast }) => {
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      showToast && showToast("VITE_GEMINI_API_KEY topilmadi!", "error");
+      showToast && showToast(t.apiKeyMissing, "error");
       return;
     }
 
@@ -153,7 +155,7 @@ const AiTutor = ({ darkMode, showToast }) => {
     } catch (err) {
       console.error("Gemini xato:", err.message);
       setMessages((prev) => [...prev.slice(0, -1), { role: "assistant", content: `❌ Xatolik: ${err.message}` }]);
-      showToast && showToast("AI bilan ulanishda xatolik", "error");
+      showToast && showToast(t.aiConnectError, "error");
     }
 
     setLoading(false);
@@ -161,7 +163,7 @@ const AiTutor = ({ darkMode, showToast }) => {
   };
 
   const clearChat = () => {
-    setMessages([{ role: "assistant", content: "Chat tozalandi! 🧹 Yangi savol berishingiz mumkin." }]);
+    setMessages([{ role: "assistant", content: t.aiTutorCleared }]);
     setShowSugg(true);
     resetTextarea();
   };
@@ -204,15 +206,15 @@ const AiTutor = ({ darkMode, showToast }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🤖</div>
           <div>
-            <h2 style={{ margin: 0, fontWeight: 800, fontSize: 18, color: darkMode ? "#f1f5f9" : "#111" }}>AI O'qituvchi</h2>
+            <h2 style={{ margin: 0, fontWeight: 800, fontSize: 18, color: darkMode ? "#f1f5f9" : "#111" }}>{t.aiTutorTitle}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981" }} />
-              <span style={{ fontSize: 11, color: "#10b981", fontWeight: 600 }}>Online — Doimo tayyor</span>
+              <span style={{ fontSize: 11, color: "#10b981", fontWeight: 600 }}>{t.aiTutorOnline}</span>
             </div>
           </div>
         </div>
         <button onClick={clearChat} style={{ padding: "6px 14px", borderRadius: 10, background: "transparent", border: `1px solid ${borderColor}`, color: darkMode ? "#94a3b8" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-          🧹 Tozalash
+          {t.aiTutorClear}
         </button>
       </div>
 
@@ -251,7 +253,7 @@ const AiTutor = ({ darkMode, showToast }) => {
 
         {showSugg && messages.length === 1 && (
           <div style={{ marginTop: 10 }}>
-            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8, fontWeight: 600 }}>💡 Tezkor savollar:</p>
+            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8, fontWeight: 600 }}>{t.aiTutorQuickQ}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {suggestedQuestions.map((q, i) => (
                 <button key={i} onClick={() => sendMessage(q)}
@@ -278,7 +280,7 @@ const AiTutor = ({ darkMode, showToast }) => {
             e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Savol yozing..."
+          placeholder={t.aiTutorPlaceholder}
           disabled={loading}
           style={{ flex: 1, border: "none", outline: "none", resize: "none", background: "transparent", color: darkMode ? "#f1f5f9" : "#111", fontSize: 14, lineHeight: 1.6, fontFamily: "inherit", minHeight: 40, maxHeight: 100, overflowY: "auto", scrollbarWidth: "none" }}
         />
@@ -292,7 +294,7 @@ const AiTutor = ({ darkMode, showToast }) => {
       </div>
 
       <p style={{ textAlign: "center", fontSize: 10, color: "#9ca3af", marginTop: 5, flexShrink: 0 }}>
-        AI javoblari doim to'g'ri bo'lmasligi mumkin. Muhim ma'lumotlarni tekshiring.
+        {t.aiTutorDisclaimer}
       </p>
     </div>
   );

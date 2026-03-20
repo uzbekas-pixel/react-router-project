@@ -501,6 +501,20 @@ export const translations = {
     markRead: "O'qilgan",
     deleteNotif: "O'chirish",
     allMarkedRead: "Hammasi o'qilgan deb belgilandi ✅",
+
+    // ── YANGI: AiTutor ───────────────────────────────────────────────────────
+    aiTutorTitle: "AI O'qituvchi",
+    aiTutorOnline: "Online — Doimo tayyor",
+    aiTutorClear: "🧹 Tozalash",
+    aiTutorCleared: "Chat tozalandi! 🧹 Yangi savol berishingiz mumkin.",
+    aiTutorPlaceholder: "Savol yozing...",
+    aiTutorDisclaimer: "AI javoblari doim to'g'ri bo'lmasligi mumkin. Muhim ma'lumotlarni tekshiring.",
+    aiTutorQuickQ: "💡 Tezkor savollar:",
+    apiKeyMissing: "VITE_GEMINI_API_KEY topilmadi!",
+    aiConnectError: "AI bilan ulanishda xatolik",
+    commentPlaceholder: "Izoh yozing...",
+    installApp: "📲 Ilovani yuklash",
+    appInstalled: "Ilova o'rnatildi! ✅",
   },
 
   en: {
@@ -1000,5 +1014,19 @@ export const translations = {
     markRead: "Mark read",
     deleteNotif: "Delete",
     allMarkedRead: "All marked as read ✅",
+
+    // ── NEW: AiTutor ─────────────────────────────────────────────────────────
+    aiTutorTitle: "AI Tutor",
+    aiTutorOnline: "Online — Always ready",
+    aiTutorClear: "🧹 Clear",
+    aiTutorCleared: "Chat cleared! 🧹 Ask a new question.",
+    aiTutorPlaceholder: "Type your question...",
+    aiTutorDisclaimer: "AI responses may not always be accurate. Please verify important information.",
+    aiTutorQuickQ: "💡 Quick questions:",
+    apiKeyMissing: "VITE_GEMINI_API_KEY not found!",
+    aiConnectError: "Error connecting to AI",
+    commentPlaceholder: "Write a comment...",
+    installApp: "📲 Download App",
+    appInstalled: "App installed! ✅",
   },
 };

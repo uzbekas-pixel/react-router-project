@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
+
 
 // ─── Video Lesson Modal ────────────────────────────────────────────────────────
 const VideoLessonModal = ({ lesson, courseColor, onClose, onComplete, darkMode }) => {
+  const { t } = useLang();
   const [watched, setWatched] = useState(false);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef(null);
@@ -61,7 +64,7 @@ const VideoLessonModal = ({ lesson, courseColor, onClose, onComplete, darkMode }
           {/* Watch progress */}
           <div style={{ marginBottom:12 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-              <span style={{ fontSize:12, color:"#6b7280" }}>{watched ? "✅ Video ko'rib bo'lindi!" : "Video tomosha qilinmoqda..."}</span>
+              <span style={{ fontSize:12, color:"#6b7280" }}>{watched ? t.videoWatched : t.videoWatching}</span>
               <span style={{ fontSize:12, color:courseColor, fontWeight:700 }}>{progress}%</span>
             </div>
             <div style={{ height:4, borderRadius:2, background:darkMode?"#334155":"#e5e7eb" }}>
@@ -75,7 +78,7 @@ const VideoLessonModal = ({ lesson, courseColor, onClose, onComplete, darkMode }
               disabled={!watched}
               style={{ padding:"10px 24px", borderRadius:10, border:"none", background:watched?"#10b981":(darkMode?"#334155":"#e2e8f0"), color:watched?"#fff":(darkMode?"#6b7280":"#9ca3af"), fontSize:14, fontWeight:700, cursor:watched?"pointer":"default", transition:"all 0.3s" }}
             >
-              {watched ? "✓ Darsni tugatdim" : "Video ko'rib bo'ling..."}
+              {watched ? t.lessonDoneBtn : t.videoNotDoneBtn}
             </button>
           </div>
         </div>
@@ -424,6 +427,7 @@ const Reviews = ({ darkMode }) => {
 
 // ─── Payment Modal ─────────────────────────────────────────────────────────────
 const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
+  const { t } = useLang();
   const [step, setStep]     = useState(1);
   const [method, setMethod] = useState("card");
   const [cardNum, setCardNum] = useState("");
@@ -441,7 +445,7 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
     <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
       <div onClick={e=>e.stopPropagation()} style={{ width:"100%", maxWidth:420, borderRadius:18, overflow:"hidden", background:darkMode?"#1e293b":"#fff", boxShadow:"0 24px 64px rgba(0,0,0,0.4)" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 20px", borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-          <p style={{ margin:0, fontWeight:700, fontSize:15, color:darkMode?"#f1f5f9":"#111" }}>{step===3?"✅ To'lov muvaffaqiyatli":"💳 To'lov"}</p>
+          <p style={{ margin:0, fontWeight:700, fontSize:15, color:darkMode?"#f1f5f9":"#111" }}>{step===3?`✅ ${t.paymentSuccess}`:`💳 ${t.paymentTitle}`}</p>
           <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", fontSize:18, color:"#6b7280" }}>✕</button>
         </div>
         <div style={{ padding:"20px" }}>
@@ -507,6 +511,7 @@ const FaqItem = ({ faq, darkMode }) => {
 
 // ─── Main CourseDetail ─────────────────────────────────────────────────────────
 const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
+  const { t } = useLang();
   const course = coursesData[courseId] || coursesData[1];
   const [activeTab, setActiveTab]       = useState("lessons");
   const [openSections, setOpenSections] = useState([0]);
@@ -536,7 +541,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
   return (
     <div style={{ width:"100%", maxWidth:900, margin:"0 auto", padding:"32px 20px 80px" }}>
       <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:"#3b82f6", fontSize:14, fontWeight:600, marginBottom:20, padding:0 }}>
-        ← Kurslar katalogiga qaytish
+        {t.backToCatalog}
       </button>
 
       <ScrollReveal direction="up">
@@ -557,21 +562,21 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
             <ScrollReveal direction="up">
               <div style={{ marginBottom:20, padding:"16px 20px", background:darkMode?"#1e293b":"#fff", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                  <span style={{ fontSize:14, fontWeight:600, color:darkMode?"#f1f5f9":"#111" }}>O'quv progressi</span>
+                  <span style={{ fontSize:14, fontWeight:600, color:darkMode?"#f1f5f9":"#111" }}>{t.progressLabel}</span>
                   <span style={{ fontSize:14, fontWeight:700, color:"#3b82f6" }}>{progress}%</span>
                 </div>
                 <div style={{ height:8, borderRadius:4, background:darkMode?"#334155":"#e5e7eb" }}>
                   <div style={{ height:"100%", borderRadius:4, background:progress===100?"#10b981":"#3b82f6", width:`${progress}%`, transition:"width 0.4s ease" }}/>
                 </div>
-                <p style={{ margin:"8px 0 0", fontSize:12, color:"#6b7280" }}>{completedLessons.length} / {totalLessons} dars tugatildi{progress===100?" 🎉 — Kursni tugatdingiz!":""}</p>
-                {progress===100 && <button style={{ marginTop:10, padding:"8px 18px", background:"#10b981", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>🏆 Sertifikat yuklab olish</button>}
+                <p style={{ margin:"8px 0 0", fontSize:12, color:"#6b7280" }}>{completedLessons.length} / {totalLessons} {t.lessonsCount} {t.completedLabel}{progress===100?" 🎉 — "+t.courseFinished+"!":""}</p>
+                {progress===100 && <button style={{ marginTop:10, padding:"8px 18px", background:"#10b981", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>{t.certificateBtn}</button>}
               </div>
             </ScrollReveal>
           )}
 
           {/* Tabs */}
           <div style={{ display:"flex", gap:4, marginBottom:20, borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-            {[{id:"lessons",label:"📚 Darslar"},{id:"reviews",label:"⭐ Sharhlar"},{id:"faq",label:"❓ FAQ"}].map(tab=>(
+            {[{id:"lessons",label:t.lessonsTab},{id:"reviews",label:t.reviewsTab},{id:"faq",label:t.faqTab}].map(tab=>(
               <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ padding:"10px 16px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:activeTab===tab.id?"#3b82f6":"#6b7280", borderBottom:`2px solid ${activeTab===tab.id?"#3b82f6":"transparent"}`, marginBottom:-1 }}>{tab.label}</button>
             ))}
           </div>
@@ -579,12 +584,12 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
           {/* Lessons */}
           {activeTab==="lessons" && (
             <div>
-              <p style={{ margin:"0 0 14px", fontSize:13, color:"#6b7280" }}>{course.sections.length} bo'lim · {totalLessons} dars</p>
+              <p style={{ margin:"0 0 14px", fontSize:13, color:"#6b7280" }}>{course.sections.length} {t.sectionsCount} · {totalLessons} {t.lessonsCount}</p>
               {course.sections.map((section, si)=>(
                 <div key={si} style={{ marginBottom:8 }}>
                   <button onClick={()=>toggleSection(si)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:10, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, cursor:"pointer", textAlign:"left" }}>
                     <span style={{ fontWeight:600, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>{openSections.includes(si)?"▾":"▸"} {section.title}</span>
-                    <span style={{ fontSize:12, color:"#6b7280" }}>{section.lessons.length} dars</span>
+                    <span style={{ fontSize:12, color:"#6b7280" }}>{section.lessons.length} {t.lessonsCount}</span>
                   </button>
                   {openSections.includes(si) && (
                     <div style={{ borderRadius:"0 0 10px 10px", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, borderTop:"none", overflow:"hidden" }}>
@@ -604,8 +609,8 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
                             </div>
                             <div style={{ flex:1 }}>
                               <span style={{ fontSize:13, color:darkMode?"#e2e8f0":"#374151" }}>{lesson.title}</span>
-                              {lesson.free&&!purchased&&<span style={{ marginLeft:6, fontSize:10, fontWeight:700, background:"#d1fae5", color:"#065f46", padding:"1px 6px", borderRadius:4 }}>BEPUL</span>}
-                              {done&&<span style={{ marginLeft:6, fontSize:10, fontWeight:700, background:"#d1fae5", color:"#065f46", padding:"1px 6px", borderRadius:4 }}>✓ Tugatildi</span>}
+                               {lesson.free&&!purchased&&<span style={{ marginLeft:6, fontSize:10, fontWeight:700, background:"#d1fae5", color:"#065f46", padding:"1px 6px", borderRadius:4 }}>{t.freeLesson}</span>}
+                               {done&&<span style={{ marginLeft:6, fontSize:10, fontWeight:700, background:"#d1fae5", color:"#065f46", padding:"1px 6px", borderRadius:4 }}>✓ {t.completedLabel}</span>}
                             </div>
                             <span style={{ fontSize:12, color:"#9ca3af" }}>{lesson.duration}</span>
                           </div>
@@ -633,21 +638,21 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
         <div style={{ width:260, flexShrink:0 }}>
           <div style={{ position:"sticky", top:84, background:darkMode?"#1e293b":"#fff", borderRadius:16, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, padding:"20px", boxShadow:"0 4px 24px rgba(0,0,0,0.1)" }}>
             <p style={{ margin:"0 0 4px", fontSize:24, fontWeight:800, color:purchased?"#10b981":"#3b82f6" }}>
-              {course.price===0?"Bepul":course.price.toLocaleString()+" so'm"}
+              {course.price===0?t.freeLabel:course.price.toLocaleString()+" "+t.priceLabel}
             </p>
-            {!purchased&&course.price>0&&<p style={{ margin:"0 0 14px", fontSize:11, color:"#6b7280" }}>Bir martalik to'lov · Umrbod kirish</p>}
+            {!purchased&&course.price>0&&<p style={{ margin:"0 0 14px", fontSize:11, color:"#6b7280" }}>{t.oneTimePayment}</p>}
             {purchased ? (
               <div style={{ padding:"10px 14px", borderRadius:10, marginBottom:14, background:"#d1fae5", textAlign:"center" }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:600, color:"#065f46" }}>✅ Kursga yozilgansiz</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:600, color:"#065f46" }}>{t.enrolledLabel}</p>
                 <p style={{ margin:"4px 0 0", fontSize:12, color:"#065f46" }}>Progress: {progress}%</p>
               </div>
             ) : (
               <button onClick={()=>course.price===0?setPurchased(true):setShowPayment(true)} style={{ width:"100%", padding:"13px 0", marginBottom:10, background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
-                {course.price===0?"🆓 Bepul Boshlash":"💳 Sotib Olish"}
+                {course.price===0?t.startFreeBtn:t.buyBtn}
               </button>
             )}
             <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              {[{icon:"⏱",text:`${course.duration} soat video`},{icon:"📱",text:"Mobil va kompyuter"},{icon:"♾️",text:"Umrbod kirish"},{icon:"🏆",text:"Tugatish sertifikati"},{icon:"🔄",text:"30 kunlik qaytarish"}].map((item,i)=>(
+              {[{icon:"⏱",text:`${course.duration} ${t.videoHours}`},{icon:"📱",text:t.mobileAccess},{icon:"♾️",text:t.lifeTimeAccess},{icon:"🏆",text:t.certificate},{icon:"🔄",text:t.moneyBack}].map((item,i)=>(
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:14 }}>{item.icon}</span>
                   <span style={{ fontSize:12, color:darkMode?"#94a3b8":"#6b7280" }}>{item.text}</span>
@@ -670,7 +675,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast }) => {
 
       {showPayment && (
         <PaymentModal course={course} onClose={()=>setShowPayment(false)}
-          onSuccess={()=>{ setPurchased(true); showToast&&showToast("Kursga muvaffaqiyatli yozildingiz! 🎉","success"); }}
+          onSuccess={() => { setPurchased(true); showToast && showToast(t.enrolledSuccess + " 🎉", "success"); }}
           darkMode={darkMode}/>
       )}
     </div>

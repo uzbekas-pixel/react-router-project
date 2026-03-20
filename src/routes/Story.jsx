@@ -514,7 +514,7 @@ const Story = ({ darkMode, showToast }) => {
                   <input
                     ref={commentInputRef}
                     type="text"
-                    placeholder="Izoh yozing..."
+                    placeholder={t.commentPlaceholder}
                     value={commentText}
                     onChange={e => setCommentText(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleComment()}

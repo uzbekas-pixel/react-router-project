@@ -1,53 +1,56 @@
 import React, { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 
-const plans = [
-  {
-    id: "free", name: "Bepul", price: { monthly: 0, yearly: 0 },
-    color: "#10b981", badge: null,
-    features: [
-      { text: "5 ta bepul kurs", ok: true },
-      { text: "Video darslar (cheklangan)", ok: true },
-      { text: "Community forum", ok: true },
-      { text: "Sertifikat", ok: false },
-      { text: "Barcha kurslar", ok: false },
-      { text: "O'qituvchi bilan chat", ok: false },
-      { text: "Offline yuklab olish", ok: false },
-      { text: "Ustunlik qo'llab-quvvatlash", ok: false },
-    ],
-  },
-  {
-    id: "pro", name: "Pro", price: { monthly: 99000, yearly: 79000 },
-    color: "#3b82f6", badge: "Eng mashhur",
-    features: [
-      { text: "Barcha kurslar", ok: true },
-      { text: "Cheksiz video darslar", ok: true },
-      { text: "Community forum", ok: true },
-      { text: "Tugatish sertifikati", ok: true },
-      { text: "Yangi kurslar (darhol)", ok: true },
-      { text: "O'qituvchi bilan chat", ok: false },
-      { text: "Offline yuklab olish", ok: false },
-      { text: "Ustunlik qo'llab-quvvatlash", ok: false },
-    ],
-  },
-  {
-    id: "premium", name: "Premium", price: { monthly: 199000, yearly: 159000 },
-    color: "#8b5cf6", badge: "To'liq imkoniyat",
-    features: [
-      { text: "Barcha kurslar", ok: true },
-      { text: "Cheksiz video darslar", ok: true },
-      { text: "Community forum", ok: true },
-      { text: "Tugatish sertifikati", ok: true },
-      { text: "Yangi kurslar (darhol)", ok: true },
-      { text: "O'qituvchi bilan chat", ok: true },
-      { text: "Offline yuklab olish", ok: true },
-      { text: "Ustunlik qo'llab-quvvatlash", ok: true },
-    ],
-  },
-];
 
 const Pricing = ({ darkMode, showToast }) => {
+  const { t } = useLang();
   const [billing, setBilling] = useState("monthly");
+
+  const plans = [
+    {
+      id: "free", name: t.free || "Bepul", price: { monthly: 0, yearly: 0 },
+      color: "#10b981", badge: null,
+      features: [
+        { text: t.feat5FreeCourses, ok: true },
+        { text: t.featLimitedVideo, ok: true },
+        { text: t.featCommunity, ok: true },
+        { text: t.featCertificate, ok: false },
+        { text: t.featAllCourses, ok: false },
+        { text: t.featChat, ok: false },
+        { text: t.featOffline, ok: false },
+        { text: t.featSupport, ok: false },
+      ],
+    },
+    {
+      id: "pro", name: "Pro", price: { monthly: 99000, yearly: 79000 },
+      color: "#3b82f6", badge: "Eng mashhur",
+      features: [
+        { text: t.featAllCourses, ok: true },
+        { text: t.featUnlimitedVideo, ok: true },
+        { text: t.featCommunity, ok: true },
+        { text: t.featCertificate, ok: true },
+        { text: t.featNewCourses, ok: true },
+        { text: t.featChat, ok: false },
+        { text: t.featOffline, ok: false },
+        { text: t.featSupport, ok: false },
+      ],
+    },
+    {
+      id: "premium", name: "Premium", price: { monthly: 199000, yearly: 159000 },
+      color: "#8b5cf6", badge: "To'liq imkoniyat",
+      features: [
+        { text: t.featAllCourses, ok: true },
+        { text: t.featUnlimitedVideo, ok: true },
+        { text: t.featCommunity, ok: true },
+        { text: t.featCertificate, ok: true },
+        { text: t.featNewCourses, ok: true },
+        { text: t.featChat, ok: true },
+        { text: t.featOffline, ok: true },
+        { text: t.featSupport, ok: true },
+      ],
+    },
+  ];
 
   return (
     <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto", padding: "40px 20px 80px" }}>
@@ -57,14 +60,13 @@ const Pricing = ({ darkMode, showToast }) => {
             display: "inline-block", background: "#eff6ff", color: "#3b82f6",
             fontSize: 12, fontWeight: 700, padding: "4px 14px",
             borderRadius: 20, marginBottom: 12, border: "1px solid #bfdbfe",
-          }}>
-            💎 Narxlar
+          }}>{t.pricingBadge}
           </span>
           <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: darkMode ? "#f1f5f9" : "#111" }}>
-            O'zingizga mos rejani tanlang
+            {t.pricingTitle}
           </h2>
           <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>
-            Istalgan vaqt bekor qilish mumkin. Yashirin to'lovlar yo'q.
+            {t.pricingDesc}
           </p>
 
           {/* Billing toggle */}
@@ -86,7 +88,7 @@ const Pricing = ({ darkMode, showToast }) => {
                   display: "flex", alignItems: "center", gap: 6,
                 }}
               >
-                {b === "monthly" ? "Oylik" : "Yillik"}
+                {b === "monthly" ? t.monthly : t.yearly}
                 {b === "yearly" && (
                   <span style={{
                     background: "#fef08a", color: "#713f12",
@@ -134,15 +136,15 @@ const Pricing = ({ darkMode, showToast }) => {
                   <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 16, color: plan.color }}>{plan.name}</p>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, color: darkMode ? "#f1f5f9" : "#111" }}>
-                      {price === 0 ? "Bepul" : price.toLocaleString()}
+                      {price === 0 ? t.freeLabel : price.toLocaleString()}
                     </span>
                     {price > 0 && (
-                      <span style={{ fontSize: 13, color: "#6b7280" }}>so'm/oy</span>
+                      <span style={{ fontSize: 13, color: "#6b7280" }}>{t.perMonth}</span>
                     )}
                   </div>
                   {billing === "yearly" && price > 0 && (
                     <p style={{ margin: "4px 0 0", fontSize: 12, color: "#10b981" }}>
-                      Yiliga {(price * 12).toLocaleString()} so'm — tejaysiz!
+                      {t.yearlySave}
                     </p>
                   )}
                 </div>
@@ -193,7 +195,7 @@ const Pricing = ({ darkMode, showToast }) => {
                     }
                   }}
                 >
-                  {plan.id === "free" ? "Bepul Boshlash" : "Rejani Tanlash"}
+                  {plan.id === "free" ? t.startFree : t.selectPlan}
                 </button>
               </div>
             </ScrollReveal>
@@ -205,7 +207,7 @@ const Pricing = ({ darkMode, showToast }) => {
       <ScrollReveal direction="up" delay={200}>
         <div style={{ marginTop: 48, textAlign: "center" }}>
           <p style={{ fontSize: 14, color: "#6b7280" }}>
-            Savol bormi? <span style={{ color: "#3b82f6", fontWeight: 600, cursor: "pointer" }}>Biz bilan bog'laning →</span>
+            {t.haveQuestion} <span style={{ color: "#3b82f6", fontWeight: 600, cursor: "pointer" }}>{t.contactUs}</span>
           </p>
         </div>
       </ScrollReveal>

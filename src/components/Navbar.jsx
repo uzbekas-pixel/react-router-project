@@ -12,6 +12,7 @@ const navLinks = [
   { path: "/instructors", label: "👨‍🏫 O'qituvchilar", end: false },
   { path: "/pricing",     label: "💎 Narxlar",       end: false },
   { path: "/ai-tutor",    label: "🤖 AI Tutor",      end: false },
+  
 ];
 
 // Bugungi yangi sahifalar — mobile burger menyuda ko'rinadi
@@ -22,18 +23,22 @@ const newPages = [
   { path: "/create-course", label: "📝 Kurs Yarat"   },
   { path: "/quiz",          label: "🎯 Quiz"         },
   { path: "/dashboard",     label: "📊 Dashboard"    },
+  { path: "/settings", icon: "⚙️", label: "Sozlamalar" },
 
 ];
 
 
 
+import { usePWA } from "../hooks/usePWA";
+
 const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   const { user, logout }  = useAuth();
   const [menuOpen, setMenuOpen]       = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAdmin, setIsAdmin]         = useState(false);
   const [unreadCount] = useState(0);
+  const { isInstallable, installApp } = usePWA();
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -58,10 +63,17 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/typing",        label: "⌨️ Typing"          },
     { path: "/multiplayer",   label: "👥 Multi"            },
     { path: "/profile",       label: "👤 Profil"           },
+    { path: "/settings", label: "⚙️ Sozlamalar" },
     ...(isAdmin ? [{ path: "/admin", label: "🛡️ Admin" }] : []),
   ];
 
   const closeMenu = () => { onNavClick(); setMenuOpen(false); };
+
+  const handleInstallClick = () => {
+    installApp();
+    setMenuOpen(false);
+    setSidebarOpen(false);
+  };
 
   return (
     <>
@@ -177,6 +189,18 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </div>
           </div>
 
+          {/* PWA Install Button (Mobile) */}
+          {isInstallable && (
+            <div className="px-8 py-2 border-t border-slate-700 mt-2">
+              <button 
+                onClick={handleInstallClick}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all scale-95 active:scale-90"
+              >
+                {t.installApp}
+              </button>
+            </div>
+          )}
+
           {/* Til */}
           <div className="px-8 py-2">
             <button onClick={() => setLang(lang === "en" ? "uz" : "en")}
@@ -218,12 +242,13 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
       {/* Desktop Sidebar */}
       <>
         {sidebarOpen && <div className="hidden md:block fixed inset-0 z-998 bg-black/40" onClick={() => setSidebarOpen(false)} />}
-        <div className={`hidden md:flex fixed top-0 right-0 h-full z-999 flex-col w-64 transition-transform duration-300 shadow-2xl ${darkMode ? "bg-slate-900" : "bg-white"} ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
+        <div className={`hidden md:flex fixed top-0 right-0 h-full z-999 flex-col w-64 transition-transform duration-300 shadow-2xl ${darkMode ? "bg-slate-900 border-l border-slate-800" : "bg-white border-l border-gray-100"} ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
             <span className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Menyu</span>
             <button onClick={() => setSidebarOpen(false)} className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${darkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>✕</button>
           </div>
-          <div className="flex-1 overflow-y-auto py-3 sidebar">
+          
+          <div className="flex-1 overflow-y-auto py-3 sidebar mt-2">
             {sidebarLinks.map((link) => (
               <NavLink key={link.path} to={link.path}
                 onClick={() => { onNavClick(); setSidebarOpen(false); }}
@@ -237,7 +262,20 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                 {link.label}
               </NavLink>
             ))}
+
+            {/* PWA Install Button (Desktop Sidebar) */}
+            {isInstallable && (
+              <div className="mt-4 px-4">
+                <button 
+                  onClick={handleInstallClick}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl flex items-center justify-center gap-2 font-semibold transition-all shadow-lg hover:shadow-blue-500/20 active:scale-95"
+                >
+                  {t.installApp}
+                </button>
+              </div>
+            )}
           </div>
+
           {user && (
             <div className={`px-5 py-4 border-t ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               <div className="flex items-center gap-3">

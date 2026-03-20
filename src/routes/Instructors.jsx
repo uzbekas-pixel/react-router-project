@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 
 const instructors = [
   {
@@ -61,6 +62,7 @@ const Stars = ({ rating }) => (
 );
 
 const Instructors = ({ darkMode }) => {
+  const { t } = useLang();
   const [selected, setSelected] = useState(null);
 
   if (selected) {
@@ -75,7 +77,7 @@ const Instructors = ({ darkMode }) => {
             color: "#3b82f6", fontSize: 14, fontWeight: 600, marginBottom: 24, padding: 0,
           }}
         >
-          ← O'qituvchilar sahifasiga qaytish
+          {t.backToInstructors}
         </button>
 
         <ScrollReveal direction="up">
@@ -91,9 +93,9 @@ const Instructors = ({ darkMode }) => {
                 <p style={{ margin: "0 0 10px", fontSize: 14, color: "#3b82f6", fontWeight: 600 }}>{ins.role}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#6b7280" }}>
                   <span>⭐ {ins.rating}</span>
-                  <span>👥 {ins.students.toLocaleString()} talaba</span>
-                  <span>📚 {ins.courses} kurs</span>
-                  <span>🕐 {ins.experience} tajriba</span>
+                  <span>👥 {ins.students.toLocaleString()} {t.studentsCount}</span>
+                  <span>📚 {ins.courses} {t.coursesCount}</span>
+                  <span>🕐 {ins.experience} {t.experience}</span>
                 </div>
               </div>
             </div>
@@ -108,7 +110,7 @@ const Instructors = ({ darkMode }) => {
             padding: "20px", marginBottom: 20,
           }}>
             <p style={{ margin: "0 0 14px", fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>
-              Ko'nikmalar
+              {t.skills}
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {ins.skills.map((sk) => (
@@ -134,13 +136,13 @@ const Instructors = ({ darkMode }) => {
           fontSize: 12, fontWeight: 700, padding: "4px 14px",
           borderRadius: 20, marginBottom: 12, border: "1px solid #bfdbfe",
         }}>
-          👨‍🏫 Bizning Jamoamiz
+          {t.ourTeam}
         </span>
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 6px", color: darkMode ? "#f1f5f9" : "#111" }}>
-          O'qituvchilar
+          {t.instructorsTitle}
         </h2>
         <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 32 }}>
-          Tajribali va sertifikatlangan o'qituvchilar bilan o'rganing
+          {t.instructorsDesc}
         </p>
       </ScrollReveal>
 
@@ -187,17 +189,17 @@ const Instructors = ({ darkMode }) => {
               <div style={{ display: "flex", justifyContent: "space-around", paddingTop: 12, borderTop: `1px solid ${darkMode ? "#334155" : "#f3f4f6"}` }}>
                 <div>
                   <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111" }}>{ins.courses}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>Kurs</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{t.coursesCount}</p>
                 </div>
                 <div>
                   <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111" }}>
                     {ins.students >= 1000 ? (ins.students / 1000).toFixed(1) + "K" : ins.students}
                   </p>
-                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>Talaba</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{t.studentsCount}</p>
                 </div>
                 <div>
                   <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111" }}>{ins.experience}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>Tajriba</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{t.experience}</p>
                 </div>
               </div>
             </div>

@@ -40,6 +40,7 @@ import Games from "./routes/Games";
 import CodeEditor from "./routes/CodeEditor";
 import DM from "./routes/DM";
 import Story from "./routes/Story";
+import Settings from "./routes/Settings";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -47,45 +48,87 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+const themeStyles = {
+  default: null,
+  sunset:   "linear-gradient(135deg, #f97316, #ec4899)",
+  ocean:    "linear-gradient(135deg, #06b6d4, #3b82f6)",
+  forest:   "linear-gradient(135deg, #22c55e, #16a34a)",
+  purple:   "linear-gradient(135deg, #a855f7, #6366f1)",
+  rose:     "linear-gradient(135deg, #f43f5e, #e11d48)",
+  gold:     "linear-gradient(135deg, #eab308, #f97316)",
+  midnight: "linear-gradient(135deg, #1e1b4b, #312e81)",
+};
+
 function App() {
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
-  const toggleDarkMode = () => { setDarkMode(!darkMode); localStorage.setItem("darkMode", !darkMode); };
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      localStorage.setItem("darkMode", !prev);
+      return !prev;
+    });
+  };
+
   const [toast, setToast]       = useState(null);
   const [confetti, setConfetti] = useState(false);
-  const location  = useLocation();
-  const { user }  = useAuth();
+  const location                = useLocation();
+  const { user }                = useAuth();
   const { show: showOnboarding, hide: hideOnboarding } = useOnboarding();
 
+  const [currentTheme, setCurrentTheme] = useState(
+    localStorage.getItem("theme") || "default"
+  );
+  const [customBg, setCustomBg] = useState(
+    localStorage.getItem("customBg") || null
+  );
+
   useOnlineStatus(user?.uid);
+
   const showToast    = useCallback((message, type = "success") => setToast({ message, type }), []);
   const showConfetti = () => setConfetti(true);
   const handleNavClick = () => {};
 
   useEffect(() => { if (user) requestNotificationPermission(); }, [user]);
+
   useEffect(() => {
     onMessageListener().then((payload) => {
-      if (payload?.notification) showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "info");
+      if (payload?.notification) {
+        showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "info");
+      }
     }).catch(() => {});
   }, [showToast]);
 
-  // Footer ko'rinmaydigan sahifalar (to'liq ekran sahifalar)
   const hideFooter = [
     "/ai-tutor",
     "/chat",
     "/dm",
     "/code",
     "/multiplayer",
-    "/games"
+    "/games",
   ].includes(location.pathname);
 
+  // Background style
+  const bgStyle = customBg
+    ? {
+        backgroundImage: `url(${customBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }
+    : currentTheme !== "default" && themeStyles[currentTheme]
+    ? { background: themeStyles[currentTheme] }
+    : {};
+
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+      style={bgStyle}
+    >
       <ParticleBackground darkMode={darkMode} />
       <CustomCursor darkMode={darkMode} />
+
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
 
-      {/* Onboarding — faqat birinchi kirganda */}
       {showOnboarding && <Onboarding darkMode={darkMode} onComplete={hideOnboarding} />}
 
       <Navbar darkMode={darkMode} setDarkMode={toggleDarkMode} onNavClick={handleNavClick} />
@@ -93,21 +136,22 @@ function App() {
       <div className="mt-16 pb-20">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
+
             {/* ── Asosiy ── */}
-            <Route path="/"             element={<Courses      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/courses"      element={<Courses      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/instructors"  element={<Instructors  darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/pricing"      element={<Pricing      darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/ai-tutor"     element={<AiTutor      darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/"              element={<Courses       darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/courses"       element={<Courses       darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/instructors"   element={<Instructors   darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/pricing"       element={<Pricing       darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/ai-tutor"      element={<AiTutor       darkMode={darkMode} showToast={showToast} />} />
 
             {/* ── O'quv ── */}
-            <Route path="/quiz"         element={<Quiz         darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/dashboard"    element={<Dashboard    darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/notifications"element={<Notifications darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/leaderboard"  element={<Leaderboard  darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/schedule"     element={<Schedule     darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/promo"        element={<PromoCode    darkMode={darkMode} showToast={showToast} />} />
-            <Route path="/create-course"element={<CreateCourse darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/quiz"          element={<Quiz          darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/dashboard"     element={<Dashboard     darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/notifications" element={<Notifications darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/leaderboard"   element={<Leaderboard   darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/schedule"      element={<Schedule      darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/promo"         element={<PromoCode     darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/create-course" element={<CreateCourse  darkMode={darkMode} showToast={showToast} />} />
 
             {/* ── Auth ── */}
             <Route path="/login"           element={<Login          darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
@@ -115,24 +159,89 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword darkMode={darkMode} showToast={showToast} />} />
 
             {/* ── Protected ── */}
-            <Route path="/profile"     element={<Profile      darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
-            <Route path="/admin"       element={<AdminRoute><Admin darkMode={darkMode} showToast={showToast} /></AdminRoute>} />
-            <Route path="/chat"        element={<Chat         darkMode={darkMode} />} />
-            <Route path="/typing"      element={<TypingGame   darkMode={darkMode} />} />
-            <Route path="/games"       element={<ProtectedRoute><Games      darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/code"        element={<ProtectedRoute><CodeEditor darkMode={darkMode} /></ProtectedRoute>} />
-            <Route path="/story"       element={<ProtectedRoute><Story      darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/dm"          element={<ProtectedRoute><DM         darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route path="/multiplayer" element={<ProtectedRoute><MultiTyping darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/profile"  element={
+              <ProtectedRoute>
+                <Profile darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin" element={
+              <AdminRoute>
+                <Admin darkMode={darkMode} showToast={showToast} />
+              </AdminRoute>
+            } />
+
+            <Route path="/chat" element={
+              <ProtectedRoute>
+                <Chat darkMode={darkMode} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/typing" element={
+              <ProtectedRoute>
+                <TypingGame darkMode={darkMode} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/multiplayer" element={
+              <ProtectedRoute>
+                <MultiTyping darkMode={darkMode} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/games" element={
+              <ProtectedRoute>
+                <Games darkMode={darkMode} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/code" element={
+              <ProtectedRoute>
+                <CodeEditor darkMode={darkMode} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/story" element={
+              <ProtectedRoute>
+                <Story darkMode={darkMode} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/dm" element={
+              <ProtectedRoute>
+                <DM darkMode={darkMode} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings
+                  darkMode={darkMode}
+                  showToast={showToast}
+                  onThemeChange={(id) => {
+                    setCurrentTheme(id);
+                    localStorage.setItem("theme", id);
+                  }}
+                  currentTheme={currentTheme}
+                  onBgChange={(bg) => {
+                    setCustomBg(bg || null);
+                    if (bg) localStorage.setItem("customBg", bg);
+                    else localStorage.removeItem("customBg");
+                  }}
+                  currentBg={customBg}
+                />
+              </ProtectedRoute>
+            } />
 
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
+
           </Routes>
         </AnimatePresence>
       </div>
 
       <ScrollToTop darkMode={darkMode} />
       <BottomNav darkMode={darkMode} />
-      {!hideFooter && <Footer darkMode={darkMode} />}
+      {!hideFooter && <Footer darkMode={darkMode} bgStyle={bgStyle} />}
     </div>
   );
 }

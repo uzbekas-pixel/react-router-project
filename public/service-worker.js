@@ -2,6 +2,9 @@ const CACHE_NAME = "eduzone-v1";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
   "/courses",
   "/quiz",
   "/dashboard",
@@ -58,5 +61,5 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data?.url || "/"));
+  e.waitUntil(self.clients.openWindow(e.notification.data?.url || "/"));
 });

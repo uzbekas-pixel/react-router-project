@@ -2,11 +2,11 @@ import React from "react";
 import { BiLogoReact } from "react-icons/bi";
 import { useLang } from "../context/useLang";
 
-const Footer = ({ darkMode }) => {
+const Footer = ({ darkMode, bgStyle }) => {
   const { t } = useLang();
 
   return (
-    <footer className={`mt-auto py-6 px-6 border-t transition-colors duration-300 md:hidden pb-24 ${
+    <footer style={bgStyle} className={`mt-auto py-6 px-6 border-t transition-colors duration-300 md:hidden pb-24 ${
       darkMode ? "bg-gray-900 border-slate-700 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-500"
     }`}>
       <div className="flex flex-col items-center gap-3">

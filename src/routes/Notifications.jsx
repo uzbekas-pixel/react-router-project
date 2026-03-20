@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 
 const initialNotifs = [
   { id: 1, type: "course", icon: "🎓", title: "Yangi dars qo'shildi", body: "JavaScript kursi — 'Async/Await' darsi qo'shildi", time: "5 daqiqa oldin", read: false, color: "#3b82f6" },
@@ -12,9 +13,10 @@ const initialNotifs = [
 ];
 
 const types = ["Barchasi", "course", "quiz", "promo", "achievement", "system"];
-const typeLabels = { Barchasi: "Barchasi", course: "📚 Kurslar", quiz: "🎯 Quiz", promo: "🔥 Aksiya", achievement: "🏆 Yutuq", system: "⚙️ Tizim" };
 
 const Notifications = ({ darkMode, showToast }) => {
+  const { t } = useLang();
+  const typeLabels = { Barchasi: t.notifFilterAll, course: t.notifFilterCourse, quiz: t.notifFilterQuiz, promo: t.notifFilterPromo, achievement: t.notifFilterAchievement, system: t.notifFilterSystem };
   const [notifs, setNotifs] = useState(initialNotifs);
   const [filter, setFilter] = useState("Barchasi");
 
@@ -22,7 +24,7 @@ const Notifications = ({ darkMode, showToast }) => {
 
   const markAllRead = () => {
     setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-    showToast && showToast("Hammasi o'qilgan deb belgilandi ✅", "success");
+    showToast && showToast(t.allMarkedRead, "success");
   };
 
   const markRead = (id) => setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
@@ -36,10 +38,10 @@ const Notifications = ({ darkMode, showToast }) => {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
           <div>
             <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
-              🔔 Xabarnomalar
+              {t.notifBadge}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>Bildirishnomalar</h2>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>{t.notifTitle}</h2>
               {unread > 0 && (
                 <span style={{ background: "#ef4444", color: "#fff", fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>
                   {unread}
@@ -54,7 +56,7 @@ const Notifications = ({ darkMode, showToast }) => {
               borderRadius: 10, fontSize: 13, fontWeight: 600,
               color: "#3b82f6", cursor: "pointer",
             }}>
-              ✓ Hammasini o'qilgan
+              {t.markAllRead}
             </button>
           )}
         </div>
@@ -75,7 +77,7 @@ const Notifications = ({ darkMode, showToast }) => {
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0" }}>
           <span style={{ fontSize: 48 }}>🔕</span>
-          <p style={{ color: darkMode ? "#94a3b8" : "#6b7280", marginTop: 12 }}>Bildirishnoma yo'q</p>
+          <p style={{ color: darkMode ? "#94a3b8" : "#6b7280", marginTop: 12 }}>{t.noNotifications}</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

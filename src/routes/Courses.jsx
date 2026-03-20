@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
+import { useLang } from "../context/useLang";
 import CourseDetail from "./CourseDetail";
 
 const allCourses = [
@@ -61,7 +62,7 @@ const allCourses = [
   },
 ];
 
-const categories = ["Barchasi", "HTML", "CSS", "JavaScript", "React", "English", "Russian", "French"];
+const categoriesBase = ["HTML", "CSS", "JavaScript", "React", "English", "Russian", "French"];
 
 const catColors = {
   HTML: "#e44d26", CSS: "#264de4", JavaScript: "#d4a017",
@@ -123,6 +124,7 @@ const VideoModal = ({ course, onClose, darkMode }) => {
 };
 
 const CourseCard = ({ course, isFav, onToggleFav, onPlay, onDetail, darkMode }) => {
+  const { t } = useLang();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -201,7 +203,7 @@ const CourseCard = ({ course, isFav, onToggleFav, onPlay, onDetail, darkMode }) 
         gap: 8,
       }}>
         <span style={{ fontWeight: 800, fontSize: 15, color: course.price === 0 ? "#10b981" : "#3b82f6" }}>
-          {course.price === 0 ? "Bepul" : course.price.toLocaleString() + " so'm"}
+          {course.price === 0 ? t.freeLabel : course.price.toLocaleString() + " " + t.priceLabel}
         </span>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={() => onPlay(course)} style={{
@@ -221,7 +223,7 @@ const CourseCard = ({ course, isFav, onToggleFav, onPlay, onDetail, darkMode }) 
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.82")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            Batafsil →
+            {t.detailBtn}
           </button>
         </div>
       </div>
@@ -254,8 +256,10 @@ const StatsBar = ({ darkMode }) => {
 };
 
 const Courses = ({ darkMode, showToast }) => {
+  const { t } = useLang();
+  const categories = [t.allCategories, ...categoriesBase];
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("Barchasi");
+  const [activeCategory, setActiveCategory] = useState(0);
   const [sortBy, setSortBy] = useState("default");
   const [favorites, setFavorites] = useState([]);
   const [showFavOnly, setShowFavOnly] = useState(false);
@@ -277,10 +281,10 @@ const Courses = ({ darkMode, showToast }) => {
   const toggleFav = (id) => {
     if (favorites.includes(id)) {
       setFavorites((f) => f.filter((x) => x !== id));
-      showToast && showToast("Sevimlilardan olib tashlandi", "error");
+      showToast && showToast(t.removedFromFav, "error");
     } else {
       setFavorites((f) => [...f, id]);
-      showToast && showToast("Sevimlilarga qo'shildi ❤️", "success");
+      showToast && showToast(t.addedToFav, "success");
     }
   };
 
@@ -290,7 +294,7 @@ const Courses = ({ darkMode, showToast }) => {
       const matchSearch = c.title.toLowerCase().includes(q) ||
         c.instructor.toLowerCase().includes(q) ||
         c.category.toLowerCase().includes(q);
-      const matchCat = activeCategory === "Barchasi" || c.category === activeCategory;
+      const matchCat = activeCategory === 0 || c.category === categoriesBase[activeCategory - 1];
       const matchFav = showFavOnly ? favorites.includes(c.id) : true;
       return matchSearch && matchCat && matchFav;
     })
@@ -310,13 +314,13 @@ const Courses = ({ darkMode, showToast }) => {
             display: "inline-block", background: "#eff6ff", color: "#3b82f6",
             fontSize: 12, fontWeight: 700, padding: "4px 14px",
             borderRadius: 20, marginBottom: 12, border: "1px solid #bfdbfe",
-          }}>🚀 Online Ta'lim Platformasi</span>
+          }}>{t.onlinePlatform}</span>
           <h1 style={{
             fontSize: "clamp(22px, 4vw, 36px)", fontWeight: 800,
             letterSpacing: "-0.03em", color: darkMode ? "#f1f5f9" : "#111827", margin: "0 0 10px",
-          }}>Kurslar Katalogi</h1>
+          }}>{t.catalogTitle}</h1>
           <p style={{ color: "#6b7280", fontSize: 15, maxWidth: 480, margin: "0 auto" }}>
-            Dasturlash va til o'rganish bo'yicha eng yaxshi kurslarni tanlang
+            {t.catalogDesc}
           </p>
         </div>
       </ScrollReveal>
@@ -329,7 +333,7 @@ const Courses = ({ darkMode, showToast }) => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14, alignItems: "center" }}>
           <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
             <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#9ca3af" }}>🔍</span>
-            <input type="text" placeholder="Kurs yoki o'qituvchi qidirish..." value={search}
+            <input type="text" placeholder={t.searchPlaceholder} value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
                 width: "100%", paddingLeft: 36, paddingRight: search ? 32 : 12,
@@ -352,11 +356,11 @@ const Courses = ({ darkMode, showToast }) => {
             background: darkMode ? "#1e293b" : "#fff",
             color: darkMode ? "#f1f5f9" : "#111", fontSize: 13, cursor: "pointer", outline: "none",
           }}>
-            <option value="default">Tartiblash</option>
-            <option value="price-asc">💰 Arzondan qimmatga</option>
-            <option value="price-desc">💎 Qimmatdan arzonga</option>
-            <option value="rating">⭐ Reyting bo'yicha</option>
-            <option value="students">👥 Talabalar soni</option>
+            <option value="default">{t.sortDefault}</option>
+            <option value="price-asc">{t.sortPriceAsc}</option>
+            <option value="price-desc">{t.sortPriceDesc}</option>
+            <option value="rating">{t.sortRating}</option>
+            <option value="students">{t.sortStudents}</option>
           </select>
 
           <button onClick={() => setShowFavOnly(!showFavOnly)} style={{
@@ -377,11 +381,11 @@ const Courses = ({ darkMode, showToast }) => {
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat;
-            const color = cat === "Barchasi" ? "#3b82f6" : catColors[cat] || "#3b82f6";
+          {categories.map((cat, idx) => {
+            const isActive = activeCategory === idx;
+            const color = idx === 0 ? "#3b82f6" : catColors[categoriesBase[idx - 1]] || "#3b82f6";
             return (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{
+              <button key={cat} onClick={() => setActiveCategory(idx)} style={{
                 padding: "7px 16px", borderRadius: 20,
                 border: `1.5px solid ${isActive ? color : darkMode ? "#334155" : "#e5e7eb"}`,
                 background: isActive ? color : darkMode ? "#1e293b" : "#fff",
@@ -391,7 +395,7 @@ const Courses = ({ darkMode, showToast }) => {
             );
           })}
         </div>
-        <p style={{ color: "#6b7280", fontSize: 12, marginBottom: 16 }}>{filtered.length} ta kurs topildi</p>
+        <p style={{ color: "#6b7280", fontSize: 12, marginBottom: 16 }}>{filtered.length} {t.foundCourses}</p>
       </ScrollReveal>
 
       {filtered.length > 0 ? (
@@ -413,11 +417,11 @@ const Courses = ({ darkMode, showToast }) => {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "64px 0", gap: 12 }}>
           <span style={{ fontSize: 48 }}>{showFavOnly ? "🤍" : "🔍"}</span>
           <p style={{ fontSize: 18, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111827", margin: 0 }}>
-            {showFavOnly ? "Sevimli kurslar yo'q" : "Hech narsa topilmadi"}
+            {showFavOnly ? t.noFavoriteCourses : t.noCoursesFound}
           </p>
-          <button onClick={() => { setSearch(""); setActiveCategory("Barchasi"); setSortBy("default"); setShowFavOnly(false); }}
+          <button onClick={() => { setSearch(""); setActiveCategory(0); setSortBy("default"); setShowFavOnly(false); }}
             style={{ marginTop: 8, padding: "9px 20px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-            Tozalash
+            {t.clearFilters}
           </button>
         </div>
       )}
