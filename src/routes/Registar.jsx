@@ -5,6 +5,8 @@ import { auth, googleProvider, githubProvider } from "../firebase/config";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
+import { MdOutlinePersonAdd } from "react-icons/md";
+import { LuArrowRight } from "react-icons/lu";
 
 const getFirebaseError = (err, t) => {
   switch (err?.code) {
@@ -130,7 +132,7 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
   const setField = (field, val) => { setForm({ ...form, [field]: val }); setErrors({ ...errors, [field]: null }); };
 
   return (
-    <div className={`page-transition min-h-[calc(100vh-64px)] flex items-center justify-center px-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div className={`page-transition min-h-[calc(100vh-64px)] flex items-center justify-center px-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className={`w-full max-w-md p-8 rounded-2xl shadow-xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
         <div className="text-center mb-8">
           <h2 className={`text-3xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.registerTitle}</h2>
@@ -164,9 +166,9 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
             {errors.confirm && <p className="text-red-400 text-xs mt-1">{errors.confirm}</p>}
           </div>
           <button onClick={handleSubmit} disabled={loading}
-            className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 mt-2">
-            {loading ? t.registering : t.registerBtn}
-          </button>
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 mt-2 flex items-center justify-center gap-2">
+  {loading ? t.registering : <><MdOutlinePersonAdd size={18} /> {t.registerBtn}</>}
+</button>
           <div className="flex items-center gap-3 my-1">
             <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
             <span className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>{t.or}</span>

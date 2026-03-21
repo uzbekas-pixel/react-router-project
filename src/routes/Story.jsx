@@ -6,6 +6,7 @@ import {
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
+import { LuCamera, LuVideo, LuSend, LuTrash2, LuHeart, LuMessageCircle, LuX } from "react-icons/lu";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const STORY_EXPIRE = 24 * 60 * 60 * 1000;
@@ -282,9 +283,9 @@ const Story = ({ darkMode, showToast }) => {
 
   return (
     <div className={`page-transition w-full max-w-3xl mx-auto px-4 py-6 mt-10 ${darkMode ? "text-white" : "text-gray-900"}`}>
-      <h1 className={`text-2xl font-extrabold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        📸 Stories
-      </h1>
+    <h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+  <LuCamera className="text-pink-400" /> {t.story}
+</h1>
 
       {/* Story ro'yxati */}
       <div className="flex gap-4 overflow-x-auto pb-4 mb-6">
@@ -350,14 +351,14 @@ const Story = ({ darkMode, showToast }) => {
 
       {/* Media tanlash tugmalari */}
       <div className="flex gap-3 mb-2">
-        <button onClick={() => fileInputRef.current?.click()}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"}`}>
-          📷 Rasm yuklash
-        </button>
+       <button onClick={() => fileInputRef.current?.click()}
+  className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ...`}>
+  <LuCamera size={16} /> Rasm yuklash
+</button>
         <button onClick={() => videoInputRef.current?.click()}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"}`}>
-          🎥 Video yuklash
-        </button>
+  className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ...`}>
+  <LuVideo size={16} /> Video yuklash
+</button>
       </div>
 
       {/* Story viewer — to'liq vertikal */}
@@ -397,12 +398,15 @@ const Story = ({ darkMode, showToast }) => {
               </div>
               <div className="flex items-center gap-3">
                 {canDelete && (
-                  <button onClick={handleDeleteStory} className="text-white/70 hover:text-red-400 transition">
-                    🗑️
-                  </button>
-                )}
-                <button onClick={() => { clearInterval(timerRef.current); setViewing(null); setShowComments(false); }}
-                  className="text-white text-2xl hover:opacity-70 drop-shadow">✕</button>
+  <button onClick={handleDeleteStory} className="text-white/70 hover:text-red-400 transition">
+    <LuTrash2 size={18} />
+  </button>
+)}
+              <button onClick={() => { clearInterval(timerRef.current); setViewing(null); setShowComments(false); }}
+  className="text-white text-2xl hover:opacity-70 drop-shadow">
+  <LuX size={24} />
+</button>
+
               </div>
             </div>
 
@@ -462,7 +466,7 @@ const Story = ({ darkMode, showToast }) => {
               <button onClick={handleLike}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/50 text-white text-sm font-semibold backdrop-blur-sm transition hover:bg-black/70 active:scale-95">
                 <span className={`text-lg transition-all duration-200 ${isLiked ? "scale-125" : "scale-100"}`}>
-                  {isLiked ? "❤️" : "🤍"}
+                  <LuHeart size={18} className={isLiked ? "fill-red-500 text-red-500" : "text-white"} />
                 </span>
                 {likeCount > 0 && <span>{likeCount}</span>}
               </button>
@@ -471,7 +475,7 @@ const Story = ({ darkMode, showToast }) => {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-semibold backdrop-blur-sm transition active:scale-95 ${
                   showComments ? "bg-blue-500/80" : "bg-black/50 hover:bg-black/70"
                 }`}>
-                <span className="text-lg">💬</span>
+                <span className="text-lg"><LuMessageCircle size={18} /></span>
                 {comments.length > 0 && <span>{comments.length}</span>}
               </button>
             </div>
@@ -482,8 +486,14 @@ const Story = ({ darkMode, showToast }) => {
                 style={{ maxHeight: "55%" }}
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                  <span className="text-white text-sm font-semibold">💬 Izohlar ({comments.length})</span>
-                  <button onClick={toggleComments} className="text-white/60 hover:text-white text-xl">✕</button>
+                  <span className="text-white text-sm font-semibold"><LuMessageCircle size={18} /> Izohlar ({comments.length})</span>
+                 <button onClick={toggleComments}
+  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-semibold backdrop-blur-sm transition active:scale-95 ${
+    showComments ? "bg-blue-500/80" : "bg-black/50 hover:bg-black/70"
+  }`}>
+  <LuMessageCircle size={18} />
+  {comments.length > 0 && <span>{comments.length}</span>}
+</button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
@@ -501,9 +511,9 @@ const Story = ({ darkMode, showToast }) => {
                         </div>
                         {(c.uid === user.uid || isAdmin) && (
                           <button onClick={() => handleDeleteComment(c.id)}
-                            className="opacity-0 group-hover:opacity-100 text-red-400 text-xs transition shrink-0 mt-0.5">
-                            🗑️
-                          </button>
+  className="opacity-0 group-hover:opacity-100 text-red-400 text-xs transition shrink-0 mt-0.5">
+  <LuTrash2 size={13} />
+</button>
                         )}
                       </div>
                     ))
@@ -520,10 +530,10 @@ const Story = ({ darkMode, showToast }) => {
                     onKeyDown={e => e.key === "Enter" && handleComment()}
                     className="flex-1 bg-white/10 text-white placeholder-white/40 text-sm px-3 py-2 rounded-xl outline-none focus:bg-white/15 transition"
                   />
-                  <button onClick={handleComment} disabled={!commentText.trim()}
-                    className="w-9 h-9 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition shrink-0">
-                    ➤
-                  </button>
+                 <button onClick={handleComment} disabled={!commentText.trim()}
+  className="w-9 h-9 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition shrink-0">
+  <LuSend size={15} />
+</button>
                 </div>
               </div>
             )}

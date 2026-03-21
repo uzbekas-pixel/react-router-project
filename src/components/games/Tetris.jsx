@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
+import { FaPlay, FaRedo, FaPause } from "react-icons/fa";
 
 const COLS = 10, ROWS = 20, CELL = 28;
 
@@ -149,20 +150,26 @@ const Tetris = ({ darkMode }) => {
               <p className="text-white text-xl font-extrabold">🎮 Tetris</p>
               <p className="text-gray-400 text-xs text-center px-4">{t.pcTetris}</p>
               <p className="text-gray-400 text-xs text-center px-4">{t.mobileTetris}</p>
-              <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">{t.start}</button>
+             <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <FaPlay /> {t.start}
+</button>
             </div>
           )}
           {paused&&running&&(
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
               <p className="text-white text-2xl font-extrabold">⏸ {t.gamePaused}</p>
-              <button onClick={()=>setPaused(false)} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">▶ {t.resume}</button>
+             <button onClick={() => setPaused(false)} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <FaPlay /> {t.resume}
+</button>
             </div>
           )}
           {gameOver&&(
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
               <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
               <p className="text-yellow-400 text-lg font-bold">{t.score}: {score}</p>
-              <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">{t.again}</button>
+              <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <FaRedo /> {t.again}
+</button>
             </div>
           )}
         </div>
@@ -182,8 +189,16 @@ const Tetris = ({ darkMode }) => {
             ))}
           </div>
           <div className="flex flex-row md:flex-col gap-2">
-            {running&&<button onClick={()=>setPaused(p=>!p)} className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${darkMode?"bg-slate-700 text-gray-300":"bg-gray-100 text-gray-600"}`}>{paused?"▶ Davom":"⏸ Pauza"}</button>}
-            <button onClick={reset} className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${darkMode?"bg-slate-700 text-gray-300":"bg-gray-100 text-gray-600"}`}>{t.again}</button>
+           {running && (
+  <button onClick={() => setPaused(p => !p)}
+    className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
+    {paused ? <><FaPlay /> Davom</> : <><FaPause /> Pauza</>}
+  </button>
+)}
+            <button onClick={reset}
+  className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
+  <FaRedo /> {t.again}
+</button>
           </div>
           <div className={`md:hidden rounded-xl p-3 ${darkMode?"bg-slate-800":"bg-white"} shadow text-center`}>
             <p className={`text-[10px] ${darkMode?"text-gray-400":"text-gray-500"}`}>

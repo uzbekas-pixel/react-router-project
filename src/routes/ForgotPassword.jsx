@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useLang } from "../context/useLang";
+import { LuKeyRound, LuMail, LuArrowLeft, LuSend } from "react-icons/lu";
 
 const ForgotPassword = ({ darkMode, showToast }) => {
   const { t } = useLang();
@@ -30,7 +31,9 @@ const ForgotPassword = ({ darkMode, showToast }) => {
         {!sent ? (
           <>
             <div className="text-center mb-8">
-              <div className="text-5xl mb-4">🔑</div>
+              <div className="text-5xl mb-4 flex justify-center">
+  <LuKeyRound className="text-blue-400" size={56} />
+</div>
               <h2 className={`text-2xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
                 {t.forgotTitle}
               </h2>
@@ -47,17 +50,19 @@ const ForgotPassword = ({ darkMode, showToast }) => {
                   }`} />
               </div>
               <button onClick={handleSubmit} disabled={loading}
-                className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300">
-                {loading ? t.sending : t.sendLink}
-              </button>
-              <Link to="/login" className="text-center text-sm text-blue-400 hover:underline">
-                {t.backToLogin}
-              </Link>
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+  {loading ? t.sending : <><LuSend size={16} /> {t.sendLink}</>}
+</button>
+             <Link to="/login" className="text-center text-sm text-blue-400 hover:underline flex items-center justify-center gap-1">
+  <LuArrowLeft size={14} /> {t.backToLogin}
+</Link>
             </div>
           </>
         ) : (
           <div className="text-center">
-            <div className="text-6xl mb-4">📧</div>
+          <div className="text-6xl mb-4 flex justify-center">
+  <LuMail className="text-blue-400" size={64} />
+</div>
             <h2 className={`text-2xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
               {t.emailSent}
             </h2>
@@ -65,9 +70,9 @@ const ForgotPassword = ({ darkMode, showToast }) => {
               <span className="text-blue-400 font-semibold">{email}</span>
             </p>
             <Link to="/login"
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-300">
-              {t.backToLogin}
-            </Link>
+  className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ">
+  <LuArrowLeft size={16} /> {t.backToLogin}
+</Link>
           </div>
         )}
       </div>

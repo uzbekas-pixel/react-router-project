@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/useAuth";
+import { FaTrophy } from "react-icons/fa";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -39,9 +40,12 @@ const Leaderboard = ({ darkMode, game }) => {
   );
 
   if (!scores.length) return (
-    <p className={`text-center text-sm py-4 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-      Hali natijalar yo'q!
-    </p>
+  <div className="flex flex-col items-center py-4 gap-2">
+  <FaTrophy className="text-3xl text-gray-400" />
+  <p className={`text-center text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+    Hali natijalar yo'q!
+  </p>
+</div>
   );
 
   return (

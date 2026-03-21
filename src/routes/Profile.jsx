@@ -5,6 +5,8 @@ import { updateProfile, updatePassword } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
+import { LuUser, LuShield, LuSave, LuLock, LuPhone, LuInfo } from "react-icons/lu";
+import { MdOutlineEdit } from "react-icons/md";
 
 const Profile = ({ darkMode, showToast, showConfetti }) => {
   const { user } = useAuth();
@@ -39,24 +41,45 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
     loadProfile();
   }, [user]);
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result);
-      reader.readAsDataURL(file);
+const handleAvatarChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Avval preview ko'rsatish (tez ko'rinsin)
+  const reader = new FileReader();
+  reader.onloadend = () => setAvatarPreview(reader.result);
+  reader.readAsDataURL(file);
+
+  // imgbb ga yuklash (URL olish uchun - boshqalar ham ko'rsin)
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch(
+      `https://api.imgbb.com/1/upload?key=2166816880e7d95d3a1fccc6a40a0a2b`,
+      { method: "POST", body: formData }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setAvatarPreview(data.data.url);
+      showToast("Rasm yuklandi! Saqlash tugmasini bosing ✅", "success");
+    } else {
+      showToast("Rasm yuklashda xatolik!", "error");
     }
-  };
+  } catch {
+    showToast("Rasm yuklashda xatolik!", "error");
+  }
+};
 
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      await updateProfile(auth.currentUser, { displayName: form.displayName });
+      await updateProfile(auth.currentUser, { displayName: form.displayName,  photoURL: avatarPreview || auth.currentUser.photoURL || "", });
       await setDoc(doc(db, "users", user.uid), {
         displayName: form.displayName,
         phone: form.phone,
         bio: form.bio,
         avatarUrl: avatarPreview || "",
+         photoURL: avatarPreview || "",
         email: user.email,
         updatedAt: new Date().toISOString(),
       });
@@ -94,8 +117,8 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
   }`;
 
   const tabs = [
-    { id: "profile", label: t.profileTab },
-    { id: "security", label: t.securityTab },
+    { id: "profile", label: t.profileTab, icon: <LuUser size={16} /> },
+    { id: "security", label: t.securityTab, icon: <LuShield size={16} /> },
   ];
 
   return (
@@ -114,7 +137,7 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                 )}
               </div>
               <label className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-400 text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer shadow transition">
-                ✏️
+                <MdOutlineEdit size={14} />
                 <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
               </label>
             </div>
@@ -133,16 +156,16 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
 
       <ScrollReveal direction="up" delay={100}>
         <div className="flex gap-2 mb-6">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                activeTab === tab.id ? "bg-blue-500 text-white"
-                : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
-                : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
-              }`}>
-              {tab.label}
-            </button>
-          ))}
+        {tabs.map((tab) => (
+  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+      activeTab === tab.id ? "bg-blue-500 text-white"
+      : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
+      : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
+    }`}>
+    {tab.icon} {tab.label}
+  </button>
+))}
         </div>
       </ScrollReveal>
 
@@ -170,9 +193,10 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                   className={inputClass + " resize-none"} />
               </div>
               <button onClick={handleSaveProfile} disabled={loading}
-                className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300">
-                {loading ? t.saving : t.save}
-              </button>
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+  {loading ? t.saving : <><LuSave size={16} /> {t.save}</>}
+</button>
+
             </div>
           </div>
         </ScrollReveal>
@@ -196,9 +220,9 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                   className={inputClass} />
               </div>
               <button onClick={handleChangePassword} disabled={loading}
-                className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300">
-                {loading ? t.updating : t.updatePassword}
-              </button>
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+  {loading ? t.updating : <><LuLock size={16} /> {t.updatePassword}</>}
+</button>
             </div>
           </div>
         </ScrollReveal>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "../../context/useLang";
+import { FaRedo } from "react-icons/fa";
 
 const WORDS_EN = [
   "apple", "brave", "chord", "drain", "eagle", "flame", "grace", "heart", "ideal", "juice",
@@ -182,10 +183,10 @@ const Wordle = ({ darkMode }) => {
               </button>
             ))}
           </div>
-          <button onClick={() => reset()}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>
-            {t.again}
-          </button>
+         <button onClick={() => reset()}
+  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>
+  <FaRedo /> {t.again}
+</button>
         </div>
       </div>
 

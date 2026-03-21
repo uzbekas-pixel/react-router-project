@@ -5,6 +5,8 @@ import { auth, googleProvider, githubProvider } from "../firebase/config";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
+import { MdOutlineLogin } from "react-icons/md";
+import { LuUser, LuLock, LuArrowRight } from "react-icons/lu";
 
 const getFirebaseError = (err, t) => {
   switch (err?.code) {
@@ -141,10 +143,10 @@ const Login = ({ darkMode, showToast, showConfetti }) => {
               className={inputClass("password")} />
             {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
           </div>
-          <button onClick={handleSubmit} disabled={loading}
-            className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 mt-2">
-            {loading ? t.loggingIn : t.loginBtn}
-          </button>
+         <button onClick={handleSubmit} disabled={loading}
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 mt-2 flex items-center justify-center gap-2">
+  {loading ? t.loggingIn : <><MdOutlineLogin size={18} /> {t.loginBtn}</>}
+</button>
           <div className="flex items-center gap-3 my-1">
             <div className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`} />
             <span className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>{t.or}</span>

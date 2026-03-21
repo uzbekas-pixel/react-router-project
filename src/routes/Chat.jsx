@@ -7,6 +7,11 @@ import AgoraRTC from "agora-rtc-sdk-ng";
 import { ref, onValue } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { useChatSound } from "../hooks/useChatSound";
+import {
+  LuPhone, LuPhoneOff, LuMic, LuMicOff, LuVideo, LuVideoOff,
+  LuSend, LuPaperclip, LuReply, LuTrash2, LuBell, LuBellOff,
+  LuMail, LuKeyboard, LuX
+} from "react-icons/lu";
 
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
@@ -254,22 +259,22 @@ const Chat = ({ darkMode }) => {
               darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-100 hover:bg-gray-200"
             }`}
             title={soundOn ? "Ovozni o'chirish" : "Ovozni yoqish"}>
-            {soundOn ? "🔔" : "🔕"}
+            {soundOn ? <LuBell className="text-yellow-300" /> : <LuBellOff className="text-gray-400" />}
           </button>
-          {!inCall ? (
-            <button onClick={joinCall} className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white text-sm font-semibold rounded-xl transition">
-              {t.videoCall}
-            </button>
-          ) : (
-            <button onClick={leaveCall} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm font-semibold rounded-xl transition">
-              {t.leaveCall}
-            </button>
-          )}
+        {!inCall ? (
+  <button onClick={joinCall} className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white text-sm font-semibold rounded-xl transition">
+    <LuVideo size={16} /> {t.videoCall}
+  </button>
+) : (
+  <button onClick={leaveCall} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm font-semibold rounded-xl transition">
+    <LuPhoneOff size={16} /> {t.leaveCall}
+  </button>
+)}
           <button onClick={() => navigate("/dm")}
             className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition ${
               darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}>
-            ✉️ DM
+            <LuMail size={15} /> DM
           </button>
         </div>
       </div>
@@ -299,10 +304,10 @@ const Chat = ({ darkMode }) => {
           </div>
           <div className="flex gap-2 mt-3">
             <button onClick={toggleMic} className={`px-3 py-1.5 text-white text-xs rounded-xl transition ${micOn ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400"}`}>
-              {micOn ? t.micOn : t.micOff}
+              {micOn ? <> <LuMic size={12} className="inline mr-1" /> {t.micOn} </> : <> <LuMicOff size={12} className="inline mr-1" /> {t.micOff} </>}
             </button>
             <button onClick={toggleCam} className={`px-3 py-1.5 text-white text-xs rounded-xl transition ${camOn ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400"}`}>
-              {camOn ? t.camOn : t.camOff}
+              {camOn ? <> <LuVideo size={12} className="inline mr-1" /> {t.camOn} </> : <> <LuVideoOff size={12} className="inline mr-1" /> {t.camOff} </>}
             </button>
           </div>
         </div>
@@ -380,7 +385,7 @@ const Chat = ({ darkMode }) => {
                       inputRef.current?.focus();
                     }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
-                      ↩️
+                      <LuReply size={14} />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
@@ -389,7 +394,7 @@ const Chat = ({ darkMode }) => {
                     {canDelete && (
                       <button onClick={() => handleDelete(msg.id, msg.uid)}
                         className="w-7 h-7 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center text-white text-xs transition">
-                        🗑️
+                        <LuTrash2 size={13} />
                       </button>
                     )}
                     {isAdmin && !isMe && (
@@ -454,17 +459,17 @@ const Chat = ({ darkMode }) => {
                 inputRef.current?.focus();
               }}
                 className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-300 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-50"}`}>
-                ↩️ Javob berish
+                <LuReply size={16} /> Javob berish
               </button>
               {canDelete && (
                 <button onClick={() => handleDelete(longPressMsg, msg.uid)}
                   className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3">
-                  {t.deleteMessage}
+                  <LuTrash2 size={16} /> {t.deleteMessage.replace("🗑️", "")}
                 </button>
               )}
               <button onClick={() => setLongPressMsg(null)}
                 className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-400 hover:bg-slate-600" : "text-gray-500 hover:bg-gray-50"}`}>
-                {t.cancel}
+                <LuX size={16} />{t.cancel.replace("✕", "")}
               </button>
             </div>
           </div>
@@ -494,14 +499,14 @@ const Chat = ({ darkMode }) => {
             inputMode === "voice" ? "bg-blue-500 text-white"
             : darkMode ? "bg-slate-700 hover:bg-slate-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
           }`}>
-          {inputMode === "text" ? "🎙️" : "⌨️"}
+          {inputMode === "text" ? <LuMic size={18} /> : <LuKeyboard size={18} />}
         </button>
 
         {inputMode === "text" ? (
           <>
             <button onClick={() => fileInputRef.current?.click()} disabled={imageUploading}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${darkMode ? "bg-slate-700 hover:bg-slate-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
-              {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
+              {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : <LuPaperclip size={18} />}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             <input ref={inputRef} type="text" placeholder={t.messagePlaceholderChat} value={text}
@@ -509,7 +514,7 @@ const Chat = ({ darkMode }) => {
               className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-400"}`} />
             <button onClick={handleSend} disabled={!text.trim()}
               className="w-10 h-10 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition">
-              ➤
+              <LuSend size={16} />
             </button>
           </>
         ) : (
@@ -523,7 +528,7 @@ const Chat = ({ darkMode }) => {
               onMouseDown={startRecording} onMouseUp={stopRecording}
               onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={stopRecording}
               className={`w-14 h-10 rounded-xl flex items-center justify-center transition ${recording ? "bg-red-500 text-white animate-pulse" : "bg-blue-500 hover:bg-blue-400 text-white"}`}>
-              🎙️
+              <LuMic size={18} />
             </button>
           </>
         )}
@@ -534,7 +539,7 @@ const Chat = ({ darkMode }) => {
         <div className="fixed inset-0 z-9999 bg-black/80 flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}>
           <img src={previewImage} alt="preview" className="max-w-full max-h-full rounded-2xl object-contain" />
-          <button onClick={() => setPreviewImage(null)} className="absolute top-4 right-4 text-white text-3xl hover:opacity-70">✕</button>
+          <button onClick={() => setPreviewImage(null)} className="absolute top-4 right-4 text-white text-3xl hover:opacity-70"> <LuX size={28} /></button>
         </div>
       )}
     </div>

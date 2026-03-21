@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "../../context/useLang";
+import { FaRedo, FaTrophy } from "react-icons/fa";
 
 const SIZE = 4;
 
@@ -175,10 +176,10 @@ const Game2048 = ({ darkMode }) => {
             <p className={`text-xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>{s.value}</p>
           </div>
         ))}
-        <button onClick={reset}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-800 text-gray-300 hover:bg-slate-700" : "bg-white text-gray-600 hover:bg-gray-100 shadow"}`}>
-          {t.again}
-        </button>
+       <button onClick={reset}
+  className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-800 text-gray-300 hover:bg-slate-700" : "bg-white text-gray-600 hover:bg-gray-100 shadow"}`}>
+  <FaRedo /> {t.again}
+</button>
       </div>
 
       {/* Board */}
@@ -207,9 +208,9 @@ const Game2048 = ({ darkMode }) => {
             <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
             <p className="text-yellow-400 text-lg font-bold">{t.score}: {score}</p>
             <button onClick={reset}
-              className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
-              {t.again}
-            </button>
+  className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl flex items-center gap-2">
+  <FaRedo /> {t.again}
+</button>
           </div>
         )}
 
@@ -219,14 +220,14 @@ const Game2048 = ({ darkMode }) => {
             <p className="text-white text-2xl font-extrabold">🏆 2048!</p>
             <p className="text-white text-sm">{t.continueGame}</p>
             <div className="flex gap-2">
-              <button onClick={() => { setWonDismissed(true); setWon(false); }}
-                className="px-4 py-2 bg-white text-yellow-600 font-semibold rounded-xl text-sm">
-                {t.continueBtn}
-              </button>
-              <button onClick={reset}
-                className="px-4 py-2 bg-yellow-700 text-white font-semibold rounded-xl text-sm">
-                {t.again}
-              </button>
+             <button onClick={() => { setWonDismissed(true); setWon(false); }}
+  className="px-4 py-2 bg-white text-yellow-600 font-semibold rounded-xl text-sm flex items-center gap-1">
+  <FaTrophy /> {t.continueBtn}
+</button>
+             <button onClick={reset}
+  className="px-4 py-2 bg-yellow-700 text-white font-semibold rounded-xl text-sm flex items-center gap-1">
+  <FaRedo /> {t.again}
+</button>
             </div>
           </div>
         )}

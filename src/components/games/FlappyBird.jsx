@@ -3,6 +3,7 @@ import { useLang } from "../../context/useLang";
 import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
 import { useAuth } from "../../context/useAuth";
+import { FaPlay, FaRedo } from "react-icons/fa";
 
 const W = 320;
 const H = 480;
@@ -160,9 +161,9 @@ const FlappyBird = ({ darkMode }) => {
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-3">
             <p className="text-white text-2xl font-extrabold">🐦 Flappy Bird</p>
             <p className="text-gray-300 text-sm">{t.clickOrSpace}</p>
-            <button onClick={jump} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
-              {t.start}
-            </button>
+           <button onClick={jump} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl flex items-center gap-2">
+  <FaPlay /> {t.start}
+</button>
           </div>
         )}
 
@@ -180,9 +181,9 @@ const FlappyBird = ({ darkMode }) => {
                 {t.saveScore}
               </button>
             )}
-            <button onClick={reset} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl">
-              {t.again}
-            </button>
+            <button onClick={reset} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl flex items-center gap-2">
+  <FaRedo /> {t.again}
+</button>
           </div>
         )}
       </div>

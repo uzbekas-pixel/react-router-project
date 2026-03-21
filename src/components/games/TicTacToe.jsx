@@ -3,6 +3,7 @@ import { useLang } from "../../context/useLang";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/useAuth";
 import { doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { FaRedo, FaSignOutAlt, FaCopy, FaGlobe, FaUsers } from "react-icons/fa";
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -85,10 +86,10 @@ const LocalGame = ({ darkMode, t }) => {
       </div>
 
       <div className="flex gap-3">
-        <button onClick={reset}
-          className={`px-6 py-2 rounded-xl font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-          {t.again}
-        </button>
+       <button onClick={reset}
+  className={`px-6 py-2 rounded-xl font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  <FaRedo /> {t.again}
+</button>
         <button onClick={() => { reset(); setScores({ X: 0, O: 0, Draw: 0 }); }}
           className={`px-6 py-2 rounded-xl font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
           Hisobni sifrlash
@@ -227,10 +228,10 @@ const OnlineGame = ({ darkMode, t, user }) => {
       <h3 className={`text-lg font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>Raqib kutilmoqda...</h3>
       <p className={`text-sm mb-4 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Do'stingizga bu kodni yuboring:</p>
       <div className={`text-4xl font-extrabold tracking-widest mb-4 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>{roomId}</div>
-      <button onClick={() => { navigator.clipboard.writeText(roomId); }}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-        📋 Nusxalash
-      </button>
+    <button onClick={() => { navigator.clipboard.writeText(roomId); }}
+  className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  <FaCopy /> Nusxalash
+</button>
       <br />
       <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline mt-2">Bekor qilish</button>
       {roomData?.guestUid && (() => { setScreen("playing"); return null; })()}
@@ -289,10 +290,10 @@ const OnlineGame = ({ darkMode, t, user }) => {
         {!isHost && winner && (
           <p className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>Host qayta boshlashini kuting...</p>
         )}
-        <button onClick={leaveRoom}
-          className={`px-5 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-          Chiqish
-        </button>
+      <button onClick={leaveRoom}
+  className={`px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  <FaSignOutAlt /> Chiqish
+</button>
       </div>
     </div>
   );
@@ -312,18 +313,12 @@ const TicTacToe = ({ darkMode }) => {
 
       {/* Mode tanlash */}
       <div className={`flex rounded-2xl overflow-hidden border mb-6 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-        <button onClick={() => setMode("local")}
-          className={`px-6 py-2 text-sm font-semibold transition ${
-            mode === "local" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
-          }`}>
-          👥 2 kishi (local)
-        </button>
-        <button onClick={() => setMode("online")}
-          className={`px-6 py-2 text-sm font-semibold transition ${
-            mode === "online" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
-          }`}>
-          🌐 Online
-        </button>
+      <button onClick={() => setMode("local")} className={`px-6 py-2 text-sm font-semibold transition flex items-center gap-2 ${mode === "local" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"}`}>
+  <FaUsers /> 2 kishi (local)
+</button>
+<button onClick={() => setMode("online")} className={`px-6 py-2 text-sm font-semibold transition flex items-center gap-2 ${mode === "online" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"}`}>
+  <FaGlobe /> Online
+</button>
       </div>
 
       {mode === "local"

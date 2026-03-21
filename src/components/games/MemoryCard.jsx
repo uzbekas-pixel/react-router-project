@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "../../context/useLang";
+import { FaRedo, FaTrophy } from "react-icons/fa";
 
 const EMOJI_SETS = {
   animals: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮"],
@@ -161,10 +162,10 @@ const MemoryCard = ({ darkMode }) => {
             <p className={`text-sm font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>{s.value}</p>
           </div>
         ))}
-        <button onClick={() => reset()}
-          className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${darkMode ? "bg-slate-800 text-gray-300 hover:bg-slate-700" : "bg-white text-gray-600 hover:bg-gray-100 shadow"}`}>
-          {t.again}
-        </button>
+       <button onClick={() => reset()}
+  className={`px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-800 text-gray-300 hover:bg-slate-700" : "bg-white text-gray-600 hover:bg-gray-100 shadow"}`}>
+  <FaRedo /> {t.again}
+</button>
       </div>
 
       {/* Cards grid */}
@@ -221,10 +222,10 @@ const MemoryCard = ({ darkMode }) => {
                 <p className={`text-xl font-extrabold text-green-400`}>{formatTime(time)}</p>
               </div>
             </div>
-            <button onClick={() => reset()}
-              className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-              {t.again}
-            </button>
+           <button onClick={() => reset()}
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2">
+  <FaRedo /> {t.again}
+</button>
           </div>
         </div>
       )}

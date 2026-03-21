@@ -108,3 +108,20 @@ iframe::-webkit-scrollbar-thumb {
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: #60a5fa;
 }
+
+.code-editor::-webkit-scrollbar {
+  width: 4px;
+}
+.code-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+.code-editor::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}
+.code-editor::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
+}
+.code-editor iframe::-webkit-scrollbar {
+  display: none;
+}

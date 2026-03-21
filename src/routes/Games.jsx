@@ -9,13 +9,14 @@ import Game2048 from "../components/games/Game2048";
 import Wordle from "../components/games/Wordle";
 import MemoryCard from "../components/games/MemoryCard";
 import { useLang } from "../context/useLang";
+import { LuArrowLeft, LuGamepad2, LuKeyboard, LuUsers } from "react-icons/lu";
 
 const BackButton = ({ onClick, darkMode, t }) => (
   <button onClick={onClick}
     className={`fixed top-8 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition mt-2 ${
       darkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-gray-700 hover:bg-gray-100 shadow"
     }`}>
-    {t.back}
+    <LuArrowLeft size={16} /> {t.back}
   </button>
 );
 
@@ -283,18 +284,26 @@ const Games = ({ darkMode, showToast }) => {
 
   return (
     <div className={`page-transition min-h-[calc(100vh-64px)] px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      <h1 className={`text-2xl font-extrabold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.gamesTitle}</h1>
+<h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+  <LuGamepad2 className="text-yellow-400" /> {t.gamesTitle}
+</h1>
       <div className={`rounded-2xl overflow-hidden shadow mb-8 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
         <div className={`flex border-b ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-          <button onClick={()=>setTab("typing")} className={`flex-1 py-3 text-sm font-semibold transition ${tab==="typing"?"text-blue-500 border-b-2 border-blue-500":darkMode?"text-gray-500":"text-gray-400"}`}>⌨️ {t.typingTitle}</button>
-          <button onClick={()=>setTab("multi")}  className={`flex-1 py-3 text-sm font-semibold transition ${tab==="multi"?"text-blue-500 border-b-2 border-blue-500":darkMode?"text-gray-500":"text-gray-400"}`}>{t.multiTitle}</button>
+          <button onClick={() => setTab("typing")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ...`}>
+  <LuKeyboard size={16} /> {t.typingTitle}
+</button>
+<button onClick={() => setTab("multi")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ...`}>
+  <LuUsers size={16} /> {t.multiTitle}
+</button>
         </div>
         <div>
           {tab==="typing" && <TypingGame darkMode={darkMode}/>}
           {tab==="multi"  && <MultiTyping darkMode={darkMode} showToast={showToast}/>}
         </div>
       </div>
-      <h2 className={`text-lg font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.arcadeGames}</h2>
+     <h2 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+  <LuGamepad2 className="text-yellow-400" size={20} /> {t.arcadeGames}
+</h2>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:14 }}>
         {GAMES.map(game => <GameCard key={game.id} game={game} onClick={()=>setScreen(game.id)} t={t}/>)}
       </div>

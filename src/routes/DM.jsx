@@ -3,6 +3,10 @@ import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where,
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
+import {
+  LuSend, LuPaperclip, LuMic, LuKeyboard,
+  LuArrowLeft, LuTrash2, LuMessageSquare
+} from "react-icons/lu";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const MSG_EXPIRE = 24 * 60 * 60 * 1000;
@@ -343,9 +347,9 @@ const DM = ({ darkMode, showToast }) => {
           {/* Header */}
           <div className={`flex items-center gap-3 px-4 py-3 border-b shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
             <button onClick={backToList}
-              className={`md:hidden w-8 h-8 flex items-center justify-center rounded-xl shrink-0 ${darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-600"}`}>
-              ←
-            </button>
+  className={`md:hidden w-8 h-8 flex items-center justify-center rounded-xl shrink-0 ${darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-600"}`}>
+  <LuArrowLeft size={18} />
+</button>
             <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
               {selectedUser.avatarUrl
                 ? <img src={selectedUser.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -402,9 +406,9 @@ const DM = ({ darkMode, showToast }) => {
                     )}
                     {(isMe || isAdmin) && (
                       <button onClick={() => handleDeleteMsg(msg.id, msg.uid)}
-                        className="opacity-0 group-hover:opacity-100 text-xs text-red-400 hover:text-red-300 transition mt-0.5">
-                        🗑️
-                      </button>
+  className="opacity-0 group-hover:opacity-100 text-xs text-red-400 hover:text-red-300 transition mt-0.5 flex items-center gap-1">
+  <LuTrash2 size={12} />
+</button>
                     )}
                     <div style={{ display:"flex", alignItems:"center", gap:4 }}>
                       <span className={`text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>
@@ -431,14 +435,14 @@ const DM = ({ darkMode, showToast }) => {
                 inputMode === "voice" ? "bg-blue-500 text-white"
                 : darkMode ? "bg-slate-700 hover:bg-slate-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
               }`}>
-              {inputMode === "text" ? "🎙️" : "⌨️"}
+              {inputMode === "text" ? <LuMic size={18} /> : <LuKeyboard size={18} />}
             </button>
 
             {inputMode === "text" ? (
               <>
                 <button onClick={() => fileInputRef.current?.click()} disabled={imageUploading}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${darkMode ? "bg-slate-700 hover:bg-slate-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
-                  {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : "📎"}
+                  {imageUploading ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> : <LuPaperclip size={17} />}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 <input
@@ -453,7 +457,7 @@ const DM = ({ darkMode, showToast }) => {
                 />
                 <button onClick={handleSend} disabled={!text.trim()}
                   className="w-9 h-9 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white rounded-xl flex items-center justify-center shrink-0 transition">
-                  ➤
+                  <LuSend size={16} />
                 </button>
               </>
             ) : (
@@ -469,7 +473,7 @@ const DM = ({ darkMode, showToast }) => {
                   className={`w-14 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
                     recording ? "bg-red-500 text-white animate-pulse" : "bg-blue-500 hover:bg-blue-400 text-white"
                   }`}>
-                  🎙️
+                  <LuMic size={18} />
                 </button>
               </>
             )}
@@ -490,9 +494,9 @@ const DM = ({ darkMode, showToast }) => {
     <div className={`page-transition w-full max-w-5xl mx-auto px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
       style={{ height: "calc(100vh - 130px)" }}>
       <div className="flex items-center gap-3 mb-4">
-        <h1 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
-          💬 Direct Messages
-        </h1>
+        <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+  <LuMessageSquare className="text-blue-500" /> Direct Messages
+</h1>
         {/* Umumiy o'qilmagan badge */}
         {totalUnread > 0 && (
           <span style={{

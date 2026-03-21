@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ScrollReveal from "../components/ScrollReveal";
-
+const shuffleArray = (arr) => [...arr].sort(() => Math.random() - 0.5);
 const quizData = [
   {
     id: 1, category: "HTML", difficulty: "Oson",
@@ -56,15 +56,36 @@ const Quiz = ({ darkMode, showToast }) => {
   const [streak, setStreak] = useState(0);
   const timerRef = useRef(null);
 
-  const startQuiz = (quiz) => {
-    setSelectedQuiz(quiz);
-    setCurrentQ(0);
-    setSelected(null);
-    setAnswers([]);
-    setStreak(0);
-    setTimeLeft(TIMER);
-    setScreen("playing");
-  };
+ const startQuiz = (quiz) => {
+  // Savolarni aralashtirib, har biridan 5 ta random variant chiqarish
+  const shuffledQuestions = shuffleArray(quiz.questions)
+    .slice(0, 5)
+    .map((q) => ({
+      ...q,
+      // Javob variantlarini ham aralashtirish
+      _shuffled: (() => {
+        const indexed = q.options.map((opt, i) => ({ opt, isCorrect: i === q.answer }));
+        const shuffled = shuffleArray(indexed);
+        return {
+          options: shuffled.map((x) => x.opt),
+          answer: shuffled.findIndex((x) => x.isCorrect),
+        };
+      })(),
+    }))
+    .map((q) => ({
+      ...q,
+      options: q._shuffled.options,
+      answer: q._shuffled.answer,
+    }));
+
+  setSelectedQuiz({ ...quiz, questions: shuffledQuestions });
+  setCurrentQ(0);
+  setSelected(null);
+  setAnswers([]);
+  setStreak(0);
+  setTimeLeft(TIMER);
+  setScreen("playing");
+};
 
   const handleAnswer = (idx) => {
     if (selected !== null) return;

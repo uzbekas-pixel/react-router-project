@@ -18,11 +18,13 @@ export default defineConfig({
     workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         maximumFileSizeToCacheInBytes: 3000000, 
+        navigateFallback: 'index.html',               // ← qo'shing
+  navigateFallbackAllowlist: [/^(?!\/__).*/], 
       },
     includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
     manifest: {
       name: "Uzbekas Pixel — Online Kurslar",
-      short_name: "EduZone",
+      short_name: "Pixel",
       description: "Uzbekistonning eng zo'r IT ta'lim platformasi",
       theme_color: "#1e293b",
       background_color: "#0f172a",

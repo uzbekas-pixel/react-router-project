@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
+import { LuTrophy, LuRefreshCw, LuKeyboard } from "react-icons/lu";
 
 const WORDS_UZ = [
  "salom", "uka", "opa", "aka", "ota", "ona", "bobo", "buvi", "dost", "yigit",
@@ -177,20 +178,18 @@ const TypingGame = ({ darkMode }) => {
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h1 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
-            {t.typingTitle}
-          </h1>
+          <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+  <LuKeyboard className="text-blue-400" /> {t.typingTitle}
+</h1>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Leaderboard tugmasi */}
-            <button
-              onClick={() => setShowLeaderboard(!showLeaderboard)}
-              className={`px-3 py-1.5 text-sm font-semibold rounded-xl transition ${
-                showLeaderboard
-                  ? "bg-yellow-500 text-white"
-                  : darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}>
-              {t.top10}
-            </button>
+          <button onClick={() => setShowLeaderboard(!showLeaderboard)}
+  className={`px-3 py-1.5 text-sm font-semibold rounded-xl transition flex items-center gap-2 ${
+    showLeaderboard ? "bg-yellow-500 text-white"
+    : darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+  }`}>
+  <LuTrophy size={15} className={showLeaderboard ? "text-white" : "text-yellow-400"} /> {t.top10}
+</button>
             {/* Til */}
             <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               {["en", "uz"].map((l) => (
@@ -340,13 +339,13 @@ const TypingGame = ({ darkMode }) => {
                 className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold transition ${
                   darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}>
-                {t.restart}
+               <LuRefreshCw size={15} /> {t.restart}
               </button>
             </div>
           </>
         ) : (
           <div className={`rounded-2xl p-8 shadow-xl text-center ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <div className="text-5xl mb-4">🎉</div>
+            <div className="text-5xl mb-4"><LuTrophy className="text-yellow-400" size={56} /></div>
             <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.results}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
@@ -371,11 +370,11 @@ const TypingGame = ({ darkMode }) => {
             <div className="flex gap-3 justify-center">
               <button onClick={() => reset()}
                 className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-                {t.playAgain}
+                <LuRefreshCw size={16} />{t.playAgain}
               </button>
               <button onClick={() => setShowLeaderboard(true)}
                 className={`px-6 py-3 rounded-xl font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                {t.top10}
+                <LuTrophy size={15} className={showLeaderboard ? "text-white" : "text-yellow-400"} />{t.top10}
               </button>
             </div>
           </div>

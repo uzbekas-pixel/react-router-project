@@ -3,6 +3,7 @@ import { useLang } from "../../context/useLang";
 import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
 import { useAuth } from "../../context/useAuth";
+import { FaPlay, FaRedo, FaSave } from "react-icons/fa";
 
 const GRID = 20;
 const CELL = 18;
@@ -240,10 +241,10 @@ const SnakeGame = ({ darkMode }) => {
             <p className="text-white text-xl font-extrabold">🐍 Snake</p>
 <p className="text-gray-400 text-xs">{t.pcControls}</p>
 <p className="text-gray-400 text-xs">{t.mobileControls}</p>
-            <button onClick={reset}
-              className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition">
-             {t.start}
-            </button>
+           <button onClick={reset}
+  className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <FaPlay /> {t.start}
+</button>
           </div>
         )}
 
@@ -254,16 +255,14 @@ const SnakeGame = ({ darkMode }) => {
             <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
 <p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
             <button onClick={reset}
-              className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition">
-              {t.again}
-            </button>
+  className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <FaRedo /> {t.again}
+</button>
             {user && (
-              <button
-                onClick={() => saveScore(user, "snake", display.score)}
-                className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl"
-              >
-                {t.saveScore}
-              </button>
+             <button onClick={() => saveScore(user, "snake", display.score)}
+  className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl flex items-center gap-2">
+  <FaSave /> {t.saveScore}
+</button>
             )}
           </div>
         )}

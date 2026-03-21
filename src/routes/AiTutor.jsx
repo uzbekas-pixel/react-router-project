@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
+import { LuRefreshCw, LuSend } from "react-icons/lu";
 
 const quickTopics = [
   { icon: "🌐", label: "HTML",       prompt: "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?" },
@@ -25,7 +26,7 @@ const suggestedQuestions = [
   "Ingliz tilida past simple ishlatish",
 ];
 
-const SYSTEM_PROMPT = `Sen "EduZone" online ta'lim platformasining AI o'qituvchisisans. Sening vazifang o'quvchilarga quyidagi mavzularda yordam berish:
+const SYSTEM_PROMPT = `Sen "Uzbekas Pixel" online ta'lim platformasining AI o'qituvchisisan. Sening vazifang o'quvchilarga quyidagi mavzularda yordam berish:
 
 Dasturlash: HTML5, CSS, JavaScript, React, Firebase, Git, REST API, SQL/NoSQL
 Tillar: Ingliz tili (IELTS, grammar), Rus tili, Fransuz tili
@@ -74,7 +75,7 @@ const AiTutor = ({ darkMode, showToast }) => {
   const { t } = useLang();
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: `${t.aiTutorWelcome}`,
+    content: t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering! 🤖",
   }]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
@@ -213,9 +214,14 @@ const AiTutor = ({ darkMode, showToast }) => {
             </div>
           </div>
         </div>
-        <button onClick={clearChat} style={{ padding: "6px 14px", borderRadius: 10, background: "transparent", border: `1px solid ${borderColor}`, color: darkMode ? "#94a3b8" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-          {t.aiTutorClear}
-        </button>
+      <button onClick={clearChat} style={{ 
+  padding: "6px 14px", borderRadius: 10, background: "transparent", 
+  border: `1px solid ${borderColor}`, color: darkMode ? "#94a3b8" : "#6b7280", 
+  fontSize: 12, fontWeight: 600, cursor: "pointer",
+  display: "flex", alignItems: "center", gap: 6  // ← qo'shing
+}}>
+  <LuRefreshCw size={13} /> {t.aiTutorClear}
+</button>
       </div>
 
       {/* Topic pills */}
@@ -289,7 +295,7 @@ const AiTutor = ({ darkMode, showToast }) => {
           disabled={loading || !input.trim()}
           style={{ width: 38, height: 38, borderRadius: 10, border: "none", flexShrink: 0, background: loading || !input.trim() ? (darkMode ? "#334155" : "#e2e8f0") : "linear-gradient(135deg, #3b82f6, #6366f1)", color: loading || !input.trim() ? "#6b7280" : "#fff", cursor: loading || !input.trim() ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.2s" }}
         >
-          {loading ? "⏳" : "➤"}
+          {loading ? "⏳" : <LuSend size={16} />}
         </button>
       </div>
 
