@@ -1,17 +1,24 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
+import {
+  LuGraduationCap,
+  LuMessageSquare,
+  LuGamepad2,
+  LuCode,
+  LuInstagram
+} from "react-icons/lu";
 
 const BottomNav = ({ darkMode }) => {
   const { user } = useAuth();
   const { t } = useLang();
 
   const tabs = [
-    { path: "/", icon: "🎓", label: "Kurslar" },
-    { path: "/chat", icon: "💬", label: "Chat" },
-    { path: "/games", icon: "🎮", label: "Games" },
-    { path: "/code", icon: "💻", label: "Code" },
-    { path: "/story", icon: "📸", label: "Story" },
+    { path: "/", icon: <LuGraduationCap />, label: t.coursesNav },
+    { path: "/chat", icon: <LuMessageSquare />, label: t.chatTab },
+    { path: "/games", icon: <LuGamepad2 />, label: t.gamesTab },
+    { path: "/code", icon: <LuCode />, label: t.codeTab },
+    { path: "/story", icon: <LuInstagram />, label: t.story },
     {
       path: "/profile",
       icon: (

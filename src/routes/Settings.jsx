@@ -1,75 +1,179 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/useAuth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
-import { FaInstagram, FaYoutube, FaTelegram, FaGithub } from "react-icons/fa";
+import { useAuth } from "../context/useAuth";
+import { FaInstagram, FaYoutube, FaTelegram, FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 
 const THEMES = [
-  { id: "default", name: "Default", preview: "linear-gradient(135deg, #0f172a, #1e293b)" },
-  { id: "sunset", name: "Sunset", preview: "linear-gradient(135deg, #f97316, #ec4899)" },
-  { id: "ocean", name: "Ocean", preview: "linear-gradient(135deg, #06b6d4, #3b82f6)" },
-  { id: "forest", name: "Forest", preview: "linear-gradient(135deg, #22c55e, #16a34a)" },
-  { id: "purple", name: "Purple", preview: "linear-gradient(135deg, #a855f7, #6366f1)" },
-  { id: "rose", name: "Rose", preview: "linear-gradient(135deg, #f43f5e, #e11d48)" },
-  { id: "gold", name: "Gold", preview: "linear-gradient(135deg, #eab308, #f97316)" },
+  { id: "default",  name: "Default",  preview: "linear-gradient(135deg, #0f172a, #1e293b)" },
+  { id: "sunset",   name: "Sunset",   preview: "linear-gradient(135deg, #f97316, #ec4899)" },
+  { id: "ocean",    name: "Ocean",    preview: "linear-gradient(135deg, #06b6d4, #3b82f6)" },
+  { id: "forest",   name: "Forest",   preview: "linear-gradient(135deg, #22c55e, #16a34a)" },
+  { id: "purple",   name: "Purple",   preview: "linear-gradient(135deg, #a855f7, #6366f1)" },
+  { id: "rose",     name: "Rose",     preview: "linear-gradient(135deg, #f43f5e, #e11d48)" },
+  { id: "gold",     name: "Gold",     preview: "linear-gradient(135deg, #eab308, #f97316)" },
   { id: "midnight", name: "Midnight", preview: "linear-gradient(135deg, #1e1b4b, #312e81)" },
 ];
 
-const SOCIAL_LINKS = [
-  {
-    id: "instagram",
-    icon: <FaInstagram size={24} color="#E1306C" />,
-    label: "Instagram",
-    url: "https://www.instagram.com/naksosnw/", // o'zingiz silka qo'yasiz
-  },
-  {
-    id: "youtube",
-    icon: <FaYoutube size={24} color="#FF0000" />,
-    label: "YouTube",
-    url: "https://youtube.com/@uzbekas.022",
-  },
-  {
-    id: "telegram",
-    icon: <FaTelegram size={24} color="#0088cc" />,
-    label: "Telegram",
-    url: "https://t.me/uzbekas_01",
-  },
-  {
-    id: "github",
-    icon: <FaGithub size={24} color="#000000" />,
-    label: "GitHub",
-    url: "https://github.com/uzbekas-pixel",
-  },
+const SOCIAL_META = [
+  { id: "instagram", icon: FaInstagram, color: "#E1306C", label: "Instagram" },
+  { id: "youtube",   icon: FaYoutube,   color: "#FF0000", label: "YouTube"   },
+  { id: "telegram",  icon: FaTelegram,  color: "#0088cc", label: "Telegram"  },
+  { id: "github",    icon: FaGithub,    color: "#000000", label: "GitHub"    },
+ 
 ];
+
+
+const DEFAULT_ABOUT = {
+  name: "Uzbekas Pixel",
+  version: "v1.0.4",
+  goal: "Zamonaviy va oson onlayn ta'lim platformasi",
+  technologies: ["React", "Firebase", "Vercel", "PWA", "Tailwind CSS"],
+  author: "Uzbekas Pixel Team",
+  website: "https://uzbekas.vercel.app",
+  email: "admin@uzbekas.uz",
+  founded: "2026",
+  socials: {
+    instagram: "",
+    youtube: "",
+    telegram: "",
+    github: "",
+    twitter: "",
+    linkedin: "",
+  },
+};
+
+// Tahrirlash mumkin bo'lgan bitta maydon
+const EditableField = ({ label, value, field, isAdmin, darkMode, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value);
+
+  const handleSave = () => {
+    onSave(field, val);
+    setEditing(false);
+  };
+
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex-1">
+        <p className={`text-xs font-semibold mb-1 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+        {editing ? (
+          <div className="flex gap-2">
+            <input value={val} onChange={(e) => setVal(e.target.value)}
+              className={`flex-1 px-3 py-1.5 rounded-xl border text-sm outline-none ${
+                darkMode ? "bg-slate-700 border-slate-500 text-white" : "bg-white border-gray-300 text-gray-900"
+              }`} autoFocus />
+            <button onClick={handleSave}
+              className="px-3 py-1.5 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-xl transition">✅</button>
+            <button onClick={() => { setVal(value); setEditing(false); }}
+              className={`px-3 py-1.5 text-xs rounded-xl transition ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}>✕</button>
+          </div>
+        ) : (
+          <p className={`text-sm font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>{value || "—"}</p>
+        )}
+      </div>
+      {isAdmin && !editing && (
+        <button onClick={() => setEditing(true)}
+          className={`mt-5 w-7 h-7 rounded-lg flex items-center justify-center text-xs transition shrink-0 ${
+            darkMode ? "bg-slate-600 hover:bg-slate-500 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+          }`}>✏️</button>
+      )}
+    </div>
+  );
+};
+
+// Social link tahrirlash
+const SocialEditBtn = ({ id, value, darkMode, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value);
+
+  if (editing) return (
+    <div className="flex gap-1 shrink-0">
+      <input value={val} onChange={(e) => setVal(e.target.value)}
+        placeholder="https://..."
+        className={`w-36 px-2 py-1 rounded-lg border text-xs outline-none ${
+          darkMode ? "bg-slate-600 border-slate-500 text-white" : "bg-white border-gray-300 text-gray-900"
+        }`} autoFocus />
+      <button onClick={() => { onSave(id, val); setEditing(false); }}
+        className="px-2 py-1 bg-blue-500 text-white text-xs rounded-lg">✅</button>
+      <button onClick={() => setEditing(false)}
+        className={`px-2 py-1 text-xs rounded-lg ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}>✕</button>
+    </div>
+  );
+
+  return (
+    <button onClick={() => setEditing(true)}
+      className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition shrink-0 ${
+        darkMode ? "bg-slate-600 hover:bg-slate-500 text-gray-300" : "bg-gray-200 hover:bg-gray-300 text-gray-500"
+      }`}>✏️</button>
+  );
+};
 
 const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange, currentBg }) => {
   const { user } = useAuth();
-
   const [activeTab, setActiveTab] = useState("themes");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [customBg, setCustomBg] = useState(currentBg || null);
-  const [about, setAbout] = useState({
-    name: "",
-    bio: "",
-    location: "",
-    website: "",
-  });
-  const [socials, setSocials] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [about, setAbout] = useState(DEFAULT_ABOUT);
+  const [socials, setSocials] = useState(DEFAULT_ABOUT.socials);
+  const [loading, setLoading] = useState(true);
 
+
+  // Admin tekshirish
   useEffect(() => {
-    const load = async () => {
+    const checkAdmin = async () => {
       if (!user) return;
-      const snap = await getDoc(doc(db, "settings", user.uid));
-      if (snap.exists()) {
-        const data = snap.data();
-        setAbout(data.about || {});
-        setSocials(data.socials || {});
-      }
+      const snap = await getDoc(doc(db, "admins", user.uid));
+      setIsAdmin(snap.exists() && snap.data().isAdmin === true);
     };
-    load();
+    checkAdmin();
   }, [user]);
 
+  // Firestore dan yuklash
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await getDoc(doc(db, "aboutProject", "main"));
+        if (snap.exists()) {
+          const data = snap.data();
+          setAbout({ ...DEFAULT_ABOUT, ...data });
+          if (data.socials) setSocials(data.socials);
+        }
+
+      } catch (err) {
+        console.error("Error loading project about info:", err);
+      }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  // Bitta maydonni saqlash
+  const handleSave = async (field, value) => {
+    try {
+      const updated = { ...about, [field]: value };
+      setAbout(updated);
+      await setDoc(doc(db, "aboutProject", "main"), updated);
+      showToast("Saqlandi! ✅", "success");
+    } catch {
+      showToast("Xatolik yuz berdi!", "error");
+    }
+  };
+
+  // Social saqlash
+  const handleSocialSave = async (id, value) => {
+    try {
+      const updated = { ...about, socials: { ...about.socials, [id]: value } };
+      setAbout(updated);
+      await setDoc(doc(db, "aboutProject", "main"), updated);
+      showToast("Saqlandi! ✅", "success");
+    } catch {
+      showToast("Xatolik yuz berdi!", "error");
+    }
+  };
+
+  // Fon rasm yuklash
   const handleBgUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -90,36 +194,15 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
     showToast("Fon rasmi olib tashlandi", "success");
   };
 
-  const handleSave = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      await setDoc(doc(db, "settings", user.uid), {
-        about,
-        socials,
-        updatedAt: new Date().toISOString(),
-      });
-      showToast("Saqlandi! ✅", "success");
-    } catch {
-      showToast("Xatolik yuz berdi!", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const cardClass = `rounded-2xl p-5 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`;
 
   const tabs = [
-    { id: "themes", label: "🎨 Mavzular" },
-    { id: "about", label: "👤 Biz haqimizda" },
+    { id: "themes", label: "🎨 Mavzular"        },
+    { id: "about",  label: "ℹ️ Loyiha haqida"   },
   ];
 
-  const inputClass = `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-300 ${
-    darkMode
-      ? "bg-slate-700 border-slate-600 text-white placeholder-gray-500 focus:border-blue-400"
-      : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-400"
-  }`;
-
   return (
-    <div className={`page-transition w-full max-w-3xl mx-auto px-4 py-10 mt-10 min-h-[calc(100vh-64px)] ${darkMode ? "text-white" : "text-gray-900"}`}>
+    <div className={`page-transition w-full max-w-3xl mx-auto px-4 py-10 mt-10 min-h-[calc(100vh-64px)]`}>
       <h1 className={`text-2xl font-extrabold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
         ⚙️ Sozlamalar
       </h1>
@@ -138,22 +221,31 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
         ))}
       </div>
 
-      {/* THEMES TAB */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className={darkMode ? "text-gray-400" : "text-gray-500"}>Yuklanmoqda...</p>
+        </div>
+      ) : (
+        <>
+
+      {/* ── MAVZULAR TAB ── */}
       {activeTab === "themes" && (
         <div className="flex flex-col gap-6">
 
           {/* Gradient themes */}
-          <div className={`rounded-2xl p-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+          <div className={cardClass}>
             <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
               🎨 Fon mavzulari
             </h2>
             <div className="grid grid-cols-4 gap-3">
               {THEMES.map((theme) => (
-                <button key={theme.id} onClick={() => {
-                  onThemeChange(theme.id);
-                  localStorage.setItem("theme", theme.id);
-                  showToast(`${theme.name} mavzusi tanlandi! 🎨`, "success");
-                }}
+                <button key={theme.id}
+                  onClick={() => {
+                    onThemeChange(theme.id);
+                    localStorage.setItem("theme", theme.id);
+                    showToast(`${theme.name} mavzusi tanlandi! 🎨`, "success");
+                  }}
                   className={`relative h-16 rounded-2xl transition-all duration-200 hover:scale-105 ${
                     currentTheme === theme.id ? "ring-4 ring-blue-400 scale-105" : ""
                   }`}
@@ -170,11 +262,10 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
           </div>
 
           {/* Custom background */}
-          <div className={`rounded-2xl p-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+          <div className={cardClass}>
             <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
               🖼️ Shaxsiy fon rasmi
             </h2>
-
             {customBg ? (
               <div className="relative">
                 <img src={customBg} alt="bg" className="w-full h-40 object-cover rounded-2xl mb-3" />
@@ -196,89 +287,179 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
         </div>
       )}
 
-      {/* ABOUT TAB */}
+      {/* ── LOYIHA HAQIDA TAB ── */}
       {activeTab === "about" && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
 
-          {/* About info */}
-          <div className={`rounded-2xl p-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              👤 Biz haqimizda
+          {/* Header */}
+          <div className="text-center py-4">
+            <div className="text-5xl mb-3">🚀</div>
+            <h2 className={`text-2xl font-extrabold mb-1 ${darkMode ? "text-white" : "text-gray-900"}`}>
+              {about.name}
             </h2>
+            <span className="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full">
+              {about.version}
+            </span>
+            {isAdmin && (
+              <span className="ml-2 inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full">
+                🛡️ Admin rejimi
+              </span>
+            )}
+          </div>
+
+          {/* Asosiy ma'lumotlar */}
+          <div className={cardClass}>
+            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>📋 Asosiy ma'lumotlar</h3>
             <div className="flex flex-col gap-4">
-              <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Ism / Loyiha nomi</label>
-                <input type="text" placeholder="Uzbekas Pixel" value={about.name || ""}
-                  onChange={(e) => setAbout({ ...about, name: e.target.value })}
-                  className={inputClass} />
-              </div>
-              <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Bio</label>
-                <textarea rows={3} placeholder="O'zingiz haqingizda..." value={about.bio || ""}
-                  onChange={(e) => setAbout({ ...about, bio: e.target.value })}
-                  className={inputClass + " resize-none"} />
-              </div>
-              <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Joylashuv</label>
-                <input type="text" placeholder="Toshkent, O'zbekiston" value={about.location || ""}
-                  onChange={(e) => setAbout({ ...about, location: e.target.value })}
-                  className={inputClass} />
-              </div>
-              <div>
-                <label className={`text-xs font-semibold mb-1 block ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Vebsayt</label>
-                <input type="text" placeholder="https://uzbekas.vercel.app" value={about.website || ""}
-                  onChange={(e) => setAbout({ ...about, website: e.target.value })}
-                  className={inputClass} />
-              </div>
+              <EditableField label="Loyiha nomi"    value={about.name}    field="name"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Versiya"         value={about.version} field="version" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Maqsad"          value={about.goal}    field="goal"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Muallif"         value={about.author}  field="author"  isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Vebsayt"         value={about.website} field="website" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Email"           value={about.email}   field="email"   isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label="Tashkil etilgan" value={about.founded} field="founded" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
             </div>
           </div>
 
-          {/* Social links */}
-          <div className={`rounded-2xl p-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              🌐 Ijtimoiy tarmoqlar
-            </h2>
-         <div className="flex flex-col gap-3">
-  {SOCIAL_LINKS.map((s) => (
-    <div key={s.id} className="flex items-center gap-3">
-      {/* Iconni react-icons bilan */}
-      <span className="text-2xl w-8 text-center">{s.icon}</span>
-      
-      {/* URL input */}
-      <input
-        type="url"
-        placeholder={s.placeholder}
-        value={socials[s.id] || ""}
-        onChange={(e) =>
-          setSocials({ ...socials, [s.id]: e.target.value })
-        }
-        className={inputClass}
-      />
+          {/* Texnologiyalar */}
+          <div className={cardClass}>
+            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>⚙️ Texnologiyalar</h3>
+            <div className="flex flex-wrap gap-2">
+              {about.technologies.map((tech, i) => (
+                <span key={i} className="px-3 py-1.5 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-xl">
+                  {tech}
+                </span>
+              ))}
+            </div>
+            {isAdmin && (
+              <div className="mt-4 pt-4 border-t border-slate-700">
+                <p className={`text-xs mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                  Vergul bilan yozing: React, Firebase, ...
+                </p>
+                <input
+                  defaultValue={about.technologies.join(", ")}
+                  onBlur={(e) => handleSave("technologies", e.target.value.split(",").map(t => t.trim()).filter(Boolean))}
+                  className={`w-full px-3 py-1.5 rounded-xl border text-sm outline-none ${
+                    darkMode ? "bg-slate-700 border-slate-500 text-white" : "bg-white border-gray-300 text-gray-900"
+                  }`}
+                />
+              </div>
+            )}
+          </div>
 
-      {/* Agar siz hohlasangiz, linkni ochish tugmasi qo‘shish mumkin */}
-      {socials[s.id] && (
-        <a
-          href={socials[s.id]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-2 text-blue-500 hover:underline"
-        >
-          Open
-        </a>
-      )}
-    </div>
-  ))}
+          {/* Statistika kartalar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: "⚛️", label: "Framework", value: "React 18"  },
+              { icon: "🔥", label: "Backend",   value: "Firebase"  },
+              { icon: "🚀", label: "Deploy",    value: "Vercel"    },
+              { icon: "📱", label: "Platform",  value: "PWA"       },
+            ].map((item, i) => (
+              <div key={i} className={`${cardClass} text-center`}>
+                <div className="text-3xl mb-2">{item.icon}</div>
+                <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{item.label}</p>
+                <p className={`text-sm font-bold mt-1 ${darkMode ? "text-white" : "text-gray-900"}`}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Ijtimoiy tarmoqlar */}
+          <div className={cardClass}>
+            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>🌐 Ijtimoiy tarmoqlar</h3>
+           <div className="flex flex-col gap-3">
+  {SOCIAL_META.map((s) => {
+    // Ma'lumotni olish (about.socials dan yoki socials state'idan)
+    const val = socials[s.id] || ""; 
+
+    return (
+      <div 
+        key={s.id} 
+        className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
+          darkMode ? "bg-slate-800/50 border-slate-700" : "bg-gray-50 border-gray-100"
+        } border`}
+      >
+        {/* Chap taraf: Ikonka */}
+        <div className={`p-2 rounded-lg ${darkMode ? "bg-slate-700" : "bg-white"} shadow-sm flex items-center justify-center`}>
+          <s.icon size={24} color={s.color} />
+        </div>
+
+        {/* Markaz: Ma'lumot yoki Input */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${
+            darkMode ? "text-slate-500" : "text-gray-400"
+          }`}>
+            {s.label}
+          </p>
+
+          {isAdmin ? (
+            /* Admin uchun: To'g'ridan-to'g'ri tahrirlash inputi */
+            <input
+              type="url"
+              placeholder="Linkni kiriting..."
+              value={val}
+              onChange={(e) => setSocials({ ...socials, [s.id]: e.target.value })}
+              onBlur={(e) => handleSocialSave(s.id, e.target.value)}
+              className={`w-full bg-transparent border-none p-0 text-sm focus:ring-0 outline-none ${
+                darkMode ? "text-blue-300 placeholder-slate-600" : "text-blue-600 placeholder-gray-300"
+              }`}
+            />
+          ) : (
+            /* Foydalanuvchi uchun: Faqat o'zgarmas link */
+            <div className="truncate">
+              {val ? (
+                <a 
+                  href={val} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-sm font-medium hover:underline text-blue-400 block truncate"
+                >
+                  {val.replace('https://', '')}
+                </a>
+              ) : (
+                <p className={`text-sm ${darkMode ? "text-slate-600" : "text-gray-400"}`}>
+                  Bog'lanmagan
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+
+        {/* O'ng taraf: Agar link bo'lsa "Open" tugmasi (faqat Admin uchun qulaylik) */}
+        {isAdmin && val && (
+          <a
+            href={val}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-xs px-2 py-1 rounded-md border ${
+              darkMode ? "border-slate-600 text-slate-400 hover:bg-slate-700" : "border-gray-200 text-gray-500 hover:bg-white"
+            } transition-colors`}
+          >
+            Open
+          </a>
+        )}
+      </div>
+    );
+  })}
 </div>
           </div>
 
-          <button onClick={handleSave} disabled={loading}
-            className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold rounded-2xl transition">
-            {loading ? "Saqlanmoqda..." : "Saqlash ✅"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
+          {/* Footer */}
+          <div className={`${cardClass} text-center`}>
+            <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              © {about.founded} {about.name} — Barcha huquqlar himoyalangan
+            </p>
+            <p className={`text-xs mt-1 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+              {about.version} • Made with ❤️ in Uzbekistan
+            </p>
+          </div>
+
+          </div>
+        )}
+      </>
+    )}
+  </div>
+);
 };
 
 export default Settings;

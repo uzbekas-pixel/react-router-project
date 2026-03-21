@@ -15,7 +15,7 @@ import PromoCode from "./routes/PromoCode";
 import CreateCourse from "./routes/CreateCourse";
 import Onboarding from "./components/Onboarding";
 import { useOnboarding } from "./hooks/useOnboarding";
-import Footer from "./components/Footer";
+
 import ScrollToTop from "./components/ScrollToTop";
 import CustomCursor from "./components/CustomCursor";
 import ParticleBackground from "./components/ParticleBackground";
@@ -92,19 +92,11 @@ function App() {
   useEffect(() => {
     onMessageListener().then((payload) => {
       if (payload?.notification) {
-        showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "info");
+        showToast(`${payload.notification.title}: ${payload.notification.body}`, "info");
       }
     }).catch(() => {});
   }, [showToast]);
 
-  const hideFooter = [
-    "/ai-tutor",
-    "/chat",
-    "/dm",
-    "/code",
-    "/multiplayer",
-    "/games",
-  ].includes(location.pathname);
 
   // Background style
   const bgStyle = customBg
@@ -241,7 +233,7 @@ function App() {
 
       <ScrollToTop darkMode={darkMode} />
       <BottomNav darkMode={darkMode} />
-      {!hideFooter && <Footer darkMode={darkMode} bgStyle={bgStyle} />}
+
     </div>
   );
 }

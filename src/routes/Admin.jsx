@@ -7,12 +7,18 @@ import { db } from "../firebase/config";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 
+import {
+  LuInfo, LuCircleCheck, LuTriangleAlert, LuGift, LuGraduationCap,
+  LuLayoutDashboard, LuUsers, LuTicket, LuBell, LuShield,
+  LuChartBar, LuUser, LuPlus, LuX, LuTrash2, LuCheck, LuMegaphone, LuSend
+} from "react-icons/lu";
+
 const NOTIF_TYPES = [
-  { value:"info",    label:"ℹ️ Ma'lumot",      color:"#3b82f6" },
-  { value:"success", label:"✅ Muvaffaqiyat",   color:"#10b981" },
-  { value:"warning", label:"⚠️ Ogohlantirish", color:"#f59e0b" },
-  { value:"promo",   label:"🎁 Promo",          color:"#8b5cf6" },
-  { value:"course",  label:"🎓 Kurs",           color:"#06b6d4" },
+  { value:"info",    label:"Ma'lumot",      icon: <LuInfo />,    color:"#3b82f6" },
+  { value:"success", label:"Muvaffaqiyat",   icon: <LuCircleCheck />, color:"#10b981" },
+  { value:"warning", label:"Ogohlantirish", icon: <LuTriangleAlert />, color:"#f59e0b" },
+  { value:"promo",   label:"Promo",          icon: <LuGift />,          color:"#8b5cf6" },
+  { value:"course",  label:"Kurs",           icon: <LuGraduationCap />, color:"#06b6d4" },
 ];
 
 const Admin = ({ darkMode, showToast }) => {
@@ -185,10 +191,10 @@ const Admin = ({ darkMode, showToast }) => {
   };
 
   const tabs = [
-    { id:"stats", label: t.statsTab           },
-    { id:"users", label: t.usersTab           },
-    { id:"promo", label: "🎟️ Promo Kodlar"    },
-    { id:"notif", label: "🔔 Bildirishnoma"   },
+    { id:"stats", label: t.statsTab, icon: <LuChartBar />           },
+    { id:"users", label: t.usersTab, icon: <LuUsers />           },
+    { id:"promo", label: "Promo Kodlar", icon: <LuTicket />    },
+    { id:"notif", label: "Bildirishnoma", icon: <LuBell />   },
   ];
 
   return (
@@ -196,7 +202,9 @@ const Admin = ({ darkMode, showToast }) => {
       <ScrollReveal direction="up">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className={`text-3xl font-extrabold ${darkMode?"text-white":"text-gray-900"}`}>🛡️ {t.adminTitle}</h1>
+            <h1 className={`text-3xl font-extrabold flex items-center gap-3 ${darkMode?"text-white":"text-gray-900"}`}>
+              <LuShield className="text-blue-500" /> {t.adminTitle}
+            </h1>
             <p className={`text-sm mt-1 ${darkMode?"text-gray-400":"text-gray-500"}`}>{t.adminSub}</p>
           </div>
           <span className="px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-xl">{t.adminBadge}</span>
@@ -205,16 +213,16 @@ const Admin = ({ darkMode, showToast }) => {
 
       <ScrollReveal direction="up" delay={100}>
         <div className="flex gap-2 mb-8 flex-wrap">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                activeTab === tab.id ? "bg-blue-500 text-white"
-                : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
-                : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
-              }`}>
-              {tab.label}
-            </button>
-          ))}
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                  activeTab === tab.id ? "bg-blue-500 text-white"
+                  : darkMode ? "bg-slate-800 text-gray-400 hover:bg-slate-700"
+                  : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
+                }`}>
+                {tab.icon} {tab.label}
+              </button>
+            ))}
         </div>
       </ScrollReveal>
 
@@ -224,7 +232,7 @@ const Admin = ({ darkMode, showToast }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <div className={cardClass}>
               <div className="text-3xl font-extrabold text-blue-400">{users.length}</div>
-              <div className="text-2xl mt-1">👥</div>
+              <div className="text-2xl mt-1 text-blue-300"><LuUsers /></div>
               <p className={`text-xs mt-2 ${darkMode?"text-gray-400":"text-gray-500"}`}>{t.totalUsers}</p>
             </div>
           </div>
@@ -278,9 +286,11 @@ const Admin = ({ darkMode, showToast }) => {
         <ScrollReveal direction="up" delay={200}>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-bold ${darkMode?"text-white":"text-gray-900"}`}>🎟️ Promo Kodlar ({promoCodes.length})</h3>
-              <button onClick={()=>setShowPromoForm(!showPromoForm)} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold rounded-xl transition">
-                {showPromoForm?"✕ Yopish":"+ Yangi kod"}
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode?"text-white":"text-gray-900"}`}>
+                <LuTicket className="text-purple-400" /> Promo Kodlar ({promoCodes.length})
+              </h3>
+              <button onClick={()=>setShowPromoForm(!showPromoForm)} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2">
+                {showPromoForm ? <><LuX /> Yopish</> : <><LuPlus /> Yangi kod</>}
               </button>
             </div>
             {showPromoForm && (
@@ -317,8 +327,8 @@ const Admin = ({ darkMode, showToast }) => {
                 </div>
                 <div style={{ marginTop:14, display:"flex", gap:8 }}>
                   <button onClick={handleAddPromo} disabled={promoSaving}
-                    style={{ padding:"10px 24px", background:promoSaving?"#93c5fd":"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:promoSaving?"default":"pointer" }}>
-                    {promoSaving?"⏳ Saqlanmoqda...":"✅ Saqlash"}
+                    style={{ padding:"10px 24px", background:promoSaving?"#93c5fd":"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:promoSaving?"default":"pointer", display:"flex", alignItems:"center", gap:8 }}>
+                    {promoSaving ? "Saqlanmoqda..." : <><LuCheck /> Saqlash</>}
                   </button>
                   <button onClick={()=>setShowPromoForm(false)} style={{ padding:"10px 16px", background:"transparent", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, borderRadius:10, fontSize:13, color:darkMode?"#94a3b8":"#374151", cursor:"pointer" }}>
                     Bekor qilish
@@ -329,7 +339,7 @@ const Admin = ({ darkMode, showToast }) => {
             {promoLoading ? <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin"/></div>
             : promoCodes.length===0 ? (
               <div style={{ textAlign:"center", padding:"40px 0" }}>
-                <div style={{ fontSize:36, marginBottom:10 }}>🎟️</div>
+                <div style={{ fontSize:42, marginBottom:12, display:"flex", justifyContent:"center", color:"#94a3b8" }}><LuTicket /></div>
                 <p style={{ color:"#6b7280" }}>Hali promo kod yo'q. "Yangi kod" bosing!</p>
               </div>
             ) : promoCodes.map((promo)=>(
@@ -349,7 +359,7 @@ const Admin = ({ darkMode, showToast }) => {
                   <button onClick={()=>handleTogglePromo(promo.id,promo.valid)} style={{ padding:"5px 12px", borderRadius:8, border:`1px solid ${promo.valid?"#ef4444":"#10b981"}`, background:"transparent", color:promo.valid?"#ef4444":"#10b981", fontSize:11, fontWeight:600, cursor:"pointer" }}>
                     {promo.valid?"O'chirish":"Yoqish"}
                   </button>
-                  <button onClick={()=>handleDeletePromo(promo.id)} style={{ padding:"5px 10px", borderRadius:8, border:"1px solid #ef4444", background:"transparent", color:"#ef4444", fontSize:11, cursor:"pointer" }}>🗑️</button>
+                  <button onClick={()=>handleDeletePromo(promo.id)} style={{ padding:"5px 10px", borderRadius:8, border:"1px solid #ef4444", background:"transparent", color:"#ef4444", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><LuTrash2 /></button>
                 </div>
               </div>
             ))}
@@ -364,7 +374,9 @@ const Admin = ({ darkMode, showToast }) => {
 
             {/* Yuborish formasi */}
             <div className={cardClass}>
-              <h3 className={`text-lg font-bold mb-6 ${darkMode?"text-white":"text-gray-900"}`}>🔔 Bildirishnoma Yuborish</h3>
+              <h3 className={`text-lg font-bold mb-6 flex items-center gap-2 ${darkMode?"text-white":"text-gray-900"}`}>
+                <LuBell className="text-blue-400" /> Bildirishnoma Yuborish
+              </h3>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:14, marginBottom:16 }}>
 
                 <div style={{ gridColumn:"1/-1" }}>
@@ -431,10 +443,10 @@ const Admin = ({ darkMode, showToast }) => {
               )}
 
               <button onClick={handleSendNotif} disabled={notifSending}
-                style={{ padding:"12px 28px", background:notifSending?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:notifSending?"default":"pointer" }}>
-                {notifSending ? "⏳ Yuborilmoqda..."
-                  : notifForm.target==="all" ? `📢 Barcha ${users.length} ta foydalanuvchiga yuborish`
-                  : "📨 Yuborish"}
+                style={{ padding:"12px 28px", background:notifSending?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:notifSending?"default":"pointer", display:"flex", alignItems:"center", gap:8, justifyContent:"center" }}>
+                {notifSending ? "Yuborilmoqda..."
+                  : notifForm.target==="all" ? <><LuMegaphone /> Barcha {users.length} ta foydalanuvchiga yuborish</>
+                  : <><LuSend /> Yuborish</>}
               </button>
             </div>
 

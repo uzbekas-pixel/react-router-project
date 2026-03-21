@@ -5,8 +5,18 @@ export const usePWA = () => {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
+    console.log("🔍 PWA Hook mounted, listening for beforeinstallprompt...");
+    console.log(
+      "🖥️ Display mode:",
+      window.matchMedia("(display-mode: standalone)").matches
+        ? "standalone"
+        : "browser",
+    );
+
     const handler = (e) => {
-      console.log("✅ beforeinstallprompt event fired");
+      console.log(
+        "✅ beforeinstallprompt event fired! PWA is now installable.",
+      );
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
@@ -14,7 +24,19 @@ export const usePWA = () => {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    // Some browsers might fire it very early
+    if (window.deferredPrompt) {
+      console.log("📦 Found already deferred prompt");
+      setTimeout(() => {
+        setDeferredPrompt(window.deferredPrompt);
+        setIsInstallable(true);
+      }, 0);
+    }
+
+    return () => {
+      console.log("🧹 PWA Hook unmounted");
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
   const installApp = async () => {

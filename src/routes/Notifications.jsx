@@ -1,15 +1,27 @@
 import React, { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
+import {
+  LuGraduationCap,
+  LuTarget,
+  LuFlame,
+  LuBell,
+  LuBook,
+  LuTrophy,
+  LuLightbulb,
+  LuBellOff,
+  LuCheck,
+  LuX
+} from "react-icons/lu";
 
 const initialNotifs = [
-  { id: 1, type: "course", icon: "🎓", title: "Yangi dars qo'shildi", body: "JavaScript kursi — 'Async/Await' darsi qo'shildi", time: "5 daqiqa oldin", read: false, color: "#3b82f6" },
-  { id: 2, type: "quiz", icon: "🎯", title: "Quiz natijasi", body: "HTML Quiz — siz 100% ball to'pladingiz! Ajoyib!", time: "1 soat oldin", read: false, color: "#10b981" },
-  { id: 3, type: "promo", icon: "🔥", title: "Chegirma!", body: "React kursi uchun 30% chegirma — faqat bugun!", time: "3 soat oldin", read: false, color: "#ef4444" },
-  { id: 4, type: "system", icon: "🔔", title: "Haftalik hisobot", body: "Bu hafta 435 daqiqa o'qidingiz. Zo'r natija!", time: "1 kun oldin", read: true, color: "#8b5cf6" },
-  { id: 5, type: "course", icon: "📚", title: "Kurs yangilandi", body: "CSS & Flexbox — 2 ta yangi dars qo'shildi", time: "2 kun oldin", read: true, color: "#264de4" },
-  { id: 6, type: "achievement", icon: "🏆", title: "Yutuq qo'lga kiritildi!", body: "'7 kunlik streak' medallini oldingiz!", time: "3 kun oldin", read: true, color: "#f59e0b" },
-  { id: 7, type: "system", icon: "💡", title: "Maslahat", body: "Har kuni 30 daqiqa o'qish — bir oyda 15 soat!", time: "4 kun oldin", read: true, color: "#6b7280" },
+  { id: 1, type: "course", icon: <LuGraduationCap />, title: "Yangi dars qo'shildi", body: "JavaScript kursi — 'Async/Await' darsi qo'shildi", time: "5 daqiqa oldin", read: false, color: "#3b82f6" },
+  { id: 2, type: "quiz", icon: <LuTarget />, title: "Quiz natijasi", body: "HTML Quiz — siz 100% ball to'pladingiz! Ajoyib!", time: "1 soat oldin", read: false, color: "#10b981" },
+  { id: 3, type: "promo", icon: <LuFlame />, title: "Chegirma!", body: "React kursi uchun 30% chegirma — faqat bugun!", time: "3 soat oldin", read: false, color: "#ef4444" },
+  { id: 4, type: "system", icon: <LuBell />, title: "Haftalik hisobot", body: "Bu hafta 435 daqiqa o'qidingiz. Zo'r natija!", time: "1 kun oldin", read: true, color: "#8b5cf6" },
+  { id: 5, type: "course", icon: <LuBook />, title: "Kurs yangilandi", body: "CSS & Flexbox — 2 ta yangi dars qo'shildi", time: "2 kun oldin", read: true, color: "#264de4" },
+  { id: 6, type: "achievement", icon: <LuTrophy />, title: "Yutuq qo'lga kiritildi!", body: "'7 kunlik streak' medallini oldingiz!", time: "3 kun oldin", read: true, color: "#f59e0b" },
+  { id: 7, type: "system", icon: <LuLightbulb />, title: "Maslahat", body: "Har kuni 30 daqiqa o'qish — bir oyda 15 soat!", time: "4 kun oldin", read: true, color: "#6b7280" },
 ];
 
 const types = ["Barchasi", "course", "quiz", "promo", "achievement", "system"];
@@ -76,7 +88,9 @@ const Notifications = ({ darkMode, showToast }) => {
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <span style={{ fontSize: 48 }}>🔕</span>
+          <span style={{ fontSize: 48, display: "flex", justifyContent: "center", color: darkMode ? "#475569" : "#cbd5e1" }}>
+            <LuBellOff />
+          </span>
           <p style={{ color: darkMode ? "#94a3b8" : "#6b7280", marginTop: 12 }}>{t.noNotifications}</p>
         </div>
       ) : (
@@ -112,14 +126,14 @@ const Notifications = ({ darkMode, showToast }) => {
                     <button onClick={() => markRead(n.id)} title="O'qilgan" style={{
                       width: 28, height: 28, borderRadius: 6, border: "none",
                       background: darkMode ? "#334155" : "#f3f4f6",
-                      cursor: "pointer", fontSize: 12, color: "#10b981",
-                    }}>✓</button>
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#10b981",
+                    }}><LuCheck /></button>
                   )}
                   <button onClick={() => deleteNotif(n.id)} title="O'chirish" style={{
                     width: 28, height: 28, borderRadius: 6, border: "none",
                     background: darkMode ? "#334155" : "#f3f4f6",
-                    cursor: "pointer", fontSize: 12, color: "#ef4444",
-                  }}>✕</button>
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#ef4444",
+                  }}><LuX /></button>
                 </div>
               </div>
             </ScrollReveal>
