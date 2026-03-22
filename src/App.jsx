@@ -41,7 +41,13 @@ import CodeEditor from "./routes/CodeEditor";
 import DM from "./routes/DM";
 import Story from "./routes/Story";
 import Settings from "./routes/Settings";
-
+import DailyTasks from "./routes/DailyTasks";
+import Friends from "./routes/Friends";
+import Certificate from "./routes/Certificate";
+import Referral from "./routes/Referral";
+import Tournament from "./routes/Tournament";
+import CoinShop from "./routes/CoinShop";
+import InstructorPanel from "./routes/InstructorPanel";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch(() => {});
@@ -96,7 +102,31 @@ function App() {
       }
     }).catch(() => {});
   }, [showToast]);
+useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // Yangi versiya tayyor
+      showToast && showToast("🆕 Yangi versiya mavjud! Sahifani yangilang.", "success");
+    });
+  }
+}, [showToast]);
+// App.jsx da mavjud useEffect lardan biriga yoki alohida qo'shing:
+useEffect(() => {
+  const goOffline = () => {
+    showToast("📵 Internet yo'q — offline rejimda ishlayapsiz", "error");
+  };
+  const goOnline = () => {
+    showToast("✅ Internet qaytdi!", "success");
+  };
 
+  window.addEventListener("offline", goOffline);
+  window.addEventListener("online", goOnline);
+
+  return () => {
+    window.removeEventListener("offline", goOffline);
+    window.removeEventListener("online", goOnline);
+  };
+}, [showToast]);
 
   // Background style
   const bgStyle = customBg
@@ -204,7 +234,34 @@ function App() {
                 <DM darkMode={darkMode} showToast={showToast} />
               </ProtectedRoute>
             } />
+            <Route path="/daily" element={<ProtectedRoute><DailyTasks darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+<Route path="/certificate" element={
+  <ProtectedRoute>
+    <Certificate darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
+<Route path="/referral" element={
+  <ProtectedRoute>
+    <Referral darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
+<Route path="/tournament" element={
+  <ProtectedRoute>
+    <Tournament darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
 
+<Route path="/shop" element={
+  <ProtectedRoute>
+    <CoinShop darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
+<Route path="/instructor" element={
+  <ProtectedRoute>
+    <InstructorPanel darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings
