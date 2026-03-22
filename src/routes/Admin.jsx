@@ -129,57 +129,72 @@ const Admin = ({ darkMode, showToast }) => {
   };
 
   // ── Bildirishnoma yuborish ─────────────────────────────────────────────────
-  const handleSendNotif = async () => {
-    if (!notifForm.title.trim() || !notifForm.message.trim()) {
-      showToast("Sarlavha va xabar kiritilmadi!", "error"); return;
-    }
-    if (notifForm.target === "user" && !notifForm.userId) {
-      showToast("Foydalanuvchi tanlanmadi!", "error"); return;
-    }
-    setNotifSending(true);
-    try {
-      const base = {
-        title:     notifForm.title.trim(),
-        message:   notifForm.message.trim(),
-        type:      notifForm.type,
-        link:      notifForm.link.trim() || null,
-        read:      false,
-        createdAt: serverTimestamp(),
-      };
+ const handleSendNotif = async () => {
+  if (!notifForm.title.trim() || !notifForm.message.trim()) {
+    showToast("Sarlavha va xabar kiritilmadi!", "error"); return;
+  }
+  if (notifForm.target === "user" && !notifForm.userId) {
+    showToast("Foydalanuvchi tanlanmadi!", "error"); return;
+  }
+  setNotifSending(true);
+  try {
+    const base = {
+      title:     notifForm.title.trim(),
+      message:   notifForm.message.trim(),
+      type:      notifForm.type,
+      link:      notifForm.link.trim() || null,
+      read:      false,
+      createdAt: serverTimestamp(),
+    };
 
-      if (notifForm.target === "all") {
-        // Barcha foydalanuvchilarga batch write
-        const batch = writeBatch(db);
-        users.forEach((u) => {
-          const ref = doc(collection(db, "users", u.id, "notifications"));
-          batch.set(ref, { ...base, userId: u.id });
-        });
-        await batch.commit();
-        await addDoc(collection(db, "adminNotifications"), {
-          ...base, target:"all", targetCount: users.length,
-        });
-        showToast(`✅ ${users.length} ta foydalanuvchiga yuborildi!`, "success");
-      } else {
-        const targetUser = users.find((u) => u.id === notifForm.userId);
-        await addDoc(collection(db, "users", notifForm.userId, "notifications"), {
-          ...base, userId: notifForm.userId,
-        });
-        await addDoc(collection(db, "adminNotifications"), {
-          ...base, target:"user",
-          targetId:   notifForm.userId,
-          targetName: targetUser?.displayName || targetUser?.email || "—",
-        });
-        showToast(`✅ ${targetUser?.displayName || "Foydalanuvchi"}ga yuborildi!`, "success");
-      }
+    if (notifForm.target === "all") {
+      // Barcha foydalanuvchilarga — har biriga alohida unique ID bilan
+      const batch = writeBatch(db);
+      const timestamp = Date.now();
+      users.forEach((u) => {
+        const ref = doc(db, "users", u.id, "notifications", `notif_${timestamp}_${u.id}`);
+        batch.set(ref, { ...base, userId: u.id });
+      });
+      await batch.commit();
 
-      setNotifForm({ title:"", message:"", type:"info", target:"all", userId:"", link:"" });
-      fetchNotifHistory();
-    } catch (err) {
-      console.error(err);
-      showToast("Yuborishda xatolik!", "error");
+      await addDoc(collection(db, "adminNotifications"), {
+        ...base, target: "all", targetCount: users.length,
+      });
+      showToast(`✅ ${users.length} ta foydalanuvchiga yuborildi!`, "success");
+
+    } else {
+      const targetUser = users.find((u) => u.id === notifForm.userId);
+      const timestamp = Date.now();
+      const ref = doc(db, "users", notifForm.userId, "notifications", `notif_${timestamp}_${notifForm.userId}`);
+      await setDoc(ref, { ...base, userId: notifForm.userId });
+
+      await addDoc(collection(db, "adminNotifications"), {
+        ...base, target: "user",
+        targetId:   notifForm.userId,
+        targetName: targetUser?.displayName || targetUser?.email || "—",
+      });
+      showToast(`✅ ${targetUser?.displayName || "Foydalanuvchi"}ga yuborildi!`, "success");
     }
-    setNotifSending(false);
-  };
+
+    setNotifForm({ title: "", message: "", type: "info", target: "all", userId: "", link: "" });
+    fetchNotifHistory();
+  } catch (err) {
+    console.error(err);
+    showToast("Yuborishda xatolik!", "error");
+  }
+  setNotifSending(false);
+};
+  // handleSendNotif dan keyin qo'shing:
+const handleDeleteNotif = async (notifId) => {
+  if (!window.confirm("Bu bildirishnomani o'chirishni tasdiqlaysizmi?")) return;
+  try {
+    await deleteDoc(doc(db, "adminNotifications", notifId));
+    setSentHistory((prev) => prev.filter((n) => n.id !== notifId));
+    showToast("Bildirishnoma o'chirildi!", "success");
+  } catch {
+    showToast("Xatolik!", "error");
+  }
+};
 
   // ── Styles ─────────────────────────────────────────────────────────────────
   const cardClass  = `rounded-2xl p-6 shadow-lg ${darkMode ? "bg-slate-800" : "bg-white"}`;
@@ -466,6 +481,10 @@ const Admin = ({ darkMode, showToast }) => {
                   <div key={n.id} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"14px 16px", borderRadius:12, marginBottom:10, background:darkMode?"#0f172a":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, borderLeft:`4px solid ${typeInfo.color}` }}>
                     <span style={{ fontSize:20, flexShrink:0 }}>{typeInfo.label.split(" ")[0]}</span>
                     <div style={{ flex:1, minWidth:0 }}>
+                      <button onClick={() => handleDeleteNotif(n.id)}
+  style={{ background:"none", border:"none", cursor:"pointer", color:"#ef4444", flexShrink:0, padding:"2px 6px", borderRadius:6 }}>
+  <LuTrash2 size={15} />
+</button>
                       <p style={{ margin:"0 0 2px", fontWeight:700, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>{n.title}</p>
                       <p style={{ margin:"0 0 6px", fontSize:12, color:"#6b7280" }}>{n.message}</p>
                       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
