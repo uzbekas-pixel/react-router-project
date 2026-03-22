@@ -345,7 +345,7 @@ const TypingGame = ({ darkMode }) => {
           </>
         ) : (
           <div className={`rounded-2xl p-8 shadow-xl text-center ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <div className="text-5xl mb-4"><LuTrophy className="text-yellow-400" size={56} /></div>
+            <div className="text-5xl mb-4 flex justify-center"><LuTrophy className="text-yellow-400" size={56} /></div>
             <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.results}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
@@ -368,14 +368,14 @@ const TypingGame = ({ darkMode }) => {
                t.pro}
             </div>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => reset()}
-                className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
-                <LuRefreshCw size={16} />{t.playAgain}
-              </button>
+             <button onClick={() => reset()}
+  className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
+  <LuRefreshCw size={16} /> {t.playAgain}
+</button>
               <button onClick={() => setShowLeaderboard(true)}
-                className={`px-6 py-3 rounded-xl font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                <LuTrophy size={15} className={showLeaderboard ? "text-white" : "text-yellow-400"} />{t.top10}
-              </button>
+  className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  <LuTrophy size={15} className="text-yellow-400" /> {t.top10}
+</button>
             </div>
           </div>
         )}

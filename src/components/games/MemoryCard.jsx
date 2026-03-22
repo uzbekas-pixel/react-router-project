@@ -119,7 +119,7 @@ const MemoryCard = ({ darkMode }) => {
     <div className={`flex flex-col items-center min-h-[calc(100vh-130px)] px-4 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
 
       {/* Header */}
-      <h2 className={`text-2xl font-extrabold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+      <h2 className={`text-2xl font-extrabold mb-3 mx-auto mt-8 ${darkMode ? "text-white" : "text-gray-900"}`}>
         🧠 Memory Card
       </h2>
 
@@ -223,7 +223,7 @@ const MemoryCard = ({ darkMode }) => {
               </div>
             </div>
            <button onClick={() => reset()}
-  className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2">
+  className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 mx-auto">
   <FaRedo /> {t.again}
 </button>
           </div>

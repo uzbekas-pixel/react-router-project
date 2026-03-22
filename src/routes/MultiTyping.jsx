@@ -586,11 +586,11 @@ const MultiTyping = ({ darkMode, showToast }) => {
               {roomId}
             </div>
           <button onClick={() => { navigator.clipboard.writeText(roomId); showToast(t.copied, "success"); }}
-  className={`px-6 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 ...`}>
+  className={`px-6 py-2 rounded-xl text-sm font-semibold mb-4 transition flex justify-center items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
   <LuCopy size={14} /> {t.copyCode}
 </button>
             <br />
-          <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline flex items-center gap-1 justify-center mt-2">
+         <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline flex items-center gap-1 justify-center mt-2">
   <LuLogOut size={14} /> {t.cancelRoom}
 </button>
           </div>

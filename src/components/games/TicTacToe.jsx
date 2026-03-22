@@ -229,7 +229,7 @@ const OnlineGame = ({ darkMode, t, user }) => {
       <p className={`text-sm mb-4 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Do'stingizga bu kodni yuboring:</p>
       <div className={`text-4xl font-extrabold tracking-widest mb-4 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>{roomId}</div>
     <button onClick={() => { navigator.clipboard.writeText(roomId); }}
-  className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
   <FaCopy /> Nusxalash
 </button>
       <br />
@@ -288,10 +288,10 @@ const OnlineGame = ({ darkMode, t, user }) => {
           </button>
         )}
         {!isHost && winner && (
-          <p className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>Host qayta boshlashini kuting...</p>
+          <p className={`text-xs mx-auto mt-2 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>Host qayta boshlashini kuting...</p>
         )}
       <button onClick={leaveRoom}
-  className={`px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+  className={`px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
   <FaSignOutAlt /> Chiqish
 </button>
       </div>

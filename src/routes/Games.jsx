@@ -289,10 +289,10 @@ const Games = ({ darkMode, showToast }) => {
 </h1>
       <div className={`rounded-2xl overflow-hidden shadow mb-8 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
         <div className={`flex border-b ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-          <button onClick={() => setTab("typing")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ...`}>
+          <button onClick={() => setTab("typing")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
   <LuKeyboard size={16} /> {t.typingTitle}
 </button>
-<button onClick={() => setTab("multi")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ...`}>
+<button onClick={() => setTab("multi")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
   <LuUsers size={16} /> {t.multiTitle}
 </button>
         </div>

@@ -207,7 +207,12 @@ const Pricing = ({ darkMode, showToast }) => {
       <ScrollReveal direction="up" delay={200}>
         <div style={{ marginTop: 48, textAlign: "center" }}>
           <p style={{ fontSize: 14, color: "#6b7280" }}>
-            {t.haveQuestion} <span style={{ color: "#3b82f6", fontWeight: 600, cursor: "pointer" }}>{t.contactUs}</span>
+            {t.haveQuestion} <a 
+  href="tel:+998330345644"
+  style={{ color: "#3b82f6", fontWeight: 600, cursor: "pointer", textDecoration: "none" }}
+>
+  {t.contactUs}
+</a>
           </p>
         </div>
       </ScrollReveal>
