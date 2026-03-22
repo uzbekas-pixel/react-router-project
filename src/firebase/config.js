@@ -9,6 +9,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyBaMm5pXooMcdiLKdqcSM_eVh1zB6_n7Eo",
   authDomain: "uzbekas.firebaseapp.com",
+  databaseURL: "https://uzbekas-default-rtdb.firebaseio.com",
   projectId: "uzbekas",
   storageBucket: "uzbekas.firebasestorage.app",
   messagingSenderId: "450501998688",

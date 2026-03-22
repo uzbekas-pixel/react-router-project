@@ -2,15 +2,10 @@ import React, { useState, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import {
-  collection, doc, getDoc, getDocs, addDoc, updateDoc,
-  serverTimestamp, increment
+  collection, doc, getDoc, getDocs, setDoc,
+  addDoc, updateDoc, serverTimestamp, increment,
 } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
-
-// ─── Firestore structure ───────────────────────────────────────────────────────
-// promoCodes/{code} → { discount, type, course, maxUses, uses, valid, createdAt }
-// users/{uid}/usedCodes/{code} → { usedAt, discount }
-// users/{uid}/data/stats → { xp, ... }
 
 const GIFTS = [
   { id:"g1", title:"Bepul HTML kurs",    icon:"🎁", desc:"HTML Asoslar kursini bepul oling",        xpRequired:500  },
@@ -23,54 +18,56 @@ const GIFTS = [
 
 const PromoCode = ({ darkMode, showToast }) => {
   const { user } = useAuth();
-  const [code, setCode]         = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [result, setResult]     = useState(null);
-  const [myXP, setMyXP]         = useState(0);
+  const [code, setCode]               = useState("");
+  const [loading, setLoading]         = useState(false);
+  const [result, setResult]           = useState(null);
+  const [myXP, setMyXP]               = useState(0);
   const [claimedGifts, setClaimedGifts] = useState([]);
-  const [history, setHistory]   = useState([]);
-  const [activeTab, setActiveTab] = useState("promo");
+  const [history, setHistory]         = useState([]);
+  const [activeTab, setActiveTab]     = useState("promo");
   const [dataLoading, setDataLoading] = useState(true);
 
-  // ─── Foydalanuvchi ma'lumotlarini yuklash ─────────────────────────────────
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
+
     const load = async () => {
       setDataLoading(true);
       try {
         // XP
-        const statsRef  = doc(db, "users", user.uid, "data", "stats");
-        const statsSnap = await getDoc(statsRef);
-        if (statsSnap.exists()) setMyXP(statsSnap.data().xp || 0);
+        const statsSnap = await getDoc(doc(db, "users", user.uid, "data", "stats"));
+        if (!cancelled && statsSnap.exists()) setMyXP(statsSnap.data().xp || 0);
 
-        // Ishlatilgan kodlar tarixi
-        const usedRef  = collection(db, "users", user.uid, "usedCodes");
-        const usedSnap = await getDocs(usedRef);
-        const hist = usedSnap.docs.map((d) => ({
-          code:     d.id,
-          discount: d.data().discount,
-          course:   d.data().course,
-          date:     d.data().usedAt?.toDate?.()?.toLocaleDateString("uz") || "—",
-          status:   "Ishlatildi",
-        }));
-        setHistory(hist.reverse());
+        // Ishlatilgan kodlar
+        const usedSnap = await getDocs(collection(db, "users", user.uid, "usedCodes"));
+        if (!cancelled) {
+          const hist = usedSnap.docs.map((d) => ({
+            code:     d.id,
+            discount: d.data().discount,
+            course:   d.data().course,
+            date:     d.data().usedAt?.toDate?.()?.toLocaleDateString("uz") || "—",
+            status:   "Ishlatildi",
+          }));
+          setHistory(hist.reverse());
+        }
 
         // Olingan sovg'alar
-        const achRef  = doc(db, "users", user.uid, "data", "achievements");
-        const achSnap = await getDoc(achRef);
-        if (achSnap.exists()) {
+        const achSnap = await getDoc(doc(db, "users", user.uid, "data", "achievements"));
+        if (!cancelled && achSnap.exists()) {
           const ach = achSnap.data();
           setClaimedGifts(Object.keys(ach).filter((k) => k.startsWith("gift_") && ach[k]));
         }
       } catch (err) {
-        console.error(err);
+        console.error("PromoCode load error:", err);
+      } finally {
+        if (!cancelled) setDataLoading(false);
       }
-      setDataLoading(false);
     };
+
     load();
+    return () => { cancelled = true; };
   }, [user]);
 
-  // ─── Promo kod tekshirish ──────────────────────────────────────────────────
   const handleApply = async () => {
     if (!code.trim() || !user) return;
     setLoading(true);
@@ -79,7 +76,7 @@ const PromoCode = ({ darkMode, showToast }) => {
     const upperCode = code.trim().toUpperCase();
 
     try {
-      // 1. Avval bu kodni ishlatganmi tekshir
+      // Avval ishlatilganmi tekshir
       const usedRef  = doc(db, "users", user.uid, "usedCodes", upperCode);
       const usedSnap = await getDoc(usedRef);
       if (usedSnap.exists()) {
@@ -88,7 +85,7 @@ const PromoCode = ({ darkMode, showToast }) => {
         return;
       }
 
-      // 2. Promo kodni Firestore dan ol
+      // Promo kodni tekshir
       const promoRef  = doc(db, "promoCodes", upperCode);
       const promoSnap = await getDoc(promoRef);
 
@@ -112,72 +109,70 @@ const PromoCode = ({ darkMode, showToast }) => {
         return;
       }
 
-      // 3. Tasdiqlash — foydalanuvchiga yoz
       const discountText = promo.type === "percent"
         ? `${promo.discount}%`
         : `${Number(promo.discount).toLocaleString()} so'm`;
 
+      // Promo uses oshirish
       await updateDoc(promoRef, { uses: increment(1) });
 
-      await addDoc(collection(db, "users", user.uid, "usedCodes"), {}).catch(() => {});
-      // setDoc bilan aniq ID
-      const { setDoc } = await import("firebase/firestore");
+      // Foydalanuvchi usedCodes ga yozish — setDoc (import tepada)
       await setDoc(usedRef, {
-        discount:  discountText,
-        course:    promo.course === "all" ? "Barcha kurslar" : promo.course,
-        usedAt:    serverTimestamp(),
+        discount: discountText,
+        course:   promo.course === "all" ? "Barcha kurslar" : promo.course,
+        usedAt:   serverTimestamp(),
       });
 
-      // 4. Natija
       setResult({
         success:  true,
-        message:  `✅ Promo kod qabul qilindi!`,
+        message:  "✅ Promo kod qabul qilindi!",
         discount: discountText,
         course:   promo.course === "all" ? "Barcha kurslar" : promo.course,
       });
 
       setHistory((prev) => [{
-        code: upperCode, discount: discountText,
-        course: promo.course === "all" ? "Barcha kurslar" : promo.course,
-        date: new Date().toLocaleDateString("uz"), status: "Ishlatildi",
+        code:     upperCode,
+        discount: discountText,
+        course:   promo.course === "all" ? "Barcha kurslar" : promo.course,
+        date:     new Date().toLocaleDateString("uz"),
+        status:   "Ishlatildi",
       }, ...prev]);
 
-      showToast && showToast(`🎉 ${discountText} chegirma qo'shildi!`, "success");
+      showToast?.(`🎉 ${discountText} chegirma qo'shildi!`, "success");
       setCode("");
 
     } catch (err) {
-      console.error(err);
+      console.error("PromoCode apply error:", err);
       setResult({ success: false, message: "❌ Xatolik yuz berdi. Qayta urinib ko'ring." });
     }
     setLoading(false);
   };
 
-  // ─── Sovg'a olish ─────────────────────────────────────────────────────────
   const claimGift = async (gift) => {
     if (!user) return;
     if (myXP < gift.xpRequired) {
-      showToast && showToast(`Yetarli XP yo'q! Kerak: ${gift.xpRequired} XP`, "error");
+      showToast?.(`Yetarli XP yo'q! Kerak: ${gift.xpRequired} XP`, "error");
       return;
     }
     const key = `gift_${gift.id}`;
     if (claimedGifts.includes(key)) return;
 
     try {
-      const { setDoc } = await import("firebase/firestore");
-      const achRef = doc(db, "users", user.uid, "data", "achievements");
+      const achRef  = doc(db, "users", user.uid, "data", "achievements");
       const achSnap = await getDoc(achRef);
       const existing = achSnap.exists() ? achSnap.data() : {};
       await setDoc(achRef, { ...existing, [key]: true });
       setClaimedGifts((prev) => [...prev, key]);
-      showToast && showToast(`🎁 "${gift.title}" sovg'asi qabul qilindi!`, "success");
-    } catch {
-      showToast && showToast("Xatolik yuz berdi", "error");
+      showToast?.(`🎁 "${gift.title}" sovg'asi qabul qilindi!`, "success");
+    } catch (err) {
+      console.error("claimGift error:", err);
+      showToast?.("Xatolik yuz berdi", "error");
     }
   };
 
   const inputStyle = {
     width: "100%", padding:"12px 16px", borderRadius:12,
-    border: `1px solid ${result?.success?"#10b981":result?.success===false?"#ef4444":(darkMode?"#334155":"#e5e7eb")}`,
+    border: `1px solid ${result?.success ? "#10b981" : result?.success === false ? "#ef4444" : (darkMode?"#334155":"#e5e7eb")}`,
     background: darkMode?"#0f172a":"#f8fafc",
     color: darkMode?"#f1f5f9":"#111",
     fontSize:15, outline:"none", letterSpacing:"0.06em", fontWeight:600, boxSizing:"border-box",
@@ -203,22 +198,26 @@ const PromoCode = ({ darkMode, showToast }) => {
           <div style={{ textAlign:"right" }}>
             <p style={{ margin:0, fontSize:12, color:"#6b7280" }}>Keyingi sovg'a</p>
             <p style={{ margin:"4px 0 0", fontSize:14, fontWeight:600, color:"#3b82f6" }}>
-              {GIFTS.find((g)=>!claimedGifts.includes(`gift_${g.id}`)&&g.xpRequired>myXP)?.xpRequired.toLocaleString() || "Hammasi olindi"} XP
+              {GIFTS.find((g) => !claimedGifts.includes(`gift_${g.id}`) && g.xpRequired > myXP)?.xpRequired.toLocaleString() || "Hammasi olindi"} XP
             </p>
           </div>
         </div>
 
         {/* Tabs */}
         <div style={{ display:"flex", gap:4, marginBottom:24, background:darkMode?"#1e293b":"#f1f5f9", borderRadius:12, padding:4 }}>
-          {[{id:"promo",label:"🎟️ Promo Kod"},{id:"gifts",label:"🎁 Sovg'alar"},{id:"history",label:"📋 Tarix"}].map((tab)=>(
-            <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ flex:1, padding:"9px 0", borderRadius:10, border:"none", cursor:"pointer", background:activeTab===tab.id?"#3b82f6":"transparent", color:activeTab===tab.id?"#fff":(darkMode?"#94a3b8":"#374151"), fontSize:12, fontWeight:600, transition:"all 0.2s" }}>
-              {tab.label}
+          {[
+            { id:"promo",   label:"🎟️ Promo Kod" },
+            { id:"gifts",   label:"🎁 Sovg'alar"  },
+            { id:"history", label:"📋 Tarix"       },
+          ].map((t) => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ flex:1, padding:"9px 0", borderRadius:10, border:"none", cursor:"pointer", background:activeTab===t.id?"#3b82f6":"transparent", color:activeTab===t.id?"#fff":(darkMode?"#94a3b8":"#374151"), fontSize:12, fontWeight:600, transition:"all 0.2s" }}>
+              {t.label}
             </button>
           ))}
         </div>
       </ScrollReveal>
 
-      {/* Promo tab */}
+      {/* ── PROMO TAB ── */}
       {activeTab === "promo" && (
         <ScrollReveal direction="up" delay={100}>
           <div style={{ background:darkMode?"#1e293b":"#fff", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, borderRadius:16, padding:"24px" }}>
@@ -226,12 +225,12 @@ const PromoCode = ({ darkMode, showToast }) => {
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <input
                 value={code}
-                onChange={(e)=>{ setCode(e.target.value.toUpperCase()); setResult(null); }}
-                onKeyDown={(e)=>e.key==="Enter"&&handleApply()}
+                onChange={(e) => { setCode(e.target.value.toUpperCase()); setResult(null); }}
+                onKeyDown={(e) => e.key === "Enter" && handleApply()}
                 placeholder="Masalan: UZBEKASPIXEL"
                 style={inputStyle}
               />
-              <button onClick={handleApply} disabled={loading||!code.trim()||!user}
+              <button onClick={handleApply} disabled={loading || !code.trim() || !user}
                 style={{ padding:"12px 20px", borderRadius:12, background:loading||!code.trim()?"#94a3b8":"#3b82f6", color:"#fff", border:"none", cursor:loading||!code.trim()?"default":"pointer", fontWeight:700, fontSize:14, whiteSpace:"nowrap", flexShrink:0 }}>
                 {loading ? "⏳" : "Tasdiqlash"}
               </button>
@@ -258,18 +257,17 @@ const PromoCode = ({ darkMode, showToast }) => {
               <p style={{ margin:"0 0 6px", fontSize:12, color:"#6b7280", fontWeight:600 }}>ℹ️ Promo kodlar qayerdan olinadi?</p>
               <p style={{ margin:0, fontSize:12, color:"#6b7280", lineHeight:1.6 }}>
                 Promo kodlar Admin tomonidan yaratiladi va ijtimoiy tarmoqlarda, email orqali tarqatiladi.
-                Hozircha test uchun Admin paneldan qo'shishingiz mumkin.
               </p>
             </div>
           </div>
         </ScrollReveal>
       )}
 
-      {/* Gifts tab */}
+      {/* ── GIFTS TAB ── */}
       {activeTab === "gifts" && (
         <ScrollReveal direction="up" delay={100}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:14 }}>
-            {GIFTS.map((gift)=>{
+            {GIFTS.map((gift) => {
               const key      = `gift_${gift.id}`;
               const claimed  = claimedGifts.includes(key);
               const canClaim = myXP >= gift.xpRequired;
@@ -286,9 +284,9 @@ const PromoCode = ({ darkMode, showToast }) => {
                   <p style={{ margin:"0 0 10px", fontSize:11, color:canClaim?"#10b981":"#6b7280", fontWeight:600 }}>
                     {gift.xpRequired.toLocaleString()} XP kerak
                   </p>
-                  <button onClick={()=>claimGift(gift)} disabled={!canClaim||claimed}
+                  <button onClick={() => claimGift(gift)} disabled={!canClaim || claimed}
                     style={{ width:"100%", padding:"8px 0", borderRadius:8, border:"none", background:claimed?"#d1fae5":canClaim?"#10b981":"#94a3b8", color:claimed?"#065f46":"#fff", fontSize:12, fontWeight:700, cursor:canClaim&&!claimed?"pointer":"default" }}>
-                    {claimed ? "✓ Olindi" : canClaim ? "🎁 Olish" : `🔒 ${(gift.xpRequired-myXP).toLocaleString()} XP kerak`}
+                    {claimed ? "✓ Olindi" : canClaim ? "🎁 Olish" : `🔒 ${(gift.xpRequired - myXP).toLocaleString()} XP kerak`}
                   </button>
                 </div>
               );
@@ -297,7 +295,7 @@ const PromoCode = ({ darkMode, showToast }) => {
         </ScrollReveal>
       )}
 
-      {/* History tab */}
+      {/* ── HISTORY TAB ── */}
       {activeTab === "history" && (
         <ScrollReveal direction="up" delay={100}>
           {dataLoading ? (

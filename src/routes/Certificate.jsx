@@ -20,50 +20,46 @@ const COURSES = [
 ];
 
 const LEVELS = [
-  { level: 1, name: "Yangi boshlovchi", minXP: 0,     badge: "🌱" },
-  { level: 2, name: "O'quvchi",         minXP: 100,   badge: "📚" },
-  { level: 3, name: "Izlanuvchi",       minXP: 300,   badge: "🔍" },
-  { level: 4, name: "Bilimdon",         minXP: 600,   badge: "🧠" },
-  { level: 5, name: "Mahir",            minXP: 1000,  badge: "⚡" },
-  { level: 6, name: "Ekspert",          minXP: 1500,  badge: "🎯" },
-  { level: 7, name: "Usta",             minXP: 2500,  badge: "🏆" },
-  { level: 8, name: "Professional",     minXP: 4000,  badge: "💎" },
-  { level: 9, name: "Champion",         minXP: 6000,  badge: "👑" },
-  { level:10, name: "Legenda",          minXP: 10000, badge: "🌟" },
+  { level: 1,  name: "Yangi boshlovchi", minXP: 0,     badge: "🌱" },
+  { level: 2,  name: "O'quvchi",         minXP: 100,   badge: "📚" },
+  { level: 3,  name: "Izlanuvchi",       minXP: 300,   badge: "🔍" },
+  { level: 4,  name: "Bilimdon",         minXP: 600,   badge: "🧠" },
+  { level: 5,  name: "Mahir",            minXP: 1000,  badge: "⚡" },
+  { level: 6,  name: "Ekspert",          minXP: 1500,  badge: "🎯" },
+  { level: 7,  name: "Usta",             minXP: 2500,  badge: "🏆" },
+  { level: 8,  name: "Professional",     minXP: 4000,  badge: "💎" },
+  { level: 9,  name: "Champion",         minXP: 6000,  badge: "👑" },
+  { level: 10, name: "Legenda",          minXP: 10000, badge: "🌟" },
 ];
 
-const getLevel = (xp = 0) => LEVELS.slice().reverse().find((l) => xp >= l.minXP) || LEVELS[0];
-
+const getLevel  = (xp = 0) => LEVELS.slice().reverse().find((l) => xp >= l.minXP) || LEVELS[0];
 const formatDate = (date = new Date()) =>
   date.toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
 
-// ─── Sertifikat preview komponenti ────────────────────────────────────────────
+// ─── Sertifikat preview ───────────────────────────────────────────────────────
 const CertificatePreview = ({ userName, course, date, certId, xp }) => {
   const level = getLevel(xp);
   return (
-    <div id="certificate-preview" style={{
-      width: "100%", maxWidth: 800,
-      background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-      borderRadius: 20, overflow: "hidden",
-      border: "3px solid #f59e0b",
-      boxShadow: "0 0 60px rgba(245,158,11,0.3)",
-      position: "relative",
-      fontFamily: "'Georgia', serif",
-    }}>
+    <div
+      id="certificate-preview"
+      style={{
+        width: "100%", maxWidth: 800,
+        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        borderRadius: 20, overflow: "hidden",
+        border: "3px solid #f59e0b",
+        boxShadow: "0 0 60px rgba(245,158,11,0.3)",
+        position: "relative",
+        fontFamily: "'Georgia', serif",
+      }}
+    >
       {/* Burchak bezaklari */}
-      {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos, i) => (
-        <div key={i} style={{
-          position: "absolute",
-          top: pos.includes("top") ? 12 : "auto",
-          bottom: pos.includes("bottom") ? 12 : "auto",
-          left: pos.includes("left") ? 12 : "auto",
-          right: pos.includes("right") ? 12 : "auto",
-          width: 40, height: 40,
-          borderTop: pos.includes("top") ? "2px solid #f59e0b" : "none",
-          borderBottom: pos.includes("bottom") ? "2px solid #f59e0b" : "none",
-          borderLeft: pos.includes("left") ? "2px solid #f59e0b" : "none",
-          borderRight: pos.includes("right") ? "2px solid #f59e0b" : "none",
-        }} />
+      {[
+        { top: 12,   left: 12,   borderTop: "2px solid #f59e0b",    borderLeft:   "2px solid #f59e0b"   },
+        { top: 12,   right: 12,  borderTop: "2px solid #f59e0b",    borderRight:  "2px solid #f59e0b"   },
+        { bottom: 12, left: 12,  borderBottom: "2px solid #f59e0b", borderLeft:   "2px solid #f59e0b"   },
+        { bottom: 12, right: 12, borderBottom: "2px solid #f59e0b", borderRight:  "2px solid #f59e0b"   },
+      ].map((style, i) => (
+        <div key={i} style={{ position: "absolute", width: 40, height: 40, ...style }} />
       ))}
 
       {/* Fon pattern */}
@@ -90,7 +86,7 @@ const CertificatePreview = ({ userName, course, date, certId, xp }) => {
           </p>
         </div>
 
-        {/* Matn */}
+        {/* Ism */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <p style={{ margin: "0 0 6px", fontSize: 13, color: "#94a3b8", letterSpacing: 1 }}>
             Ushbu sertifikat taqdim etiladi
@@ -117,9 +113,9 @@ const CertificatePreview = ({ userName, course, date, certId, xp }) => {
         {/* Info qator */}
         <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
           {[
-            { label: "O'qituvchi",  value: course.instructor, icon: "👨‍🏫" },
-            { label: "Daraja",      value: `${level.badge} ${level.name}`, icon: "⭐" },
-            { label: "Sana",        value: date, icon: "📅" },
+            { label: "O'qituvchi", value: course.instructor, icon: "👨‍🏫" },
+            { label: "Daraja",     value: `${level.badge} ${level.name}`, icon: "⭐" },
+            { label: "Sana",       value: date, icon: "📅" },
           ].map((item, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <p style={{ margin: "0 0 2px", fontSize: 18 }}>{item.icon}</p>
@@ -159,80 +155,93 @@ const Certificate = ({ darkMode, showToast }) => {
   const [xp, setXp]                         = useState(0);
   const [printing, setPrinting]             = useState(false);
   const [date]                              = useState(formatDate());
-  const certId = `UZP-${Date.now().toString(36).toUpperCase()}`;
+  const [certId]                            = useState(`UZP-${Date.now().toString(36).toUpperCase()}`);
 
   useEffect(() => {
     if (!user) return;
     setUserName(user.displayName || user.email?.split("@")[0] || "");
-    const load = async () => {
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid, "data", "stats"));
-        if (snap.exists()) setXp(snap.data().xp || 0);
-      } catch (err){
-        console.error(err);
-      }
-    };
-    load();
+    getDoc(doc(db, "users", user.uid, "data", "stats"))
+      .then((snap) => { if (snap.exists()) setXp(snap.data().xp || 0); })
+      .catch(console.error);
   }, [user]);
 
-  // ── Print / Download ──────────────────────────────────────────────────────
+  // ── Print ─────────────────────────────────────────────────────────────────
   const handlePrint = () => {
     setPrinting(true);
     setTimeout(() => {
-      const printContent = document.getElementById("certificate-preview");
-      if (!printContent) { setPrinting(false); return; }
+      const el = document.getElementById("certificate-preview");
+      if (!el) { setPrinting(false); return; }
 
-      const printWindow = window.open("", "_blank");
-      printWindow.document.write(`
+      const win = window.open("", "_blank");
+      win.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
           <title>Sertifikat — ${userName}</title>
           <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
             @media print {
-              body { background: white; }
-              @page { size: A4 landscape; margin: 10mm; }
+              body { background:white; }
+              @page { size:A4 landscape; margin:10mm; }
             }
           </style>
         </head>
         <body>
-          ${printContent.outerHTML}
-          <script>
-            window.onload = () => { window.print(); window.close(); }
-          </script>
+          ${el.outerHTML}
+          <script>window.onload=()=>{window.print();window.close();}<\/script>
         </body>
         </html>
       `);
-      printWindow.document.close();
+      win.document.close();
       setPrinting(false);
-      showToast && showToast("Sertifikat chop etilmoqda! 🖨️", "success");
-    }, 500);
+      showToast?.("Sertifikat chop etilmoqda! 🖨️", "success");
+    }, 400);
   };
 
-  // ── HTML canvas orqali download ───────────────────────────────────────────
+  // ── Download — Canvas API (tashqi kutubxonasiz) ───────────────────────────
   const handleDownload = async () => {
+    if (!userName) { showToast?.("Ismingizni kiriting!", "error"); return; }
     setPrinting(true);
-    try {
-      // html2canvas mavjud bo'lmasa, print funksiyasini ishlatamiz
-      const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js").catch(() => ({ default: null }));
 
-      if (html2canvas) {
-        const element = document.getElementById("certificate-preview");
-        const canvas  = await html2canvas(element, { scale: 2, backgroundColor: null, useCORS: true });
-        const link    = document.createElement("a");
-        link.download = `sertifikat-${userName.replace(/\s/g, "_")}-${selectedCourse.category}.png`;
-        link.href     = canvas.toDataURL("image/png");
-        link.click();
-        showToast && showToast("Sertifikat yuklab olindi! 📥", "success");
-      } else {
+    try {
+      // html2canvas ni CDN dan yuklash (xavfsiz usul)
+      const script = document.createElement("script");
+      script.src   = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      script.onload = async () => {
+        try {
+          const el     = document.getElementById("certificate-preview");
+          const canvas = await window.html2canvas(el, {
+            scale:           2,
+            backgroundColor: null,
+            useCORS:         true,
+            logging:         false,
+          });
+          const link      = document.createElement("a");
+          link.download   = `sertifikat-${userName.replace(/\s/g, "_")}-${selectedCourse.category}.png`;
+          link.href       = canvas.toDataURL("image/png");
+          link.click();
+          showToast?.("Sertifikat yuklab olindi! 📥", "success");
+        } catch {
+          // Canvas ishlamasa print ga fallback
+          handlePrint();
+        } finally {
+          setPrinting(false);
+          // scripni tozalash
+          document.head.removeChild(script);
+        }
+      };
+      script.onerror = () => {
+        // CDN ishlamasa print ga fallback
         handlePrint();
-      }
+        setPrinting(false);
+        document.head.removeChild(script);
+      };
+      document.head.appendChild(script);
     } catch {
       handlePrint();
+      setPrinting(false);
     }
-    setPrinting(false);
   };
 
   const level = getLevel(xp);
@@ -330,7 +339,9 @@ const Certificate = ({ darkMode, showToast }) => {
 
         {/* Tugmalar */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button onClick={handleDownload} disabled={printing || !userName}
+          <button
+            onClick={handleDownload}
+            disabled={printing || !userName}
             style={{ flex: 1, minWidth: 160, padding: "14px 24px", borderRadius: 12, border: "none", background: printing || !userName ? "#94a3b8" : "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: printing || !userName ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s" }}>
             {printing
               ? <><div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid #fff", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} /> Tayyorlanmoqda...</>
@@ -338,7 +349,9 @@ const Certificate = ({ darkMode, showToast }) => {
             }
           </button>
 
-          <button onClick={handlePrint} disabled={printing || !userName}
+          <button
+            onClick={handlePrint}
+            disabled={printing || !userName}
             style={{ flex: 1, minWidth: 160, padding: "14px 24px", borderRadius: 12, border: `2px solid ${darkMode ? "#334155" : "#e5e7eb"}`, background: "transparent", color: darkMode ? "#f1f5f9" : "#374151", fontSize: 14, fontWeight: 700, cursor: printing || !userName ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             <LuPrinter size={18} /> Chop etish
           </button>

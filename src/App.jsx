@@ -48,6 +48,7 @@ import Referral from "./routes/Referral";
 import Tournament from "./routes/Tournament";
 import CoinShop from "./routes/CoinShop";
 import InstructorPanel from "./routes/InstructorPanel";
+import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch(() => {});
@@ -79,6 +80,7 @@ function App() {
   const location                = useLocation();
   const { user }                = useAuth();
   const { show: showOnboarding, hide: hideOnboarding } = useOnboarding();
+  const navigate = useNavigate();
 
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme") || "default"
@@ -103,12 +105,7 @@ function App() {
     }).catch(() => {});
   }, [showToast]);
 useEffect(() => {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // Yangi versiya tayyor
-      showToast && showToast("🆕 Yangi versiya mavjud! Sahifani yangilang.", "success");
-    });
-  }
+ 
 }, [showToast]);
 // App.jsx da mavjud useEffect lardan biriga yoki alohida qo'shing:
 useEffect(() => {
@@ -151,7 +148,7 @@ useEffect(() => {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
 
-      {showOnboarding && <Onboarding darkMode={darkMode} onComplete={hideOnboarding} />}
+      {showOnboarding && <Onboarding darkMode={darkMode} onComplete={hideOnboarding} navigate={navigate} />}
 
       <Navbar darkMode={darkMode} setDarkMode={toggleDarkMode} onNavClick={handleNavClick} />
 
