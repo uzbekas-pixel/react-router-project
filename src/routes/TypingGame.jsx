@@ -173,7 +173,7 @@ const TypingGame = ({ darkMode }) => {
   };
 
   return (
-    <div className={`page-transition min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-4 py-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div className="page-transition min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl">
 
         {/* Header */}

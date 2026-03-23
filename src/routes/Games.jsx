@@ -8,6 +8,7 @@ import Tetris from "../components/games/Tetris";
 import Game2048 from "../components/games/Game2048";
 import Wordle from "../components/games/Wordle";
 import MemoryCard from "../components/games/MemoryCard";
+import MarioGame from "../components/games/MarioGame";
 import { useLang } from "../context/useLang";
 import { LuArrowLeft, LuGamepad2, LuKeyboard, LuUsers } from "react-icons/lu";
 
@@ -27,20 +28,14 @@ const SnakeSVG = () => (
     {[20,40,60,80,100,120,140,160,180].map(x=>[20,40,60,80,100,120].map(y=>(
       <circle key={`${x}-${y}`} cx={x} cy={y} r="1" fill="#166534" opacity="0.5"/>
     )))}
-    {/* Snake */}
     {[[60,50],[80,50],[100,50],[120,50],[120,70],[100,70],[80,70]].map(([x,y],i)=>(
       <rect key={i} x={x+1} y={y+1} width="17" height="17" rx="3" fill="#22c55e"/>
     ))}
-    {/* Head */}
     <rect x="41" y="51" width="17" height="17" rx="4" fill="#4ade80"/>
     <circle cx="47" cy="57" r="2" fill="#052e16"/>
     <circle cx="54" cy="57" r="2" fill="#052e16"/>
-    <ellipse cx="49" cy="64" rx="4" ry="2" fill="#16a34a"/>
-    {/* Apple */}
     <circle cx="165" cy="35" r="9" fill="#ef4444"/>
     <path d="M165 25 Q168 20 172 22" stroke="#16a34a" strokeWidth="2" fill="none" strokeLinecap="round"/>
-    <circle cx="165" cy="35" r="4" fill="#fca5a5" opacity="0.4"/>
-    {/* Score */}
     <rect x="5" y="110" width="190" height="16" rx="4" fill="#14532d"/>
     <text x="100" y="122" textAnchor="middle" fontSize="9" fill="#86efac" fontWeight="700">SCORE: 240</text>
   </svg>
@@ -48,32 +43,18 @@ const SnakeSVG = () => (
 
 const FlappySVG = () => (
   <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
-    <defs>
-      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#0ea5e9"/>
-        <stop offset="100%" stopColor="#38bdf8"/>
-      </linearGradient>
-    </defs>
-    <rect width="200" height="130" fill="url(#sky)"/>
+    <rect width="200" height="130" fill="#38bdf8"/>
     <ellipse cx="50" cy="28" rx="28" ry="12" fill="white" opacity="0.85"/>
-    <ellipse cx="63" cy="23" rx="18" ry="10" fill="white" opacity="0.85"/>
     <ellipse cx="155" cy="35" rx="22" ry="10" fill="white" opacity="0.7"/>
     <rect x="0" y="110" width="200" height="20" fill="#65a30d"/>
-    <rect x="0" y="110" width="200" height="5" fill="#4d7c0f"/>
-    {/* Pipes */}
     <rect x="125" y="0" width="22" height="58" rx="2" fill="#16a34a"/>
     <rect x="121" y="51" width="30" height="9" rx="2" fill="#15803d"/>
     <rect x="125" y="78" width="22" height="50" rx="2" fill="#16a34a"/>
     <rect x="121" y="75" width="30" height="9" rx="2" fill="#15803d"/>
-    {/* Bird */}
     <circle cx="70" cy="58" r="13" fill="#fbbf24"/>
-    <ellipse cx="70" cy="58" rx="13" ry="10" fill="#fbbf24"/>
     <circle cx="77" cy="53" r="5" fill="white"/>
     <circle cx="79" cy="53" r="3" fill="#1e293b"/>
-    <circle cx="80" cy="52" r="1" fill="white"/>
     <polygon points="83,59 94,56 83,62" fill="#f97316"/>
-    <ellipse cx="62" cy="63" rx="9" ry="5" fill="#f59e0b" transform="rotate(-15 62 63)"/>
-    {/* Score */}
     <text x="100" y="20" textAnchor="middle" fontSize="14" fill="white" fontWeight="800" opacity="0.9">3</text>
   </svg>
 );
@@ -81,39 +62,27 @@ const FlappySVG = () => (
 const TicSVG = () => (
   <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
     <rect width="200" height="130" fill="#1e1b4b"/>
-    {/* Stars bg */}
-    {[[15,10],[45,20],[80,8],[130,15],[170,25],[20,50],[160,60],[100,5]].map(([x,y],i)=>(
-      <circle key={i} cx={x} cy={y} r="1.5" fill="white" opacity="0.4"/>
-    ))}
-    {/* Grid */}
     <line x1="80" y1="18" x2="80" y2="112" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"/>
     <line x1="120" y1="18" x2="120" y2="112" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"/>
     <line x1="30" y1="50" x2="170" y2="50" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"/>
     <line x1="30" y1="80" x2="170" y2="80" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"/>
-    {/* X */}
     <line x1="40" y1="25" x2="68" y2="45" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
     <line x1="68" y1="25" x2="40" y2="45" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="130" y1="57" x2="158" y2="75" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="158" y1="57" x2="130" y2="75" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="40" y1="87" x2="68" y2="107" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="68" y1="87" x2="40" y2="107" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
-    {/* O */}
     <circle cx="100" cy="35" r="13" fill="none" stroke="#a78bfa" strokeWidth="3.5"/>
     <circle cx="55" cy="65" r="13" fill="none" stroke="#a78bfa" strokeWidth="3.5"/>
+    <line x1="130" y1="57" x2="158" y2="75" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
+    <line x1="158" y1="57" x2="130" y2="75" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round"/>
     <circle cx="145" cy="96" r="13" fill="none" stroke="#a78bfa" strokeWidth="3.5"/>
-    {/* Win */}
-    <line x1="30" y1="65" x2="170" y2="65" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" opacity="0.5" strokeDasharray="5,3"/>
   </svg>
 );
 
 const TetrisSVG = () => {
   const blocks = [
     {x:5,y:90,c:"#06b6d4"},{x:25,y:90,c:"#06b6d4"},{x:45,y:90,c:"#22c55e"},{x:65,y:90,c:"#22c55e"},
-    {x:85,y:90,c:"#eab308"},{x:105,y:90,c:"#eab308"},{x:125,y:90,c:"#ef4444"},{x:145,y:90,c:"#ef4444"},{x:165,y:90,c:"#a855f7"},
-    {x:5,y:70,c:"#a855f7"},{x:25,y:70,c:"#a855f7"},{x:45,y:70,c:"#06b6d4"},{x:65,y:70,c:"#f97316"},{x:85,y:70,c:"#22c55e"},
+    {x:85,y:90,c:"#eab308"},{x:105,y:90,c:"#eab308"},{x:125,y:90,c:"#ef4444"},{x:145,y:90,c:"#ef4444"},
+    {x:5,y:70,c:"#a855f7"},{x:25,y:70,c:"#a855f7"},{x:45,y:70,c:"#06b6d4"},{x:65,y:70,c:"#f97316"},
     {x:5,y:50,c:"#3b82f6"},{x:25,y:50,c:"#3b82f6"},{x:45,y:50,c:"#ef4444"},
-    {x:5,y:110,c:"#06b6d4"},{x:25,y:110,c:"#22c55e"},{x:45,y:110,c:"#22c55e"},{x:65,y:110,c:"#eab308"},
-    {x:85,y:110,c:"#eab308"},{x:105,y:110,c:"#a855f7"},{x:125,y:110,c:"#3b82f6"},{x:145,y:110,c:"#3b82f6"},{x:165,y:110,c:"#06b6d4"},
+    {x:5,y:110,c:"#06b6d4"},{x:25,y:110,c:"#22c55e"},{x:65,y:110,c:"#eab308"},{x:105,y:110,c:"#a855f7"},
   ];
   return (
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
@@ -124,14 +93,6 @@ const TetrisSVG = () => {
           <rect x={b.x+1} y={b.y+1} width="18" height="4" rx="1" fill="rgba(255,255,255,0.2)"/>
         </g>
       ))}
-      {/* Falling I-piece */}
-      {[0,1,2].map(i=>(
-        <g key={`f${i}`}>
-          <rect x="156" y={i*20+5} width="18" height="18" rx="2" fill="#06b6d4" opacity="0.85"/>
-          <rect x="156" y={i*20+5} width="18" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
-        </g>
-      ))}
-      <rect x="156" y="65" width="18" height="18" rx="2" fill="#06b6d4" opacity="0.3" strokeDasharray="3,2" stroke="#06b6d4" strokeWidth="1"/>
     </svg>
   );
 };
@@ -160,7 +121,6 @@ const G2048SVG = () => {
           )}
         </g>
       )))}
-      <rect x="8*3+12" y="2*26+12" width="40" height="22" rx="4" fill="none" stroke="#818cf8" strokeWidth="2" opacity="0.9"/>
     </svg>
   );
 };
@@ -171,14 +131,12 @@ const WordleSVG = () => {
     [{l:"G",s:"a"},{l:"R",s:"p"},{l:"A",s:"c"},{l:"C",s:"a"},{l:"E",s:"a"}],
     [{l:"G",s:"c"},{l:"R",s:"c"},{l:"A",s:"c"},{l:"C",s:"c"},{l:"E",s:"c"}],
     [{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"}],
-    [{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"},{l:"",s:"e"}],
   ];
   const sc = {c:"#16a34a",p:"#ca8a04",a:"#4b5563",e:"#1f2937"};
   return (
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
       <rect width="200" height="130" fill="#111827"/>
       <text x="100" y="16" textAnchor="middle" fontSize="11" fontWeight="800" fill="white">WORDLE</text>
-      <line x1="20" y1="20" x2="180" y2="20" stroke="#374151" strokeWidth="0.5"/>
       {rows.map((row,ri)=>row.map((cell,ci)=>(
         <g key={`${ri}-${ci}`}>
           <rect x={ci*34+15} y={ri*22+24} width="28" height="20" rx="3" fill={sc[cell.s]}/>
@@ -216,13 +174,85 @@ const MemorySVG = () => {
           )}
         </g>
       ))}
-      <text x="105" y="122" textAnchor="middle" fontSize="9" fill="#a78bfa" fontWeight="700">4 juft topildi ✓</text>
     </svg>
   );
 };
 
-const SVGS = { snake:<SnakeSVG/>, flappy:<FlappySVG/>, tictactoe:<TicSVG/>, tetris:<TetrisSVG/>, "2048":<G2048SVG/>, wordle:<WordleSVG/>, memory:<MemorySVG/> };
-const COLORS = { snake:"#16a34a", flappy:"#d97706", tictactoe:"#7c3aed", tetris:"#dc2626", "2048":"#0891b2", wordle:"#059669", memory:"#9333ea" };
+// ── Mario SVG ─────────────────────────────────────────────────────────────────
+const MarioSVG = () => (
+  <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
+    {/* Sky */}
+    <rect width="200" height="130" fill="#5c94fc"/>
+    {/* Clouds */}
+    <ellipse cx="40" cy="25" rx="22" ry="10" fill="white" opacity="0.9"/>
+    <ellipse cx="55" cy="20" rx="16" ry="9" fill="white" opacity="0.9"/>
+    <ellipse cx="150" cy="30" rx="18" ry="8" fill="white" opacity="0.8"/>
+    {/* Ground */}
+    <rect x="0" y="100" width="200" height="30" fill="#8b4513"/>
+    <rect x="0" y="100" width="200" height="10" fill="#4caf50"/>
+    {/* Pipe */}
+    <rect x="150" y="68" width="30" height="32" fill="#4caf50"/>
+    <rect x="146" y="65" width="38" height="12" rx="2" fill="#388e3c"/>
+    {/* Brick blocks */}
+    <rect x="60" y="68" width="22" height="20" rx="2" fill="#c84b00"/>
+    <line x1="60" y1="78" x2="82" y2="78" stroke="#a03800" strokeWidth="1.5"/>
+    <line x1="71" y1="68" x2="71" y2="88" stroke="#a03800" strokeWidth="1.5"/>
+    <rect x="86" y="68" width="22" height="20" rx="2" fill="#e8a020"/>
+    <text x="97" y="83" textAnchor="middle" fontSize="13" fontWeight="800" fill="white">?</text>
+    <rect x="112" y="68" width="22" height="20" rx="2" fill="#c84b00"/>
+    <line x1="112" y1="78" x2="134" y2="78" stroke="#a03800" strokeWidth="1.5"/>
+    {/* Coin */}
+    <circle cx="97" cy="52" r="7" fill="#ffd700"/>
+    <circle cx="97" cy="52" r="4" fill="#fff8dc" opacity="0.5"/>
+    {/* Goomba */}
+    <ellipse cx="38" cy="90" rx="13" ry="11" fill="#8b4513"/>
+    <rect x="28" y="95" width="8" height="6" rx="2" fill="#5d2e0c"/>
+    <rect x="42" y="95" width="8" height="6" rx="2" fill="#5d2e0c"/>
+    <rect x="30" y="82" width="7" height="4" rx="1" fill="#3d1a00"/>
+    <rect x="43" y="82" width="7" height="4" rx="1" fill="#3d1a00"/>
+    <circle cx="35" cy="88" r="3" fill="white"/>
+    <circle cx="43" cy="88" r="3" fill="white"/>
+    <circle cx="36" cy="89" r="1.5" fill="#000"/>
+    <circle cx="44" cy="89" r="1.5" fill="#000"/>
+    {/* Mario */}
+    {/* Hat */}
+    <rect x="100" y="58" width="20" height="7" rx="2" fill="#ff0000"/>
+    <rect x="97" y="64" width="26" height="4" rx="1" fill="#ff0000"/>
+    {/* Face */}
+    <rect x="100" y="68" width="20" height="10" rx="1" fill="#ffcc99"/>
+    {/* Eye */}
+    <rect x="114" y="70" width="4" height="4" rx="1" fill="#000"/>
+    {/* Mustache */}
+    <rect x="104" y="75" width="14" height="3" rx="1" fill="#ff0000"/>
+    {/* Body */}
+    <rect x="98" y="78" width="22" height="10" rx="2" fill="#ff0000"/>
+    {/* Pants */}
+    <rect x="96" y="88" width="26" height="7" rx="1" fill="#0000cc"/>
+    {/* Shoes */}
+    <rect x="96" y="95" width="10" height="5" rx="2" fill="#4a2800"/>
+    <rect x="112" y="95" width="10" height="5" rx="2" fill="#4a2800"/>
+    {/* Score */}
+    <rect x="2" y="2" width="80" height="14" rx="4" fill="rgba(0,0,0,0.3)"/>
+    <text x="8" y="13" fontSize="8" fill="white" fontWeight="700">⭐ 5400  🪙×8  ❤️×3</text>
+  </svg>
+);
+
+const SVGS = {
+  snake:    <SnakeSVG/>,
+  flappy:   <FlappySVG/>,
+  tictactoe:<TicSVG/>,
+  tetris:   <TetrisSVG/>,
+  "2048":   <G2048SVG/>,
+  wordle:   <WordleSVG/>,
+  memory:   <MemorySVG/>,
+  mario:    <MarioSVG/>,
+};
+
+const COLORS = {
+  snake:"#16a34a", flappy:"#d97706", tictactoe:"#7c3aed",
+  tetris:"#dc2626", "2048":"#0891b2", wordle:"#059669",
+  memory:"#9333ea", mario:"#e8a020",
+};
 
 const GameCard = ({ game, onClick, t }) => {
   const [hovered, setHovered] = useState(false);
@@ -272,6 +302,7 @@ const Games = ({ darkMode, showToast }) => {
     { id:"2048",      icon:"🔢", title:"2048",         desc:"Raqamlarni birlashtiring" },
     { id:"wordle",    icon:"🔤", title:"Wordle",       desc:"So'zni toping" },
     { id:"memory",    icon:"🧠", title:"Memory Card",  desc:"Eslab qolish o'yini" },
+    { id:"mario",     icon:"🍄", title:"Super Mario",  desc:"Yugur, sakra, g'alaba qozon!" },
   ];
 
   if (screen==="snake")     return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><SnakeGame darkMode={darkMode}/></div></div>;
@@ -282,30 +313,44 @@ const Games = ({ darkMode, showToast }) => {
   if (screen==="wordle")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><Wordle darkMode={darkMode}/></div></div>;
   if (screen==="memory")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MemoryCard darkMode={darkMode}/></div></div>;
 
+  // ← Mario qo'shildi
+  if (screen==="mario")     return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MarioGame darkMode={darkMode}/></div></div>;
+
   return (
-    <div className={`page-transition min-h-[calc(100vh-64px)] px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-<h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-  <LuGamepad2 className="text-yellow-400" /> {t.gamesTitle}
-</h1>
+    <div className="page-transition min-h-[calc(100vh-64px)] px-4 py-6 mt-10">
+      <h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <LuGamepad2 className="text-yellow-400" /> {t.gamesTitle}
+      </h1>
+
       <div className={`rounded-2xl overflow-hidden shadow mb-8 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
         <div className={`flex border-b ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-          <button onClick={() => setTab("typing")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-  <LuKeyboard size={16} /> {t.typingTitle}
-</button>
-<button onClick={() => setTab("multi")} className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-  <LuUsers size={16} /> {t.multiTitle}
-</button>
+          <button onClick={() => setTab("typing")}
+            className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${
+              tab==="typing" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
+            }`}>
+            <LuKeyboard size={16} /> {t.typingTitle}
+          </button>
+          <button onClick={() => setTab("multi")}
+            className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${
+              tab==="multi" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
+            }`}>
+            <LuUsers size={16} /> {t.multiTitle}
+          </button>
         </div>
         <div>
           {tab==="typing" && <TypingGame darkMode={darkMode}/>}
           {tab==="multi"  && <MultiTyping darkMode={darkMode} showToast={showToast}/>}
         </div>
       </div>
-     <h2 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-  <LuGamepad2 className="text-yellow-400" size={20} /> {t.arcadeGames}
-</h2>
+
+      <h2 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <LuGamepad2 className="text-yellow-400" size={20} /> {t.arcadeGames}
+      </h2>
+
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:14 }}>
-        {GAMES.map(game => <GameCard key={game.id} game={game} onClick={()=>setScreen(game.id)} t={t}/>)}
+        {GAMES.map(game => (
+          <GameCard key={game.id} game={game} onClick={() => setScreen(game.id)} t={t}/>
+        ))}
       </div>
     </div>
   );

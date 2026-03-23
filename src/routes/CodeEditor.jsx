@@ -60,10 +60,10 @@ const CodeEditor = ({ darkMode }) => {
   };
 
   return (
-    <div className={`page-transition min-h-[calc(100vh-64px)] flex flex-col mt-7  ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div className={`page-transition min-h-[calc(100vh-64px)] flex flex-col mt-7  `}>
 
       {/* ── Header ── */}
-      <div className={`flex flex-col gap-2 px-4 py-3 border-b ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+      <div className={`flex flex-col gap-2 px-4 py-3 border-b `}>
 
         {/* 1-qator: sarlavha + Run tugmasi */}
         <div className="flex items-center justify-between">
@@ -95,7 +95,7 @@ const CodeEditor = ({ darkMode }) => {
       </div>
 
       {/* ── Mobile tab ── */}
-      <div className={`md:hidden flex border-b ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+      <div className={`md:hidden flex border-b ${darkMode ? " border-slate-700" : " border-gray-200"}`}>
         <button onClick={() => setActiveTab("editor")}
           className={`flex-1 py-2 text-sm font-semibold transition ${activeTab === "editor" ? "text-blue-500 border-b-2 border-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"}`}>
           {t.codeTitle}
@@ -111,7 +111,7 @@ const CodeEditor = ({ darkMode }) => {
 
         {/* Editor */}
         <div className={`${activeTab === "output" ? "hidden" : "flex"} md:flex flex-col w-full md:w-1/2 border-r code-editor ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-          <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs ${darkMode ? "bg-slate-900 border-slate-700 text-gray-400" : "bg-gray-100 border-gray-200 text-gray-500"}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs ${darkMode ? " border-slate-700 text-gray-400" : " border-gray-200 text-gray-500"}`}>
             <span className="w-3 h-3 rounded-full bg-red-400" />
             <span className="w-3 h-3 rounded-full bg-yellow-400" />
             <span className="w-3 h-3 rounded-full bg-green-400" />
@@ -119,19 +119,19 @@ const CodeEditor = ({ darkMode }) => {
             <span className={`ml-auto text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>{t.shortcut}</span>
           </div>
           <div className="flex flex-1 overflow-hidden code-editor">
-            <div className={`select-none px-3 py-4 text-right text-xs leading-6 min-w-[40px] ${darkMode ? "bg-slate-900 text-gray-600" : "bg-gray-100 text-gray-400"}`}>
+            <div className={`select-none px-3 py-4 text-right text-xs leading-6 min-w-[40px] ${darkMode ? " text-gray-600" : " text-gray-400"}`}>
               {code.split("\n").map((_, i) => <div key={i}>{i + 1}</div>)}
             </div>
             <textarea value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={handleKeyDown}
               spellCheck="false"
-              className={`flex-1 p-4 text-sm font-mono leading-6 resize-none outline-none ${darkMode ? "bg-slate-900 text-gray-200" : "bg-white text-gray-800"}`}
+              className={`flex-1 p-4 text-sm font-mono leading-6 resize-none outline-none ${darkMode ? " text-gray-200" : " text-gray-800"}`}
               style={{ tabSize: 2 }} />
           </div>
         </div>
 
         {/* Output */}
         <div className={`${activeTab === "editor" ? "hidden" : "flex"} md:flex flex-col w-full md:w-1/2 `}>
-          <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs code-editor ${darkMode ? "bg-slate-900 border-slate-700 text-gray-400" : "bg-gray-100 border-gray-200 text-gray-500"}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs code-editor ${darkMode ? " border-slate-700 text-gray-400" : " border-gray-200 text-gray-500"}`}>
             <span>{t.output}</span>
             {output && (
              <button onClick={() => setOutput("")} className="ml-auto text-red-400 hover:text-red-300 transition flex items-center gap-1">
@@ -142,7 +142,7 @@ const CodeEditor = ({ darkMode }) => {
           {output ? (
             <iframe srcDoc={output} className="flex-1 w-full border-0" sandbox="allow-scripts" title="output" />
           ) : (
-            <div className={`flex-1 flex flex-col items-center justify-center gap-3 ${darkMode ? "bg-slate-900 text-gray-600" : "bg-gray-50 text-gray-400"}`}>
+            <div className={`flex-1 flex flex-col items-center justify-center gap-3 ${darkMode ? " text-gray-600" : " text-gray-400"}`}>
               <span className="text-5xl"><LuPlay size={13} /></span>
               <p className="text-sm">{t.writeCode}</p>
               <p className="text-xs opacity-60">{t.shortcut}</p>

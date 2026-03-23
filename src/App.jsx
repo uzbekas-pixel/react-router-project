@@ -136,10 +136,12 @@ useEffect(() => {
     : currentTheme !== "default" && themeStyles[currentTheme]
     ? { background: themeStyles[currentTheme] }
     : {};
-
+const hasCustomBg = customBg || (currentTheme !== "default");
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+     className={`min-h-screen flex flex-col transition-colors duration-300 ${
+  hasCustomBg ? "" : darkMode ? "bg-gray-900" : "bg-gray-50"
+}`}
       style={bgStyle}
     >
       <ParticleBackground darkMode={darkMode} />

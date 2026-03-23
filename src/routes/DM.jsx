@@ -491,7 +491,7 @@ const DM = ({ darkMode, showToast }) => {
   );
 
   return (
-    <div className={`page-transition w-full max-w-5xl mx-auto px-4 py-6 mt-10 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}
+    <div className="page-transition w-full max-w-5xl mx-auto px-4 py-6 mt-10"
       style={{ height: "calc(100vh - 130px)" }}>
       <div className="flex items-center gap-3 mb-4">
         <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>

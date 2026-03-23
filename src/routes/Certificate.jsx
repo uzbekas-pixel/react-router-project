@@ -189,7 +189,7 @@ const Certificate = ({ darkMode, showToast }) => {
         </head>
         <body>
           ${el.outerHTML}
-          <script>window.onload=()=>{window.print();window.close();}<\/script>
+          <script>window.onload=()=>{window.print();window.close();}</script>
         </body>
         </html>
       `);
