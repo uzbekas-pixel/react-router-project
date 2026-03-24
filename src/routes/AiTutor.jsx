@@ -2,41 +2,157 @@ import React, { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
-import { LuRefreshCw, LuSend } from "react-icons/lu";
+import { LuMic, LuMicOff, LuPaperclip, LuRefreshCw, LuSend, LuX } from "react-icons/lu";
 
-const quickTopics = [
-  { icon: "🌐", label: "HTML",       prompt: "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?" },
-  { icon: "🎨", label: "CSS",        prompt: "CSS Flexbox va Grid farqi nima? Qachon qaysinisini ishlataman?" },
-  { icon: "⚡", label: "JavaScript", prompt: "JavaScript da async/await qanday ishlaydi? Misol bilan tushuntir." },
-  { icon: "⚛️", label: "React",      prompt: "React hooks nima? useState va useEffect ni tushuntir." },
-  { icon: "🇬🇧", label: "English",   prompt: "Ingliz tilida Present Perfect va Simple Past farqini misol bilan tushuntir." },
-  { icon: "🇷🇺", label: "Russian",   prompt: "Rus tilida падежlar qanday ishlaydi? Misollar bilan tushuntir." },
-  { icon: "🇫🇷", label: "French",    prompt: "Fransuz tilida être va avoir fe'llarini qachon ishlatiladi?" },
-  { icon: "🔥", label: "Firebase",   prompt: "Firebase Firestore da ma'lumot qo'shish, o'qish va o'chirish qanday amalga oshiriladi?" },
-];
+const getQuickTopics = (lang) => {
+  const isUz = lang === "uz";
+  const isRu = lang === "ru";
+  const isFr = lang === "fr";
 
-const suggestedQuestions = [
-  "HTML form elementlari qaysilar?",
-  "CSS animatsiya qanday yoziladi?",
-  "JavaScript Promise nima?",
-  "React Component lifecycle tushuntir",
-  "SQL va NoSQL farqi nima?",
-  "Git clone, pull, push farqi?",
-  "REST API nima?",
-  "Ingliz tilida past simple ishlatish",
-];
+  const label = {
+    html: isUz ? "HTML" : "HTML",
+    css: isUz ? "CSS" : "CSS",
+    js: isUz ? "JavaScript" : "JavaScript",
+    react: isUz ? "React" : "React",
+    en: isUz ? "Ingliz tili" : isRu ? "Английский" : isFr ? "Anglais" : "English",
+    ru: isUz ? "Rus tili" : isRu ? "Русский" : isFr ? "Russe" : "Russian",
+    fr: isUz ? "Fransuz tili" : isRu ? "Французский" : isFr ? "Français" : "French",
+    fb: "Firebase",
+  };
 
-const SYSTEM_PROMPT = `Sen "Uzbekas Pixel" online ta'lim platformasining AI o'qituvchisisan. Sening vazifang o'quvchilarga quyidagi mavzularda yordam berish:
+  const topics = [
+    {
+      icon: "🌐",
+      label: label.html,
+      prompt: isUz
+        ? "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?"
+        : isRu
+          ? "Какие самые часто используемые HTML-теги и для чего нужен каждый из них?"
+          : isFr
+            ? "Quelles sont les balises HTML les plus utilisées et à quoi sert chacune d'elles ?"
+            : "Which are the most commonly used HTML tags and what is each tag used for?",
+    },
+    {
+      icon: "🎨",
+      label: label.css,
+      prompt: isUz
+        ? "CSS Flexbox va Grid farqi nima? Qachon qaysinisini ishlataman?"
+        : isRu
+          ? "Чем отличается Flexbox и Grid в CSS? Когда использовать каждый из них?"
+          : isFr
+            ? "Quelle est la différence entre Flexbox et Grid en CSS ? Quand utiliser chacun ?"
+            : "What is the difference between CSS Flexbox and Grid? When should I use each?",
+    },
+    {
+      icon: "⚡",
+      label: label.js,
+      prompt: isUz
+        ? "JavaScript da async/await qanday ishlaydi? Misol bilan tushuntir."
+        : isRu
+          ? "Как работает async/await в JavaScript? Объясни на примере."
+          : isFr
+            ? "Comment fonctionne async/await en JavaScript ? Explique avec un exemple."
+            : "How does async/await work in JavaScript? Explain with an example.",
+    },
+    {
+      icon: "⚛️",
+      label: label.react,
+      prompt: isUz
+        ? "React hooks nima? useState va useEffect ni tushuntir."
+        : isRu
+          ? "Что такое хуки React? Объясни useState и useEffect."
+          : isFr
+            ? "Qu'est-ce que les hooks React ? Expliquez useState et useEffect."
+            : "What are React hooks? Explain useState and useEffect.",
+    },
+    {
+      icon: "🇬🇧",
+      label: label.en,
+      prompt: isUz
+        ? "Ingliz tilida Present Perfect va Simple Past farqini misol bilan tushuntir."
+        : isRu
+          ? "Объясни разницу между Present Perfect и Simple Past на примерах."
+          : isFr
+            ? "Expliquez la différence entre le Present Perfect et le Simple Past avec des exemples."
+            : "Explain the difference between Present Perfect and Simple Past with examples.",
+    },
+    {
+      icon: "🇷🇺",
+      label: label.ru,
+      prompt: isUz
+        ? "Rus tilida падежlar qanday ishlaydi? Misollar bilan tushuntir."
+        : isRu
+          ? "Как работают падежи в русском языке? Объясни на примерах."
+          : isFr
+            ? "Comment fonctionnent les cas en russe ? Expliquez avec des exemples."
+            : "How do cases work in Russian? Explain with examples.",
+    },
+    {
+      icon: "🇫🇷",
+      label: label.fr,
+      prompt: isUz
+        ? "Fransuz tilida être va avoir fe'llarini qachon ishlatiladi?"
+        : isRu
+          ? "Во французском: когда используются глаголы être и avoir? Объясни."
+          : isFr
+            ? "En français, quand utilise-t-on les verbes être et avoir ? Expliquez."
+            : "In French, when do we use the verbs être and avoir? Explain.",
+    },
+    {
+      icon: "🔥",
+      label: label.fb,
+      prompt: isUz
+        ? "Firebase Firestore da ma'lumot qo'shish, o'qish va o'chirish qanday amalga oshiriladi?"
+        : isRu
+          ? "В Firebase Firestore: как добавить, прочитать и удалить данные?"
+          : isFr
+            ? "Dans Firebase Firestore, comment ajouter, lire et supprimer des données ?"
+            : "In Firebase Firestore, how do I add, read, and delete data?",
+    },
+  ];
+
+  return topics;
+};
+
+const getSuggestedQuestions = (lang) => {
+  const isUz = lang === "uz";
+  const isRu = lang === "ru";
+  const isFr = lang === "fr";
+
+  return [
+    isUz ? "HTML form elementlari qaysilar?" : isRu ? "Какие есть элементы форм в HTML?" : isFr ? "Quels éléments de formulaire HTML existent ?" : "Which HTML form elements exist?",
+    isUz ? "CSS animatsiya qanday yoziladi?" : isRu ? "Как написать анимации в CSS?" : isFr ? "Comment écrire des animations CSS ?" : "How do I write CSS animations?",
+    isUz ? "JavaScript Promise nima?" : isRu ? "Что такое Promise в JavaScript?" : isFr ? "Qu'est-ce qu'une Promise en JavaScript ?" : "What is a JavaScript Promise?",
+    isUz ? "React component lifecycle tushuntir" : isRu ? "Объясни жизненный цикл компонента React." : isFr ? "Explique le cycle de vie d'un composant React." : "Explain React component lifecycle.",
+    isUz ? "SQL va NoSQL farqi nima?" : isRu ? "В чем разница между SQL и NoSQL?" : isFr ? "Quelle est la différence entre SQL et NoSQL ?" : "What is the difference between SQL and NoSQL?",
+    isUz ? "Git clone, pull, push farqi?" : isRu ? "В чем разница между git clone, pull и push?" : isFr ? "Quelle est la différence entre git clone, pull et push ?" : "What is the difference between git clone, pull, and push?",
+    isUz ? "REST API nima?" : isRu ? "Что такое REST API?" : isFr ? "Qu'est-ce qu'une API REST ?" : "What is a REST API?",
+    isUz ? "Ingliz tilida past simple ishlatish" : isRu ? "Как использовать Past Simple?" : isFr ? "Comment utiliser le prétérit (Past Simple) ?" : "How to use Past Simple tense?",
+  ];
+};
+
+const getSystemPrompt = (lang) => {
+  const langRule =
+    lang === "uz"
+      ? "Har doim o'zbek tilida javob ber (agar savol boshqa tilda bo'lsa, o'sha tilda javob ber)."
+      : lang === "ru"
+        ? "Всегда отвечай на русском языке (если вопрос задан на другом языке, ответь на языке вопроса)."
+        : lang === "fr"
+          ? "Réponds toujours en français (si la question est posée dans une autre langue, réponds dans la langue de la question)."
+          : "Always respond in English (if the question is asked in another language, respond in the question's language).";
+
+  return `Sen "Uzbekas Pixel" online ta'lim platformasining AI o'qituvchisisan. Sening vazifang o'quvchilarga quyidagi mavzularda yordam berish:
 
 Dasturlash: HTML5, CSS, JavaScript, React, Firebase, Git, REST API, SQL/NoSQL
 Tillar: Ingliz tili (IELTS, grammar), Rus tili, Fransuz tili
 
 Qoidalar:
-- Har doim o'zbek tilida javob ber (agar savol boshqa tilda bo'lsa, o'sha tilda javob ber)
+- ${langRule}
 - Javoblarni tushunarli va qisqa qil, lekin to'liq tushuntir
 - Kod misollar berganingda aniq va tushunarli yoz
 - Faqat ta'lim va dasturlash mavzularida gapir
 - Friendly va ragbatlantiruci bo'l`;
+};
 
 const MessageBubble = ({ msg, darkMode }) => {
   const isUser = msg.role === "user";
@@ -54,6 +170,20 @@ const MessageBubble = ({ msg, darkMode }) => {
         border: !isUser ? `1px solid ${darkMode ? "#334155" : "#e2e8f0"}` : "none",
         whiteSpace: "pre-wrap", wordBreak: "break-word",
       }}>
+        {msg.imagePreviewUrl && (
+          <img
+            src={msg.imagePreviewUrl}
+            alt="Rasm"
+            style={{
+              maxWidth: "100%",
+              maxHeight: 260,
+              borderRadius: 12,
+              display: "block",
+              marginBottom: msg.content ? 8 : 0,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.15)"
+            }}
+          />
+        )}
         {msg.content}
         {msg.loading && (
           <span style={{ display: "inline-flex", gap: 3, marginLeft: 6, verticalAlign: "middle" }}>
@@ -72,7 +202,7 @@ const MessageBubble = ({ msg, darkMode }) => {
 
 const AiTutor = ({ darkMode, showToast }) => {
   const { user: _user } = useAuth();
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [messages, setMessages] = useState([{
     role: "assistant",
     content: t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering! 🤖",
@@ -81,8 +211,55 @@ const AiTutor = ({ darkMode, showToast }) => {
   const [loading, setLoading]   = useState(false);
   const [showSugg, setShowSugg] = useState(true);
 
+  const [listening, setListening] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+
+  const quickTopics = getQuickTopics(lang);
+  const suggestedQuestions = getSuggestedQuestions(lang);
+
   const messagesAreaRef = useRef(null);
   const textareaRef     = useRef(null);
+  const fileInputRef   = useRef(null);
+  const recognitionRef  = useRef(null);
+
+  useEffect(() => {
+    // Foydalanuvchi hali hech narsa yubormagan bo'lsa,
+    // menyu tili o'zgarganda welcome-xabarni ham yangilaymiz.
+    const hasUserMessage = messages.some((m) => m.role === "user");
+    if (hasUserMessage) return;
+
+    revokePendingImage();
+    setPendingImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setShowSugg(true);
+    resetTextarea();
+    setMessages([{ role: "assistant", content: t.aiTutorCleared }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
+  const revokeObjectUrl = (url) => {
+    try {
+      if (url) URL.revokeObjectURL(url);
+    } catch (e) {
+      // Oldingi object URL bo'lsa ham, browser xatolarga yo'l qo'yishi mumkin.
+      // Biz bu holatni jim e'tiborsiz qoldiramiz.
+      void e;
+    }
+  };
+
+  const revokePendingImage = () => {
+    if (!pendingImage?.previewUrl) return;
+    revokeObjectUrl(pendingImage.previewUrl);
+  };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop?.();
+      revokePendingImage();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Faqat messages box ichida scroll, sahifa emas
   useEffect(() => {
@@ -98,8 +275,9 @@ const AiTutor = ({ darkMode, showToast }) => {
   };
 
   const sendMessage = async (text) => {
-    const userText = (text || input).trim();
-    if (!userText || loading) return;
+    const rawText = (text || input).trim();
+    const hasImage = Boolean(pendingImage);
+    if ((!rawText && !hasImage) || loading) return;
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
@@ -107,24 +285,50 @@ const AiTutor = ({ darkMode, showToast }) => {
       return;
     }
 
+    const imageToSend = pendingImage;
+    const effectiveText = rawText || (hasImage ? t.aiTutorImageOnlyFallback : "");
+    const currentUserParts = [
+      ...(effectiveText ? [{ text: effectiveText }] : []),
+      ...(imageToSend?.base64
+        ? [{ inlineData: { mimeType: imageToSend.mimeType, data: imageToSend.base64 } }]
+        : []),
+    ];
+
     setInput("");
     resetTextarea();
     setShowSugg(false);
+    setPendingImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setLoading(true);
 
     setMessages((prev) => [
       ...prev,
-      { role: "user",      content: userText },
+      {
+        role: "user",
+        content: effectiveText,
+        imagePreviewUrl: imageToSend?.previewUrl || null,
+        imageInlineData: imageToSend?.base64
+          ? { mimeType: imageToSend.mimeType, data: imageToSend.base64 }
+          : null,
+      },
       { role: "assistant", content: "", loading: true },
     ]);
 
     // Gemini history formati
     const history = messages
-      .filter((m) => !m.loading && m.content)
+      .filter((m) => !m.loading && (m.content || m.imageInlineData))
       .slice(-8)
       .map((m) => ({
-        role:  m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
+        role: m.role === "assistant" ? "model" : "user",
+        parts:
+          m.role === "assistant"
+            ? [{ text: m.content || "" }]
+            : [
+                ...(m.content ? [{ text: m.content }] : []),
+                ...(m.imageInlineData
+                  ? [{ inlineData: { mimeType: m.imageInlineData.mimeType, data: m.imageInlineData.data } }]
+                  : []),
+              ],
       }));
 
     try {
@@ -134,10 +338,10 @@ const AiTutor = ({ darkMode, showToast }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            system_instruction: { parts: [{ text: getSystemPrompt(lang) }] },
             contents: [
               ...history,
-              { role: "user", parts: [{ text: userText }] },
+              { role: "user", parts: currentUserParts },
             ],
             generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
           }),
@@ -149,13 +353,17 @@ const AiTutor = ({ darkMode, showToast }) => {
         throw new Error(err?.error?.message || `HTTP ${res.status}`);
       }
 
-      const data  = await res.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Javob olishda xatolik yuz berdi.";
+      const data = await res.json();
+      const reply =
+        data.candidates?.[0]?.content?.parts?.[0]?.text || "Javob olishda xatolik yuz berdi.";
 
       setMessages((prev) => [...prev.slice(0, -1), { role: "assistant", content: reply }]);
     } catch (err) {
       console.error("Gemini xato:", err.message);
-      setMessages((prev) => [...prev.slice(0, -1), { role: "assistant", content: `❌ Xatolik: ${err.message}` }]);
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "assistant", content: `❌ Xatolik: ${err.message}` },
+      ]);
       showToast && showToast(t.aiConnectError, "error");
     }
 
@@ -164,9 +372,14 @@ const AiTutor = ({ darkMode, showToast }) => {
   };
 
   const clearChat = () => {
+    // Xabar ichidagi rasm preview-larni tozalash (object URL)
+    messages.forEach((m) => revokeObjectUrl(m?.imagePreviewUrl));
+    revokePendingImage();
     setMessages([{ role: "assistant", content: t.aiTutorCleared }]);
     setShowSugg(true);
     resetTextarea();
+    setPendingImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleKeyDown = (e) => {
@@ -174,6 +387,126 @@ const AiTutor = ({ darkMode, showToast }) => {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleImageSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type?.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Rasm 5MB dan katta bo'lmasligi kerak.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageUploading(true);
+    try {
+      // Oldingi pending rasm preview-ni tozalaymiz (u hali yuborilmagan bo'ladi)
+      revokePendingImage();
+
+      const reader = new FileReader();
+      const dataUrl = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const base64 = dataUrl.split(",")[1] || "";
+      const previewUrl = URL.createObjectURL(file);
+
+      setPendingImage({
+        mimeType: file.type || "image/png",
+        base64,
+        previewUrl,
+      });
+    } catch {
+      alert("Rasmni o'qishda xato yuz berdi.");
+    } finally {
+      setImageUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const toggleVoice = () => {
+    if (loading) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast && showToast(t.aiTutorSpeechNotSupported, "error");
+      return;
+    }
+
+    if (listening) {
+      recognitionRef.current?.stop?.();
+      setListening(false);
+      return;
+    }
+
+    setShowSugg(false);
+    setListening(true);
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    // Hozirgi UI tiliga mos ravishda transkripsiya tilini ham moslaymiz.
+    recognition.lang =
+      lang === "uz" ? "uz-UZ" :
+      lang === "ru" ? "ru-RU" :
+      lang === "fr" ? "fr-FR" :
+      "en-US";
+
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      let reachedFinal = false;
+
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        transcript += event.results[i][0]?.transcript || "";
+        if (event.results[i].isFinal) {
+          reachedFinal = true;
+          break;
+        }
+      }
+
+      const cleaned = transcript.replace(/\s+/g, " ").trim();
+      if (cleaned) setInput(cleaned);
+
+      // Yakuniy natija bo'lsa matnni textarea'ga joylaymiz.
+      // Keyin siz o'zingiz `Send` bosasiz (transkripsiya xatolarda noto'g'ri yuborib yubormaslik uchun).
+      if (reachedFinal && cleaned) {
+        try { recognition.stop(); } catch (e) {
+          console.warn("SpeechRecognition stop error:", e);
+        }
+        setListening(false);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setListening(false);
+      const code = event?.error;
+      // Brauzerlar xato kodlarini turlicha yuboradi.
+      const message =
+        code === "not-allowed" || code === "service-not-allowed"
+          ? t.aiTutorSpeechMicrophoneDenied
+          : code === "no-speech"
+            ? t.aiTutorSpeechNoSpeech
+            : code === "aborted"
+              ? t.aiTutorSpeechAborted
+              : code === "network"
+                ? t.aiTutorSpeechNetwork
+                : t.aiTutorSpeechError;
+
+      console.warn("SpeechRecognition error:", code, event);
+      showToast && showToast(message, "error");
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+      textareaRef.current?.focus?.();
+    };
+
+    recognition.start();
   };
 
   const borderColor = darkMode ? "#334155" : "#e2e8f0";
@@ -276,6 +609,79 @@ const AiTutor = ({ darkMode, showToast }) => {
 
       {/* Input */}
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end", background: darkMode ? "#1e293b" : "#fff", border: `1px solid ${borderColor}`, borderRadius: 14, padding: "8px 10px", flexShrink: 0 }}>
+        <button
+          onClick={toggleVoice}
+          disabled={loading}
+          title={t.aiTutorMic}
+          style={{
+            width: 38, height: 38, borderRadius: 10,
+            border: `1px solid ${borderColor}`,
+            background: listening ? "linear-gradient(135deg, #3b82f6, #6366f1)" : (darkMode ? "#0f172a" : "#f8fafc"),
+            color: listening ? "#fff" : (darkMode ? "#94a3b8" : "#374151"),
+            cursor: loading ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.2s",
+          }}
+        >
+          {listening ? <LuMicOff size={16} /> : <LuMic size={16} />}
+        </button>
+
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading || imageUploading}
+          title={t.aiTutorImageAttach}
+          style={{
+            width: 38, height: 38, borderRadius: 10,
+            border: `1px solid ${borderColor}`,
+            background: darkMode ? "#0f172a" : "#f8fafc",
+            color: darkMode ? "#94a3b8" : "#374151",
+            cursor: (loading || imageUploading) ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          {imageUploading ? "⏳" : <LuPaperclip size={16} />}
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelected}
+          style={{ display: "none" }}
+        />
+
+        {pendingImage?.previewUrl && (
+          <div style={{ position: "relative", width: 38, height: 38, borderRadius: 10, overflow: "hidden", border: `1px solid ${borderColor}`, background: darkMode ? "#0f172a" : "#f8fafc" }}>
+            <img src={pendingImage.previewUrl} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <button
+              onClick={() => {
+                revokePendingImage();
+                setPendingImage(null);
+              }}
+              disabled={loading}
+              style={{
+                position: "absolute",
+                top: -8,
+                right: -8,
+                width: 20,
+                height: 20,
+                borderRadius: 999,
+                border: "none",
+                background: "#ef4444",
+                color: "#fff",
+                cursor: loading ? "default" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+              }}
+              title="Rasmni olib tashlash"
+            >
+              <LuX size={12} />
+            </button>
+          </div>
+        )}
+
         <textarea
           ref={textareaRef}
           rows={1}
@@ -288,12 +694,19 @@ const AiTutor = ({ darkMode, showToast }) => {
           onKeyDown={handleKeyDown}
           placeholder={t.aiTutorPlaceholder}
           disabled={loading}
-          style={{ flex: 1, border: "none", outline: "none", resize: "none", background: "transparent", color: darkMode ? "#f1f5f9" : "#111", fontSize: 14, lineHeight: 1.6, fontFamily: "inherit", minHeight: 40, maxHeight: 100, overflowY: "auto", scrollbarWidth: "none" }}
+          style={{ flex: 1, paddingTop: 10, border: "none", outline: "none", resize: "none", background: "transparent", color: darkMode ? "#f1f5f9" : "#111", fontSize: 14, lineHeight: 1.6, fontFamily: "inherit", minHeight: 40, maxHeight: 100, overflowY: "auto", scrollbarWidth: "none" }}
         />
         <button
           onClick={() => sendMessage()}
-          disabled={loading || !input.trim()}
-          style={{ width: 38, height: 38, borderRadius: 10, border: "none", flexShrink: 0, background: loading || !input.trim() ? (darkMode ? "#334155" : "#e2e8f0") : "linear-gradient(135deg, #3b82f6, #6366f1)", color: loading || !input.trim() ? "#6b7280" : "#fff", cursor: loading || !input.trim() ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.2s" }}
+          disabled={loading || (!input.trim() && !pendingImage)}
+          style={{
+            width: 38, height: 38, borderRadius: 10, border: "none", flexShrink: 0,
+            background: loading || (!input.trim() && !pendingImage) ? (darkMode ? "#334155" : "#e2e8f0") : "linear-gradient(135deg, #3b82f6, #6366f1)",
+            color: loading || (!input.trim() && !pendingImage) ? "#6b7280" : "#fff",
+            cursor: loading || (!input.trim() && !pendingImage) ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 16, transition: "all 0.2s",
+          }}
         >
           {loading ? "⏳" : <LuSend size={16} />}
         </button>
