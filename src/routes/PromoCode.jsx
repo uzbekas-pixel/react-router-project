@@ -3,7 +3,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import {
   collection, doc, getDoc, getDocs, setDoc,
-  addDoc, updateDoc, serverTimestamp, increment,
+ updateDoc, serverTimestamp, increment,
 } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
 

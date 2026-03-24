@@ -48,6 +48,7 @@ import Referral from "./routes/Referral";
 import Tournament from "./routes/Tournament";
 import CoinShop from "./routes/CoinShop";
 import InstructorPanel from "./routes/InstructorPanel";
+import UserProfile from "./routes/UserProfile";
 import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -259,6 +260,11 @@ const hasCustomBg = customBg || (currentTheme !== "default");
 <Route path="/instructor" element={
   <ProtectedRoute>
     <InstructorPanel darkMode={darkMode} showToast={showToast} />
+  </ProtectedRoute>
+} />
+<Route path="/profile/:userId" element={
+  <ProtectedRoute>
+    <UserProfile darkMode={darkMode} />
   </ProtectedRoute>
 } />
             <Route path="/settings" element={

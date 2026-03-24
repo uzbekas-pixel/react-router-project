@@ -3,9 +3,10 @@ import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where,
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
+import { useNavigate } from "react-router-dom";
 import {
   LuSend, LuPaperclip, LuMic, LuKeyboard,
-  LuArrowLeft, LuTrash2, LuMessageSquare
+  LuArrowLeft, LuTrash2, LuMessageSquare, LuUser
 } from "react-icons/lu";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
@@ -14,6 +15,7 @@ const MSG_EXPIRE = 24 * 60 * 60 * 1000;
 const DM = ({ darkMode, showToast }) => {
   const { user } = useAuth();
   const { t } = useLang();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -24,7 +26,6 @@ const DM = ({ darkMode, showToast }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [inputMode, setInputMode] = useState("text");
   const [recording, setRecording] = useState(false);
-  // ── Unread counts: { [otherUserId]: number } ──
   const [unreadCounts, setUnreadCounts] = useState({});
 
   const messagesContainerRef = useRef(null);
@@ -42,7 +43,6 @@ const DM = ({ darkMode, showToast }) => {
     checkAdmin();
   }, [user]);
 
-  // ── Barcha foydalanuvchilarni olish ──────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(collection(db, "users"), (snap) => {
@@ -54,11 +54,9 @@ const DM = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
-  // ── O'qilmagan xabarlarni real-time kuzatish ─────────────────────────────
   useEffect(() => {
     if (!user) return;
 
-    // Menga yuborilgan, o'qilmagan barcha DM xabarlarini kuzat
     const q = query(
       collection(db, "dmMessages"),
       where("toUid", "==", user.uid),
@@ -78,7 +76,6 @@ const DM = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
-  // ── Tanlangan foydalanuvchi bilan xabarlar ────────────────────────────────
   useEffect(() => {
     if (!selectedUser) return;
     const dmId = [user.uid, selectedUser.id].sort().join("_");
@@ -104,7 +101,6 @@ const DM = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [selectedUser, user]);
 
-  // ── Foydalanuvchi tanlanganda o'qilmagan xabarlarni o'qilgan qil ─────────
   useEffect(() => {
     if (!selectedUser || !user) return;
 
@@ -141,8 +137,8 @@ const DM = ({ darkMode, showToast }) => {
       dmId:      getDmId(),
       text:      sendText,
       uid:       user.uid,
-      toUid:     selectedUser.id,   // ← kimga yuborilgan
-      read:      false,              // ← o'qilmagan
+      toUid:     selectedUser.id,
+      read:      false,
       name:      user.displayName || user.email,
       avatar:    user.photoURL || null,
       type:      "text",
@@ -268,14 +264,12 @@ const DM = ({ darkMode, showToast }) => {
                     ? darkMode ? "bg-slate-700" : "bg-blue-50"
                     : darkMode ? "hover:bg-slate-700" : "hover:bg-gray-50"
                 }`}>
-                {/* Avatar */}
                 <div className="relative shrink-0">
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
                     {u.avatarUrl
                       ? <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       : u.displayName?.[0]?.toUpperCase() || "?"}
                   </div>
-                  {/* Unread badge — avatar ustida */}
                   {unread > 0 && (
                     <span style={{
                       position: "absolute",
@@ -308,7 +302,6 @@ const DM = ({ darkMode, showToast }) => {
                     }`}>
                       {u.displayName || u.email}
                     </p>
-                    {/* O'qilmagan badge — o'ngda */}
                     {unread > 0 && !isSelected && (
                       <span style={{
                         background: "#3b82f6",
@@ -347,21 +340,33 @@ const DM = ({ darkMode, showToast }) => {
           {/* Header */}
           <div className={`flex items-center gap-3 px-4 py-3 border-b shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
             <button onClick={backToList}
-  className={`md:hidden w-8 h-8 flex items-center justify-center rounded-xl shrink-0 ${darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-600"}`}>
-  <LuArrowLeft size={18} />
-</button>
+              className={`md:hidden w-8 h-8 flex items-center justify-center rounded-xl shrink-0 ${darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-600"}`}>
+              <LuArrowLeft size={18} />
+            </button>
             <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
               {selectedUser.avatarUrl
                 ? <img src={selectedUser.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : selectedUser.displayName?.[0]?.toUpperCase() || "?"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
+              {/* Ism — bosiladigan, profilga o'tadi */}
+              <p
+                onClick={() => navigate(`/profile/${selectedUser.id}`)}
+                className={`text-sm font-semibold truncate cursor-pointer hover:text-blue-400 transition ${darkMode ? "text-white" : "text-gray-900"}`}
+                title="Profilni ko'rish"
+              >
                 {selectedUser.displayName || selectedUser.email}
               </p>
               <p className={`text-xs truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{selectedUser.email}</p>
             </div>
-            {/* Online indicator */}
+            {/* Profil tugmasi */}
+            <button
+              onClick={() => navigate(`/profile/${selectedUser.id}`)}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition shrink-0 ${darkMode ? "bg-slate-700 text-blue-400 hover:bg-slate-600" : "bg-blue-50 text-blue-500 hover:bg-blue-100"}`}
+              title="Profilni ko'rish"
+            >
+              <LuUser size={15} />
+            </button>
             {selectedUser.isOnline && (
               <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:"#10b981" }}/>
@@ -381,7 +386,12 @@ const DM = ({ darkMode, showToast }) => {
               const isMe = msg.uid === user.uid;
               return (
                 <div key={msg.id} className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+                  {/* Avatar — bosiladigan (boshqa odam bo'lsa) */}
+                  <div
+                    onClick={() => !isMe && navigate(`/profile/${msg.uid}`)}
+                    className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0"
+                    style={{ cursor: isMe ? "default" : "pointer" }}
+                  >
                     {msg.avatar
                       ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" />
                       : msg.name?.[0]?.toUpperCase() || "?"}
@@ -406,15 +416,14 @@ const DM = ({ darkMode, showToast }) => {
                     )}
                     {(isMe || isAdmin) && (
                       <button onClick={() => handleDeleteMsg(msg.id, msg.uid)}
-  className="opacity-0 group-hover:opacity-100 text-xs text-red-400 hover:text-red-300 transition mt-0.5 flex items-center gap-1">
-  <LuTrash2 size={12} />
-</button>
+                        className="opacity-0 group-hover:opacity-100 text-xs text-red-400 hover:text-red-300 transition mt-0.5 flex items-center gap-1">
+                        <LuTrash2 size={12} />
+                      </button>
                     )}
                     <div style={{ display:"flex", alignItems:"center", gap:4 }}>
                       <span className={`text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>
                         {msg.createdAt?.toDate?.()?.toLocaleTimeString("uz", { hour:"2-digit", minute:"2-digit" }) || ""}
                       </span>
-                      {/* O'qilgan belgisi */}
                       {isMe && (
                         <span style={{ fontSize:10, color: msg.read ? "#3b82f6" : "#6b7280" }}>
                           {msg.read ? "✓✓" : "✓"}
@@ -495,9 +504,8 @@ const DM = ({ darkMode, showToast }) => {
       style={{ height: "calc(100vh - 130px)" }}>
       <div className="flex items-center gap-3 mb-4">
         <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-  <LuMessageSquare className="text-blue-500" /> Direct Messages
-</h1>
-        {/* Umumiy o'qilmagan badge */}
+          <LuMessageSquare className="text-blue-500" /> Direct Messages
+        </h1>
         {totalUnread > 0 && (
           <span style={{
             background: "#ef4444",

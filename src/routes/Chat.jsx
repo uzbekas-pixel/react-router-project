@@ -50,7 +50,6 @@ const Chat = ({ darkMode }) => {
   const [camOn, setCamOn] = useState(true);
   const clientRef = useRef(null);
 
-  // Admin tekshirish
   useEffect(() => {
     const checkAdmin = async () => {
       if (!user) return;
@@ -60,7 +59,6 @@ const Chat = ({ darkMode }) => {
     checkAdmin();
   }, [user]);
 
-  // Xabarlarni yuklash + 24 soat eski xabarlarni o'chirish
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt"));
     const unsub = onSnapshot(q, (snap) => {
@@ -71,7 +69,6 @@ const Chat = ({ darkMode }) => {
         const data = d.data();
         const created = data.createdAt?.toDate?.()?.getTime?.();
 
-        // 24 soatdan eski bo'lsa o'chir
         if (created && now - created > MSG_EXPIRE) {
           deleteDoc(doc(db, "messages", d.id)).catch(() => {});
         } else {
@@ -84,13 +81,11 @@ const Chat = ({ darkMode }) => {
     return () => unsub();
   }, []);
 
-  // Oxirgi xabarga scroll + ovoz
   useEffect(() => {
     if (messages.length > prevLengthRef.current) {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
-      // Faqat boshqalar xabariga ovoz
       const lastMsg = messages[messages.length - 1];
       if (prevLengthRef.current > 0 && lastMsg && lastMsg.uid !== user?.uid) {
         playMessage();
@@ -130,7 +125,6 @@ const Chat = ({ darkMode }) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // O'z xabarini o'chirish + admin istalgan xabarni o'chira oladi
   const handleDelete = async (msgId, msgUid) => {
     if (msgUid !== user.uid && !isAdmin) return;
     await deleteDoc(doc(db, "messages", msgId));
@@ -248,7 +242,6 @@ const Chat = ({ darkMode }) => {
           <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.chatSub}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {/* Ovoz on/off */}
           <button onClick={() => {
             const next = !soundOn;
             setSoundOn(next);
@@ -334,8 +327,15 @@ const Chat = ({ darkMode }) => {
               onTouchEnd={handleLongPressEnd}
               onTouchMove={handleLongPressEnd}
               onContextMenu={(e) => e.preventDefault()}>
+
+              {/* Avatar — bosiladigan (o'zim emas) */}
               <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                <div
+                  onClick={() => !isMe && navigate(`/profile/${msg.uid}`)}
+                  className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                  style={{ cursor: isMe ? "default" : "pointer" }}
+                  title={isMe ? "" : `${msg.name} profilini ko'rish`}
+                >
                   {msg.avatar ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" /> : msg.name?.[0]?.toUpperCase() || "?"}
                 </div>
                 {onlineUsers[msg.uid]?.online && (
@@ -344,9 +344,16 @@ const Chat = ({ darkMode }) => {
               </div>
 
               <div className={`max-w-[70%] flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
-                {!isMe && <span className={`text-xs font-semibold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{msg.name}</span>}
+                {/* Ism — bosiladigan (o'zim emas) */}
+                {!isMe && (
+                  <span
+                    onClick={() => navigate(`/profile/${msg.uid}`)}
+                    className={`text-xs font-semibold cursor-pointer hover:text-blue-400 transition ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {msg.name}
+                  </span>
+                )}
                 <div className="relative">
-                  {/* Reply preview xabar ichida */}
                   {msg.replyTo && (
                     <div className={`mb-1 px-3 py-1.5 rounded-xl text-xs border-l-2 border-blue-400 ${
                       isMe ? "bg-blue-600/40 text-blue-100" : darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"
@@ -378,7 +385,6 @@ const Chat = ({ darkMode }) => {
                   )}
 
                   <div className={`absolute top-0 ${isMe ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-1`}>
-                    {/* Reply tugmasi */}
                     <button onClick={(e) => {
                       e.stopPropagation();
                       setReplyTo({ id: msg.id, name: msg.name, text: msg.text, type: msg.type });
@@ -453,6 +459,13 @@ const Chat = ({ darkMode }) => {
                     className="text-2xl hover:scale-125 transition-transform active:scale-110">{emoji}</button>
                 ))}
               </div>
+              {/* Profilga o'tish (o'zim emas) */}
+              {!isMe && (
+                <button onClick={() => { navigate(`/profile/${msg.uid}`); setLongPressMsg(null); }}
+                  className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-blue-400 hover:bg-slate-600" : "text-blue-500 hover:bg-gray-50"}`}>
+                  👤 Profilni ko'rish
+                </button>
+              )}
               <button onClick={() => {
                 setReplyTo({ id: msg.id, name: msg.name, text: msg.text, type: msg.type });
                 setLongPressMsg(null);
@@ -478,7 +491,6 @@ const Chat = ({ darkMode }) => {
 
       {/* Input */}
       <div className={`rounded-2xl px-4 py-3 flex flex-col gap-2 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-        {/* Reply preview */}
         {replyTo && (
           <div className={`flex items-center justify-between px-3 py-2 rounded-xl border-l-2 border-blue-400 ${darkMode ? "bg-slate-700" : "bg-blue-50"}`}>
             <div className="min-w-0">

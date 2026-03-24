@@ -3,6 +3,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
+import { useNavigate } from "react-router-dom"; // ← YANGI
 
 const TABS = [
   { id: "xp",      label: "⭐ XP ball"  },
@@ -28,14 +29,14 @@ const Avatar = ({ user, size = 40 }) => {
 
 const Leaderboard = ({ darkMode }) => {
   const { user }          = useAuth();
+  const navigate          = useNavigate(); // ← YANGI
   const [activeTab, setActiveTab] = useState("xp");
   const [users, setUsers]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [period, setPeriod]       = useState("all");
 
-  // Firebase dan real ma'lumotlar yuklash
-useEffect(() => {
-  setTimeout(() => setLoading(true), 0); // ← shu
+  useEffect(() => {
+  setTimeout(() => setLoading(true), 0);
 
   const unsub = onSnapshot(collection(db, "users"), async (snap) => {
     const baseUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -77,7 +78,7 @@ useEffect(() => {
 
   const sorted = [...users]
     .sort((a, b) => (b[activeTab] || 0) - (a[activeTab] || 0))
-    .filter((u) => (u[activeTab] || 0) > 0); // 0 bo'lganlarni ko'rsatma
+    .filter((u) => (u[activeTab] || 0) > 0);
 
   const myRank = sorted.findIndex((u) => u.id === user?.uid);
   const myData = myRank >= 0 ? sorted[myRank] : null;
@@ -90,6 +91,12 @@ useEffect(() => {
     return "";
   };
 
+  // ← YANGI: profilga o'tish (o'zining profiliga emas)
+  const handleUserClick = (u) => {
+    if (u.id === user?.uid) return; // o'zining profiliga o'tmaslik
+    navigate(`/profile/${u.id}`);
+  };
+
   return (
     <div style={{ width:"100%", maxWidth:800, margin:"0 auto", padding:"40px 16px 80px" }}>
       <ScrollReveal direction="up">
@@ -100,7 +107,6 @@ useEffect(() => {
             </span>
             <h2 style={{ fontSize:26, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111" }}>Leaderboard</h2>
           </div>
-          {/* Period filter */}
           <div style={{ display:"flex", gap:6, background:darkMode?"#1e293b":"#f1f5f9", borderRadius:10, padding:4 }}>
             {[{id:"all",label:"Barchasi"},{id:"month",label:"Oy"},{id:"week",label:"Hafta"}].map((p) => (
               <button key={p.id} onClick={() => setPeriod(p.id)}
@@ -115,12 +121,15 @@ useEffect(() => {
         {!loading && sorted.length >= 3 && (
           <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:12, marginBottom:28 }}>
             {/* 2nd */}
-            <div style={{ textAlign:"center", flex:1 }}>
+            <div
+              onClick={() => handleUserClick(sorted[1])}
+              style={{ textAlign:"center", flex:1, cursor: sorted[1]?.id === user?.uid ? "default" : "pointer" }}
+            >
               <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
                 <Avatar user={sorted[1]} size={56}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:18 }}>🥈</span>
               </div>
-              <p style={{ fontWeight:700, fontSize:13, color:darkMode?"#f1f5f9":"#111", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:80, margin:"4px auto 2px" }}>
+              <p style={{ fontWeight:700, fontSize:13, color: sorted[1]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:80, margin:"4px auto 2px" }}>
                 {sorted[1].displayName || sorted[1].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[1])}</p>
@@ -129,12 +138,15 @@ useEffect(() => {
               </div>
             </div>
             {/* 1st */}
-            <div style={{ textAlign:"center", flex:1 }}>
+            <div
+              onClick={() => handleUserClick(sorted[0])}
+              style={{ textAlign:"center", flex:1, cursor: sorted[0]?.id === user?.uid ? "default" : "pointer" }}
+            >
               <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
                 <Avatar user={sorted[0]} size={68}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:22 }}>🥇</span>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:14, color:darkMode?"#f1f5f9":"#111", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:90 }}>
+              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:14, color: sorted[0]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:90 }}>
                 {sorted[0].displayName || sorted[0].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:12, color:"#f59e0b", fontWeight:700 }}>{valueLabel(sorted[0])}</p>
@@ -143,12 +155,15 @@ useEffect(() => {
               </div>
             </div>
             {/* 3rd */}
-            <div style={{ textAlign:"center", flex:1 }}>
+            <div
+              onClick={() => handleUserClick(sorted[2])}
+              style={{ textAlign:"center", flex:1, cursor: sorted[2]?.id === user?.uid ? "default" : "pointer" }}
+            >
               <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
                 <Avatar user={sorted[2]} size={52}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:16 }}>🥉</span>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:12, color:darkMode?"#f1f5f9":"#111", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:75 }}>
+              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:12, color: sorted[2]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:75 }}>
                 {sorted[2].displayName || sorted[2].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[2])}</p>
@@ -200,19 +215,22 @@ useEffect(() => {
             sorted.map((u, i) => {
               const isMe = u.id === user?.uid;
               return (
-                <div key={u.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:12, background:isMe?(darkMode?"#1e3a5f":"#eff6ff"):(darkMode?"#1e293b":"#fff"), border:`1px solid ${isMe?"#3b82f6":(darkMode?"#334155":"#e5e7eb")}`, transition:"all 0.2s" }}>
+                <div
+                  key={u.id}
+                  onClick={() => handleUserClick(u)}
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:12, background:isMe?(darkMode?"#1e3a5f":"#eff6ff"):(darkMode?"#1e293b":"#fff"), border:`1px solid ${isMe?"#3b82f6":(darkMode?"#334155":"#e5e7eb")}`, transition:"all 0.2s", cursor: isMe ? "default" : "pointer" }}
+                >
                   <span style={{ fontWeight:700, fontSize:15, minWidth:30, color:i<3?"#f59e0b":(darkMode?"#94a3b8":"#6b7280") }}>
                     {MEDAL[i] || `#${i + 1}`}
                   </span>
                   <Avatar user={u} size={38}/>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ margin:0, fontWeight:600, fontSize:13, color:darkMode?"#f1f5f9":"#111", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                    <p style={{ margin:0, fontWeight:600, fontSize:13, color: !isMe ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                       {u.displayName || u.email?.split("@")[0]}
                       {isMe && <span style={{ marginLeft:6, fontSize:10, background:"#3b82f6", color:"#fff", padding:"1px 6px", borderRadius:4 }}>Siz</span>}
                     </p>
                     <p style={{ margin:0, fontSize:11, color:"#6b7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.email}</p>
                   </div>
-                  {/* Progress bar */}
                   <div style={{ width:80, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
                     <span style={{ fontWeight:700, fontSize:13, color:i===0?"#f59e0b":i===1?"#94a3b8":i===2?"#cd7f32":"#3b82f6" }}>
                       {valueLabel(u)}

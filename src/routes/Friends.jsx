@@ -41,16 +41,22 @@ const Avatar = ({ user: u, size = 44 }) => {
 };
 
 // ─── User Card ────────────────────────────────────────────────────────────────
-const UserCard = ({ u, status, onAdd, onAccept, onDecline, onRemove, onMessage, darkMode }) => {
+const UserCard = ({ u, status, onAdd, onAccept, onDecline, onRemove, onMessage, onViewProfile, darkMode }) => {
   const level = getLevel(u.xp || 0);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: darkMode ? "#1e293b" : "#fff", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, transition: "all 0.2s" }}>
-      <div style={{ position: "relative" }}>
+      {/* Avatar - bosiladigan */}
+      <div style={{ position: "relative", cursor: "pointer" }} onClick={() => onViewProfile && onViewProfile(u.id)}>
         <Avatar user={u} size={46} />
         <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{level.badge}</span>
       </div>
+
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {/* Ism - bosiladigan */}
+        <p
+          onClick={() => onViewProfile && onViewProfile(u.id)}
+          style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 14, color: "#3b82f6", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}
+        >
           {u.displayName || u.email?.split("@")[0]}
         </p>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -118,7 +124,6 @@ const Friends = ({ darkMode, showToast }) => {
   const [requests, setRequests]   = useState({ sent: [], received: [] });
   const [loading, setLoading]     = useState(true);
 
-  // ── Barcha foydalanuvchilar ───────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(collection(db, "users"), (snap) => {
@@ -131,23 +136,19 @@ const Friends = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
-  // ── Do'stlar va so'rovlar ─────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
-    // Do'stlar
     const friendsUnsub = onSnapshot(
       collection(db, "users", user.uid, "friends"),
       (snap) => setFriends(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     );
 
-    // Yuborilgan so'rovlar
     const sentUnsub = onSnapshot(
       query(collection(db, "friendRequests"), where("fromId", "==", user.uid), where("status", "==", "pending")),
       (snap) => setRequests((prev) => ({ ...prev, sent: snap.docs.map((d) => ({ id: d.id, ...d.data() })) }))
     );
 
-    // Kelgan so'rovlar
     const receivedUnsub = onSnapshot(
       query(collection(db, "friendRequests"), where("toId", "==", user.uid), where("status", "==", "pending")),
       (snap) => setRequests((prev) => ({ ...prev, received: snap.docs.map((d) => ({ id: d.id, ...d.data() })) }))
@@ -156,7 +157,6 @@ const Friends = ({ darkMode, showToast }) => {
     return () => { friendsUnsub(); sentUnsub(); receivedUnsub(); };
   }, [user]);
 
-  // ── Do'stlik so'rov yuborish ──────────────────────────────────────────────
   const sendRequest = async (toUser) => {
     if (!user) return;
     try {
@@ -177,13 +177,10 @@ const Friends = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── So'rovni qabul qilish ─────────────────────────────────────────────────
   const acceptRequest = async (fromUser) => {
     if (!user) return;
     try {
       const reqId = `${fromUser.fromId}_${user.uid}`;
-
-      // Ikki tomonga ham do'st qo'shish
       await setDoc(doc(db, "users", user.uid, "friends", fromUser.fromId), {
         uid:      fromUser.fromId,
         displayName: fromUser.fromName,
@@ -196,8 +193,6 @@ const Friends = ({ darkMode, showToast }) => {
         photoURL: user.photoURL || null,
         addedAt:  serverTimestamp(),
       });
-
-      // So'rovni o'chirish
       await deleteDoc(doc(db, "friendRequests", reqId));
       showToast && showToast("Do'st qo'shildi! 🎉", "success");
     } catch (err) {
@@ -205,7 +200,6 @@ const Friends = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── So'rovni rad etish ────────────────────────────────────────────────────
   const declineRequest = async (fromUser) => {
     if (!user) return;
     try {
@@ -217,7 +211,6 @@ const Friends = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── Do'stlikdan chiqarish ─────────────────────────────────────────────────
   const removeFriend = async (friendUser) => {
     if (!user || !window.confirm(`${friendUser.displayName || friendUser.uid}ni do'stlardan olib tashlaysizmi?`)) return;
     try {
@@ -229,12 +222,15 @@ const Friends = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── DM ga o'tish ──────────────────────────────────────────────────────────
   const goToMessage = () => {
     navigate("/dm");
   };
 
-  // ── Status aniqlash ───────────────────────────────────────────────────────
+  // ← YANGI: profilga o'tish
+  const goToProfile = (userId) => {
+    navigate(`/profile/${userId}`);
+  };
+
   const getStatus = (targetUser) => {
     if (friends.find((f) => f.uid === targetUser.id || f.id === targetUser.id)) return "friends";
     if (requests.sent.find((r) => r.toId === targetUser.id)) return "pending_sent";
@@ -242,7 +238,6 @@ const Friends = ({ darkMode, showToast }) => {
     return "none";
   };
 
-  // ── Filter ────────────────────────────────────────────────────────────────
   const friendsList = allUsers.filter((u) =>
     friends.find((f) => f.uid === u.id || f.id === u.id)
   );
@@ -318,7 +313,9 @@ const Friends = ({ darkMode, showToast }) => {
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6b7280" }}>{friendsList.length} ta do'st</p>
               {friendsList.map((u) => (
                 <UserCard key={u.id} u={u} status="friends"
-                  onRemove={removeFriend} onMessage={goToMessage} darkMode={darkMode} />
+                  onRemove={removeFriend} onMessage={goToMessage}
+                  onViewProfile={goToProfile}
+                  darkMode={darkMode} />
               ))}
             </div>
           )}
@@ -330,7 +327,6 @@ const Friends = ({ darkMode, showToast }) => {
         <ScrollReveal direction="up" delay={100}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-            {/* Kelgan so'rovlar */}
             {receivedUsers.length > 0 && (
               <div>
                 <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: darkMode ? "#94a3b8" : "#6b7280" }}>
@@ -339,13 +335,14 @@ const Friends = ({ darkMode, showToast }) => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {receivedUsers.map((u) => (
                     <UserCard key={u.id} u={u} status="pending_received"
-                      onAccept={acceptRequest} onDecline={declineRequest} darkMode={darkMode} />
+                      onAccept={acceptRequest} onDecline={declineRequest}
+                      onViewProfile={goToProfile}
+                      darkMode={darkMode} />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Yuborilgan so'rovlar */}
             {requests.sent.length > 0 && (
               <div>
                 <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: darkMode ? "#94a3b8" : "#6b7280" }}>
@@ -355,7 +352,9 @@ const Friends = ({ darkMode, showToast }) => {
                   {requests.sent.map((r) => {
                     const toUser = allUsers.find((u) => u.id === r.toId) || { id: r.toId, displayName: r.toName };
                     return (
-                      <UserCard key={r.id} u={toUser} status="pending_sent" darkMode={darkMode} />
+                      <UserCard key={r.id} u={toUser} status="pending_sent"
+                        onViewProfile={goToProfile}
+                        darkMode={darkMode} />
                     );
                   })}
                 </div>
@@ -375,7 +374,6 @@ const Friends = ({ darkMode, showToast }) => {
       {/* ── Qidirish tab ── */}
       {tab === "search" && (
         <ScrollReveal direction="up" delay={100}>
-          {/* Search input */}
           <div style={{ position: "relative", marginBottom: 16 }}>
             <LuSearch style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 16 }} />
             <input
@@ -404,7 +402,9 @@ const Friends = ({ darkMode, showToast }) => {
                 <UserCard key={u.id} u={u} status={getStatus(u)}
                   onAdd={sendRequest} onAccept={acceptRequest}
                   onDecline={declineRequest} onRemove={removeFriend}
-                  onMessage={goToMessage} darkMode={darkMode} />
+                  onMessage={goToMessage}
+                  onViewProfile={goToProfile}
+                  darkMode={darkMode} />
               ))}
             </div>
           )}
