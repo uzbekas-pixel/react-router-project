@@ -9,6 +9,7 @@ import { LangProvider } from "./context/LangProvider.jsx";
 
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
+import { SoundProvider } from "./context/SoundContext.jsx";
 
 // Global capture for PWA install prompt
 window.addEventListener("beforeinstallprompt", (e) => {
@@ -21,7 +22,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <LangProvider>
         <AuthProvider>
-          <App />
+          <SoundProvider>
+            <App />
+          </SoundProvider>
         </AuthProvider>
       </LangProvider>
     </BrowserRouter>

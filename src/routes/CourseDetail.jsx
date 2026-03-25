@@ -5,69 +5,113 @@ import { useAuth } from "../context/useAuth";
 import {
   doc, setDoc, getDoc, serverTimestamp,
   collection, addDoc, onSnapshot, orderBy, query,
+  increment,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-// ── VideoLessonModal ──────────────────────────────────────────────────────────
+// ── 1. RATING MODAL ──────────────────────────────────────────────────────────
+const RatingModal = ({ courseId, onClose, darkMode }) => {
+  return (
+    <div style={{
+      position:"fixed", inset:0, zIndex:3000, background:"rgba(0,0,0,0.8)",
+      display:"flex", alignItems:"center", justifyContent:"center", padding:20,
+      backdropFilter: "blur(4px)"
+    }}>
+      <div style={{
+        width:"100%", maxWidth:420, background:darkMode ? "#1e293b" : "#fff",
+        borderRadius:24, padding:30, textAlign:"center", boxShadow:"0 20px 25px -5px rgba(0,0,0,0.3)"
+      }}>
+        <div style={{ fontSize:60, marginBottom:10 }}>⭐</div>
+        <h2 style={{ color:darkMode ? "#fff" : "#111", fontSize:22, fontWeight:800, margin:"0 0 8px" }}>
+          Dars qanday bo'ldi?
+        </h2>
+        <p style={{ color:"#6b7280", fontSize:14, marginBottom:24 }}>
+          Fikringiz biz uchun muhim! Kursni baholang va XP yutib oling.
+        </p>
+
+        {/* isModal=true: faqat forma ko'rinadi, sharhlar ro'yxati yashiriladi */}
+        <Reviews courseId={courseId} darkMode={darkMode} isModal={true} onFinish={onClose} />
+
+        <button
+          onClick={onClose}
+          style={{ marginTop:16, background:"none", border:"none", color:"#94a3b8", cursor:"pointer", fontSize:13, fontWeight:500 }}
+        >
+          Keyinroq qoldirish
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ── 2. VIDEO LESSON MODAL ────────────────────────────────────────────────────
 const VideoLessonModal = ({ lesson, courseColor, onClose, onComplete, darkMode }) => {
-  const [watched,  setWatched]  = useState(false);
+  const [watched, setWatched] = useState(false);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    const fn = (e) => e.key === "Escape" && onClose();
+    const fn = (e) => e.key === "Escape" && onClose(false);
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
   }, [onClose]);
 
   useEffect(() => {
     let elapsed = 0;
+    const durationForXP = 8; // Test uchun 8 soniya, dars uchun ko'paytirish mumkin
     timerRef.current = setInterval(() => {
       elapsed++;
-      const pct = Math.min(Math.round((elapsed / 8) * 100), 100);
+      const pct = Math.min(Math.round((elapsed / durationForXP) * 100), 100);
       setProgress(pct);
-      if (elapsed >= 8) { clearInterval(timerRef.current); setWatched(true); }
+      if (elapsed >= durationForXP) {
+        clearInterval(timerRef.current);
+        setWatched(true);
+      }
     }, 1000);
     return () => clearInterval(timerRef.current);
   }, []);
 
   return (
-    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:2000, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width:"100%", maxWidth:800, borderRadius:18, overflow:"hidden", background:darkMode?"#1e293b":"#fff", boxShadow:"0 32px 80px rgba(0,0,0,0.5)" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 20px", borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-          <div>
-            <p style={{ margin:0, fontWeight:700, fontSize:15, color:darkMode?"#f1f5f9":"#111" }}>{lesson.title}</p>
-            <p style={{ margin:0, fontSize:12, color:"#6b7280" }}>⏱ {lesson.duration}</p>
-          </div>
-          <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", fontSize:22, color:"#6b7280" }}>✕</button>
+    <div
+      onClick={() => onClose(false)}
+      style={{ position:"fixed", inset:0, zIndex:2000, background:"rgba(0,0,0,0.9)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width:"100%", maxWidth:900, borderRadius:20, overflow:"hidden", background:darkMode?"#1e293b":"#fff" }}
+      >
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
+          <span style={{ fontWeight:700, color:darkMode?"#fff":"#111" }}>{lesson.title}</span>
+          <button onClick={() => onClose(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#94a3b8" }}>✕</button>
         </div>
         <div style={{ position:"relative", paddingTop:"56.25%", background:"#000" }}>
           <iframe
-            src={`https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&rel=0&modestbranding=1`}
-            title={lesson.title}
+            src={`https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&rel=0`}
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", border:"none" }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
-        <div style={{ padding:"14px 20px" }}>
-          <div style={{ marginBottom:12 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-              <span style={{ fontSize:12, color:"#6b7280" }}>{watched ? "✅ Ko'rib bo'lindi" : "▶ Ko'rilmoqda..."}</span>
-              <span style={{ fontSize:12, color:courseColor, fontWeight:700 }}>{progress}%</span>
-            </div>
-            <div style={{ height:4, borderRadius:2, background:darkMode?"#334155":"#e5e7eb" }}>
-              <div style={{ height:"100%", borderRadius:2, background:watched?"#10b981":courseColor, width:`${progress}%`, transition:"width 0.5s ease" }} />
-            </div>
+        <div style={{ padding:20 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8, fontSize:12, color:"#94a3b8" }}>
+            <span>{watched ? "✅ Ko'rib bo'lindi" : "⏳ Ko'rilmoqda..."}</span>
+            <span>{progress}%</span>
           </div>
-          <div style={{ display:"flex", justifyContent:"flex-end" }}>
-            <button
-              onClick={() => { onComplete(lesson.id); onClose(); }}
-              disabled={!watched}
-              style={{ padding:"10px 24px", borderRadius:10, border:"none", background:watched?"#10b981":(darkMode?"#334155":"#e2e8f0"), color:watched?"#fff":(darkMode?"#6b7280":"#9ca3af"), fontSize:14, fontWeight:700, cursor:watched?"pointer":"default", transition:"all 0.3s" }}>
-              {watched ? "✅ Darsni tugatdim" : "Videoni ko'ring..."}
-            </button>
+          <div style={{ height:6, background:darkMode?"#334155":"#e5e7eb", borderRadius:3, overflow:"hidden", marginBottom:16 }}>
+            <div style={{ width:`${progress}%`, height:"100%", background:watched?"#10b981":courseColor, transition:"width 0.4s ease" }} />
           </div>
+          <button
+            disabled={!watched}
+            onClick={() => {
+              onComplete(lesson.id);
+              onClose(true); // true = dars muvaffaqiyatli tugatildi
+            }}
+            style={{
+              width:"100%", padding:14, borderRadius:12, border:"none", fontWeight:700,
+              background: watched ? (courseColor || "#3b82f6") : "#94a3b8",
+              color: "#fff", cursor: watched ? "pointer" : "not-allowed"
+            }}
+          >
+            {watched ? "Tugatdim va davom etaman" : `Darsni ko'ring (${progress}%)`}
+          </button>
         </div>
       </div>
     </div>
@@ -90,21 +134,26 @@ const coursesData = {
 const Stars = ({ rating, interactive = false, onChange }) => (
   <div style={{ display:"flex", gap:3 }}>
     {[1,2,3,4,5].map((s) => (
-      <span key={s} onClick={() => interactive && onChange && onChange(s)}
-        style={{ fontSize:interactive?24:14, color:s<=rating?"#f59e0b":"#d1d5db", cursor:interactive?"pointer":"default" }}>★</span>
+      <span
+        key={s}
+        onClick={() => interactive && onChange && onChange(s)}
+        style={{ fontSize:interactive?24:14, color:s<=rating?"#f59e0b":"#d1d5db", cursor:interactive?"pointer":"default" }}
+      >★</span>
     ))}
   </div>
 );
 
 // ── Reviews — Firebase bilan ──────────────────────────────────────────────────
-const Reviews = ({ darkMode, courseId }) => {
+// isModal=true bo'lsa: faqat sharh yozish formasi ko'rinadi (sharhlar ro'yxati va diagramma yashiriladi)
+// onFinish — modal rejimida sharh yuborilgandan keyin chaqiriladi
+const Reviews = ({ darkMode, courseId, isModal = false, onFinish }) => {
   const { user } = useAuth();
   const [allReviews, setAllReviews] = useState([]);
   const [newReview,  setNewReview]  = useState({ rating:5, text:"" });
   const [submitted,  setSubmitted]  = useState(false);
   const [loading,    setLoading]    = useState(false);
 
-  // Real-time sharhlarni yuklash
+  // Real-time sharhlarni yuklash (modal rejimida ham kerak — avg hisoblash uchun)
   useEffect(() => {
     if (!courseId) return;
     const unsub = onSnapshot(
@@ -118,6 +167,7 @@ const Reviews = ({ darkMode, courseId }) => {
     if (!newReview.text.trim() || !user) return;
     setLoading(true);
     try {
+      // Sharhni Firestore ga saqlash
       await addDoc(collection(db, "courses", String(courseId), "reviews"), {
         uid:       user.uid,
         name:      user.displayName || user.email,
@@ -126,10 +176,23 @@ const Reviews = ({ darkMode, courseId }) => {
         text:      newReview.text,
         createdAt: serverTimestamp(),
       });
+
+      // +5 XP — setDoc + merge (hujjat yo'q bo'lsa ham ishlaydi)
+      const statsRef = doc(db, "users", user.uid, "data", "stats");
+      await setDoc(statsRef, { xp: increment(5) }, { merge: true });
+
       setSubmitted(true);
       setNewReview({ rating:5, text:"" });
-      setTimeout(() => setSubmitted(false), 3000);
-    } catch (err) { console.error("Review error:", err); }
+
+      // Modal rejimida tugagandan so'ng onFinish chaqiriladi
+      if (isModal && onFinish) {
+        setTimeout(() => onFinish(), 1500);
+      } else {
+        setTimeout(() => setSubmitted(false), 3000);
+      }
+    } catch (err) {
+      console.error("Review error:", err);
+    }
     setLoading(false);
   };
 
@@ -139,79 +202,92 @@ const Reviews = ({ darkMode, courseId }) => {
 
   return (
     <div>
-      {/* Umumiy reyting */}
-      <div style={{ display:"flex", alignItems:"center", gap:20, marginBottom:20, padding:"16px 20px", background:darkMode?"#1e293b":"#f8fafc", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-        <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:40, fontWeight:800, color:"#f59e0b" }}>{avg}</div>
-          <Stars rating={Math.round(Number(avg))} />
-          <div style={{ fontSize:12, color:"#6b7280", marginTop:4 }}>{allReviews.length} ta sharh</div>
-        </div>
-        <div style={{ flex:1 }}>
-          {[5,4,3,2,1].map((star) => {
-            const cnt = allReviews.filter((r) => r.rating === star).length;
-            const pct = allReviews.length ? Math.round((cnt / allReviews.length) * 100) : 0;
-            return (
-              <div key={star} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                <span style={{ fontSize:12, color:"#6b7280", width:16 }}>{star}</span>
-                <span style={{ fontSize:12, color:"#f59e0b" }}>★</span>
-                <div style={{ flex:1, height:6, borderRadius:3, background:darkMode?"#334155":"#e5e7eb" }}>
-                  <div style={{ width:`${pct}%`, height:"100%", borderRadius:3, background:"#f59e0b" }} />
+      {/* Umumiy reyting diagrammasi — faqat to'liq rejimda ko'rinadi */}
+      {!isModal && (
+        <div style={{ display:"flex", alignItems:"center", gap:20, marginBottom:20, padding:"16px 20px", background:darkMode?"#1e293b":"#f8fafc", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:40, fontWeight:800, color:"#f59e0b" }}>{avg}</div>
+            <Stars rating={Math.round(Number(avg))} />
+            <div style={{ fontSize:12, color:"#6b7280", marginTop:4 }}>{allReviews.length} ta sharh</div>
+          </div>
+          <div style={{ flex:1 }}>
+            {[5,4,3,2,1].map((star) => {
+              const cnt = allReviews.filter((r) => r.rating === star).length;
+              const pct = allReviews.length ? Math.round((cnt / allReviews.length) * 100) : 0;
+              return (
+                <div key={star} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:"#6b7280", width:16 }}>{star}</span>
+                  <span style={{ fontSize:12, color:"#f59e0b" }}>★</span>
+                  <div style={{ flex:1, height:6, borderRadius:3, background:darkMode?"#334155":"#e5e7eb" }}>
+                    <div style={{ width:`${pct}%`, height:"100%", borderRadius:3, background:"#f59e0b" }} />
+                  </div>
+                  <span style={{ fontSize:12, color:"#6b7280", width:28 }}>{pct}%</span>
                 </div>
-                <span style={{ fontSize:12, color:"#6b7280", width:28 }}>{pct}%</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Sharh yozish */}
+      {/* Sharh yozish formasi */}
       {!user ? (
         <div style={{ marginBottom:20, padding:"12px 16px", background:darkMode?"#1e293b":"#f8fafc", borderRadius:10, fontSize:13, color:"#6b7280", textAlign:"center" }}>
           Sharh yozish uchun <a href="/login" style={{ color:"#3b82f6", fontWeight:600 }}>tizimga kiring</a>
         </div>
       ) : submitted ? (
         <div style={{ marginBottom:20, padding:"12px 16px", background:"#d1fae5", borderRadius:10, fontSize:13, color:"#065f46", fontWeight:600 }}>
-          ✅ Sharhingiz qabul qilindi!
+          ✅ Sharhingiz qabul qilindi! +5 XP qo'shildi 🎉
         </div>
       ) : (
-        <div style={{ marginBottom:20, padding:"16px 20px", background:darkMode?"#1e293b":"#fff", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-          <p style={{ margin:"0 0 10px", fontWeight:600, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>Sharh yozing</p>
+        <div style={{ marginBottom:isModal ? 0 : 20, padding:"16px 20px", background:darkMode?"#1e293b":"#fff", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
+          <p style={{ margin:"0 0 10px", fontWeight:600, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>
+            {isModal ? "Darsga baho bering" : "Sharh yozing"}
+          </p>
           <Stars rating={newReview.rating} interactive onChange={(r) => setNewReview({ ...newReview, rating:r })} />
-          <textarea rows={3} placeholder="Kurs haqida fikringiz..." value={newReview.text}
+          <textarea
+            rows={3}
+            placeholder="Kurs haqida fikringiz..."
+            value={newReview.text}
             onChange={(e) => setNewReview({ ...newReview, text:e.target.value })}
-            style={{ width:"100%", marginTop:10, padding:"10px 12px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:13, resize:"none", outline:"none", boxSizing:"border-box" }} />
-          <button onClick={handleSubmit} disabled={loading || !newReview.text.trim()}
-            style={{ marginTop:8, padding:"8px 20px", background:loading?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:loading||!newReview.text.trim()?"default":"pointer", opacity:!newReview.text.trim()?0.6:1 }}>
+            style={{ width:"100%", marginTop:10, padding:"10px 12px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:13, resize:"none", outline:"none", boxSizing:"border-box" }}
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !newReview.text.trim()}
+            style={{ marginTop:8, padding:"8px 20px", background:loading?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:loading||!newReview.text.trim()?"default":"pointer", opacity:!newReview.text.trim()?0.6:1 }}
+          >
             {loading ? "⏳..." : "Yuborish"}
           </button>
         </div>
       )}
 
-      {/* Sharhlar ro'yxati */}
-      {allReviews.length === 0 ? (
-        <p style={{ textAlign:"center", color:"#6b7280", fontSize:13, padding:"20px 0" }}>
-          Hali sharhlar yo'q. Birinchi bo'ling! ⭐
-        </p>
-      ) : (
-        allReviews.map((r) => (
-          <div key={r.id} style={{ marginBottom:14, padding:"14px 16px", background:darkMode?"#1e293b":"#fff", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#f3f4f6"}` }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-              <div style={{ width:34, height:34, borderRadius:"50%", background:"#3b82f6", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:13, overflow:"hidden", flexShrink:0 }}>
-                {r.avatar
-                  ? <img src={r.avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                  : r.name?.[0]?.toUpperCase() || "?"}
+      {/* Sharhlar ro'yxati — faqat to'liq rejimda ko'rinadi */}
+      {!isModal && (
+        allReviews.length === 0 ? (
+          <p style={{ textAlign:"center", color:"#6b7280", fontSize:13, padding:"20px 0" }}>
+            Hali sharhlar yo'q. Birinchi bo'ling! ⭐
+          </p>
+        ) : (
+          allReviews.map((r) => (
+            <div key={r.id} style={{ marginBottom:14, padding:"14px 16px", background:darkMode?"#1e293b":"#fff", borderRadius:12, border:`1px solid ${darkMode?"#334155":"#f3f4f6"}` }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                <div style={{ width:34, height:34, borderRadius:"50%", background:"#3b82f6", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:13, overflow:"hidden", flexShrink:0 }}>
+                  {r.avatar
+                    ? <img src={r.avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                    : r.name?.[0]?.toUpperCase() || "?"}
+                </div>
+                <div>
+                  <p style={{ margin:0, fontWeight:600, fontSize:13, color:darkMode?"#f1f5f9":"#111" }}>{r.name}</p>
+                  <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>
+                    {r.createdAt?.toDate?.()?.toLocaleDateString("uz") || "Hozirgina"}
+                  </p>
+                </div>
+                <div style={{ marginLeft:"auto" }}><Stars rating={r.rating} /></div>
               </div>
-              <div>
-                <p style={{ margin:0, fontWeight:600, fontSize:13, color:darkMode?"#f1f5f9":"#111" }}>{r.name}</p>
-                <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>
-                  {r.createdAt?.toDate?.()?.toLocaleDateString("uz") || "Hozirgina"}
-                </p>
-              </div>
-              <div style={{ marginLeft:"auto" }}><Stars rating={r.rating} /></div>
+              <p style={{ margin:0, fontSize:13, color:darkMode?"#94a3b8":"#4b5563", lineHeight:1.6 }}>{r.text}</p>
             </div>
-            <p style={{ margin:0, fontSize:13, color:darkMode?"#94a3b8":"#4b5563", lineHeight:1.6 }}>{r.text}</p>
-          </div>
-        ))
+          ))
+        )
       )}
     </div>
   );
@@ -222,8 +298,10 @@ const FaqItem = ({ faq, darkMode }) => {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ marginBottom:8 }}>
-      <button onClick={() => setOpen(!open)}
-        style={{ width:"100%", textAlign:"left", padding:"13px 16px", borderRadius:open?"10px 10px 0 0":10, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, cursor:"pointer", display:"flex", justifyContent:"space-between" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{ width:"100%", textAlign:"left", padding:"13px 16px", borderRadius:open?"10px 10px 0 0":10, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, cursor:"pointer", display:"flex", justifyContent:"space-between" }}
+      >
         <span style={{ fontWeight:600, fontSize:13, color:darkMode?"#f1f5f9":"#111" }}>{faq.q}</span>
         <span style={{ color:"#6b7280", fontSize:16 }}>{open?"−":"+"}</span>
       </button>
@@ -253,8 +331,14 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
   };
 
   return (
-    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width:"100%", maxWidth:420, borderRadius:18, overflow:"hidden", background:darkMode?"#1e293b":"#fff", boxShadow:"0 24px 64px rgba(0,0,0,0.4)" }}>
+    <div
+      onClick={onClose}
+      style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width:"100%", maxWidth:420, borderRadius:18, overflow:"hidden", background:darkMode?"#1e293b":"#fff", boxShadow:"0 24px 64px rgba(0,0,0,0.4)" }}
+      >
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 20px", borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
           <p style={{ margin:0, fontWeight:700, fontSize:15, color:darkMode?"#f1f5f9":"#111" }}>
             {step===3 ? `✅ ${t.paymentSuccess}` : `💳 ${t.paymentTitle}`}
@@ -270,14 +354,19 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
               </div>
               <div style={{ display:"flex", gap:8, marginBottom:18 }}>
                 {[{id:"card",label:"💳 Karta"},{id:"payme",label:"🟢 Payme"},{id:"click",label:"🔵 Click"}].map((m) => (
-                  <button key={m.id} onClick={() => setMethod(m.id)}
-                    style={{ flex:1, padding:"9px 0", borderRadius:8, border:`2px solid ${method===m.id?"#3b82f6":darkMode?"#334155":"#e5e7eb"}`, background:method===m.id?(darkMode?"#1e3a5f":"#eff6ff"):"transparent", color:method===m.id?"#3b82f6":darkMode?"#94a3b8":"#374151", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+                  <button
+                    key={m.id}
+                    onClick={() => setMethod(m.id)}
+                    style={{ flex:1, padding:"9px 0", borderRadius:8, border:`2px solid ${method===m.id?"#3b82f6":darkMode?"#334155":"#e5e7eb"}`, background:method===m.id?(darkMode?"#1e3a5f":"#eff6ff"):"transparent", color:method===m.id?"#3b82f6":darkMode?"#94a3b8":"#374151", fontSize:12, fontWeight:600, cursor:"pointer" }}
+                  >
                     {m.label}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(2)}
-                style={{ width:"100%", padding:"12px 0", background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+              <button
+                onClick={() => setStep(2)}
+                style={{ width:"100%", padding:"12px 0", background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}
+              >
                 Davom etish →
               </button>
             </>
@@ -285,8 +374,12 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
           {step===2 && (
             <>
               <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:18 }}>
-                <input placeholder="0000 0000 0000 0000" value={cardNum} onChange={(e) => setCardNum(formatCard(e.target.value))}
-                  style={{ padding:"11px 14px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:16, letterSpacing:"0.1em", outline:"none" }} />
+                <input
+                  placeholder="0000 0000 0000 0000"
+                  value={cardNum}
+                  onChange={(e) => setCardNum(formatCard(e.target.value))}
+                  style={{ padding:"11px 14px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:16, letterSpacing:"0.1em", outline:"none" }}
+                />
                 <div style={{ display:"flex", gap:8 }}>
                   <input placeholder="MM/YY" style={{ flex:1, padding:"11px 14px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:14, outline:"none" }} />
                   <input placeholder="CVV" maxLength={3} style={{ width:80, padding:"11px 14px", borderRadius:8, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:14, outline:"none" }} />
@@ -296,8 +389,11 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
                 <span style={{ fontSize:13, color:"#6b7280" }}>Jami:</span>
                 <span style={{ fontSize:14, fontWeight:800, color:"#3b82f6" }}>{course.price.toLocaleString()} so'm</span>
               </div>
-              <button onClick={handlePay} disabled={loading}
-                style={{ width:"100%", padding:"12px 0", background:loading?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:loading?"default":"pointer" }}>
+              <button
+                onClick={handlePay}
+                disabled={loading}
+                style={{ width:"100%", padding:"12px 0", background:loading?"#93c5fd":"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:loading?"default":"pointer" }}
+              >
                 {loading ? "⏳ Tekshirilmoqda..." : `💳 ${course.price.toLocaleString()} so'm To'lash`}
               </button>
             </>
@@ -307,8 +403,10 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
               <div style={{ fontSize:56, marginBottom:12 }}>🎉</div>
               <p style={{ fontWeight:700, fontSize:16, color:darkMode?"#f1f5f9":"#111", margin:"0 0 6px" }}>Tabriklaymiz!</p>
               <p style={{ fontSize:13, color:"#6b7280", margin:"0 0 20px" }}>"{course.title}" kursiga muvaffaqiyatli yozildingiz!</p>
-              <button onClick={() => { onSuccess(); onClose(); }}
-                style={{ padding:"11px 28px", background:"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+              <button
+                onClick={() => { onSuccess(); onClose(); }}
+                style={{ padding:"11px 28px", background:"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}
+              >
                 O'qishni boshlash →
               </button>
             </div>
@@ -332,6 +430,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   const [showPayment,      setShowPayment]      = useState(false);
   const [playingLesson,    setPlayingLesson]    = useState(null);
   const [loadingData,      setLoadingData]      = useState(true);
+  const [showRatingModal,  setShowRatingModal]  = useState(false);
 
   const totalLessons = course.sections.reduce((a, s) => a + s.lessons.length, 0);
   const progress     = Math.round((completedLessons.length / totalLessons) * 100);
@@ -344,7 +443,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
     { q:"O'qituvchi bilan bog'lanish mumkinmi?", a:"Ha, har bir dars ostidagi izoh bo'limida savol berishingiz mumkin." },
   ];
 
-  // Firebase dan yuklash
+  // Firebase dan progress yuklash
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -365,7 +464,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
     return () => { cancelled = true; };
   }, [user, courseId, course.price, userPlan]);
 
-  // Darsni tugatish
+  // Darsni tugatish — atomik +10 XP
   const markComplete = async (lessonId) => {
     if (completedLessons.includes(lessonId)) return;
     const newCompleted = [...completedLessons, lessonId];
@@ -373,18 +472,19 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
     const newProgress = Math.round((newCompleted.length / totalLessons) * 100);
     if (!user) return;
     try {
+      // Progress saqlash
       await setDoc(
         doc(db, "users", user.uid, "progress", String(courseId)),
         { courseId, courseTitle:course.title, completedLessons:newCompleted, purchased:true, progress:newProgress, lastStudied:serverTimestamp() },
         { merge:true }
       );
-      // XP +10
-      const statsRef  = doc(db, "users", user.uid, "data", "stats");
-      const statsSnap = await getDoc(statsRef);
-      const currentXP = statsSnap.exists() ? (statsSnap.data().xp || 0) : 0;
-      await setDoc(statsRef, { xp: currentXP + 10 }, { merge:true });
+
+      // +10 XP — setDoc + merge (hujjat yo'q bo'lsa ham ishlaydi)
+      const statsRef = doc(db, "users", user.uid, "data", "stats");
+      await setDoc(statsRef, { xp: increment(10) }, { merge: true });
       showToast?.(`+10 XP qo'shildi! ✅`, "success");
 
+      // Kurs 100% tugatilsa bildirishnoma
       if (newProgress === 100) {
         await setDoc(
           doc(db, "users", user.uid, "notifications", `course_${courseId}`),
@@ -418,7 +518,10 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
 
   return (
     <div style={{ width:"100%", maxWidth:900, margin:"0 auto", padding:"32px 20px 80px" }}>
-      <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:"#3b82f6", fontSize:14, fontWeight:600, marginBottom:20, padding:0 }}>
+      <button
+        onClick={onBack}
+        style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:"#3b82f6", fontSize:14, fontWeight:600, marginBottom:20, padding:0 }}
+      >
         {t.backToCatalog}
       </button>
 
@@ -462,8 +565,11 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
           {/* Tabs */}
           <div style={{ display:"flex", gap:4, marginBottom:20, borderBottom:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
             {[{id:"lessons",label:t.lessonsTab},{id:"reviews",label:t.reviewsTab},{id:"faq",label:t.faqTab}].map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                style={{ padding:"10px 16px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:activeTab===tab.id?"#3b82f6":"#6b7280", borderBottom:`2px solid ${activeTab===tab.id?"#3b82f6":"transparent"}`, marginBottom:-1 }}>
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{ padding:"10px 16px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:activeTab===tab.id?"#3b82f6":"#6b7280", borderBottom:`2px solid ${activeTab===tab.id?"#3b82f6":"transparent"}`, marginBottom:-1 }}
+              >
                 {tab.label}
               </button>
             ))}
@@ -475,8 +581,10 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
               <p style={{ margin:"0 0 14px", fontSize:13, color:"#6b7280" }}>{course.sections.length} {t.sectionsCount} · {totalLessons} {t.lessonsCount}</p>
               {course.sections.map((section, si) => (
                 <div key={si} style={{ marginBottom:8 }}>
-                  <button onClick={() => setOpenSections((prev) => prev.includes(si) ? prev.filter((x) => x!==si) : [...prev,si])}
-                    style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:10, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, cursor:"pointer", textAlign:"left" }}>
+                  <button
+                    onClick={() => setOpenSections((prev) => prev.includes(si) ? prev.filter((x) => x!==si) : [...prev, si])}
+                    style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:10, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, cursor:"pointer", textAlign:"left" }}
+                  >
                     <span style={{ fontWeight:600, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>{openSections.includes(si)?"▾":"▸"} {section.title}</span>
                     <span style={{ fontSize:12, color:"#6b7280" }}>{section.lessons.length} {t.lessonsCount}</span>
                   </button>
@@ -484,13 +592,22 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
                     <div style={{ borderRadius:"0 0 10px 10px", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, borderTop:"none", overflow:"hidden" }}>
                       {section.lessons.map((lesson) => {
                         const done   = completedLessons.includes(lesson.id);
+                        // To'lov mantiqi: kurs bepul yoki sotib olingan bo'lsa — ochiq, aks holda to'lov talab qilinadi
                         const locked = !purchased && !lesson.free;
                         return (
-                          <div key={lesson.id}
-                            onClick={() => { if (!locked) setPlayingLesson(lesson); else setShowPayment(true); }}
+                          <div
+                            key={lesson.id}
+                            onClick={() => {
+                              if (!locked) {
+                                setPlayingLesson(lesson);
+                              } else {
+                                setShowPayment(true);
+                              }
+                            }}
                             style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 16px", background:done?(darkMode?"#0f2818":"#f0fdf4"):(darkMode?"#0f172a":"#fff"), borderBottom:`1px solid ${darkMode?"#1e293b":"#f3f4f6"}`, cursor:locked?"not-allowed":"pointer", opacity:locked?0.6:1, transition:"background 0.15s" }}
                             onMouseEnter={(e) => { if (!locked) e.currentTarget.style.background=darkMode?"#1e293b":"#f8fafc"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background=done?(darkMode?"#0f2818":"#f0fdf4"):(darkMode?"#0f172a":"#fff"); }}>
+                            onMouseLeave={(e) => { e.currentTarget.style.background=done?(darkMode?"#0f2818":"#f0fdf4"):(darkMode?"#0f172a":"#fff"); }}
+                          >
                             <div style={{ width:28, height:28, borderRadius:"50%", border:`2px solid ${done?"#10b981":locked?"#9ca3af":"#3b82f6"}`, background:done?"#10b981":"transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:done?"#fff":locked?"#9ca3af":"#3b82f6", flexShrink:0 }}>
                               {done?"✓":locked?"🔒":"▶"}
                             </div>
@@ -531,8 +648,10 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
                 <p style={{ margin:"4px 0 0", fontSize:12, color:"#065f46" }}>Progress: {progress}%</p>
               </div>
             ) : (
-              <button onClick={() => course.price===0 ? handlePurchaseSuccess() : setShowPayment(true)}
-                style={{ width:"100%", padding:"13px 0", marginBottom:10, background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+              <button
+                onClick={() => course.price===0 ? handlePurchaseSuccess() : setShowPayment(true)}
+                style={{ width:"100%", padding:"13px 0", marginBottom:10, background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}
+              >
                 {course.price===0 ? t.startFreeBtn : t.buyBtn}
               </button>
             )}
@@ -554,11 +673,40 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         </div>
       </div>
 
+      {/* Video dars modali — onClose(true) = dars tugatildi, RatingModal ochiladi */}
       {playingLesson && (
-        <VideoLessonModal lesson={playingLesson} courseColor={course.color} onClose={() => setPlayingLesson(null)} onComplete={markComplete} darkMode={darkMode} />
+        <VideoLessonModal
+          lesson={playingLesson}
+          courseColor={course.color}
+          onClose={(wasCompleted) => {
+            setPlayingLesson(null);
+            // Dars muvaffaqiyatli tugatilgan bo'lsa, 600ms keyin RatingModal ochiladi
+            if (wasCompleted === true) {
+              setTimeout(() => setShowRatingModal(true), 600);
+            }
+          }}
+          onComplete={markComplete}
+          darkMode={darkMode}
+        />
       )}
+
+      {/* To'lov modali */}
       {showPayment && (
-        <PaymentModal course={course} onClose={() => setShowPayment(false)} onSuccess={handlePurchaseSuccess} darkMode={darkMode} />
+        <PaymentModal
+          course={course}
+          onClose={() => setShowPayment(false)}
+          onSuccess={handlePurchaseSuccess}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* Sharh modali — dars tugatilgandan keyin avtomatik ochiladi */}
+      {showRatingModal && (
+        <RatingModal
+          courseId={courseId}
+          darkMode={darkMode}
+          onClose={() => setShowRatingModal(false)}
+        />
       )}
     </div>
   );
