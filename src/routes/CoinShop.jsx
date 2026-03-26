@@ -10,7 +10,7 @@ import {
   LuCheck, LuLock, LuGift, LuHistory,
   LuPalette, LuBadgeCheck,
 } from "react-icons/lu";
-
+const DEFAULT_MAX_SNIPPETS = 5;
 const SHOP_ITEMS = [
   { id:"xp_boost_2x",   category:"boost", icon:"⚡", name:"XP Boost x2",    desc:"1 soat XP 2x",                price:50,  color:"#f59e0b" },
   { id:"xp_boost_3x",   category:"boost", icon:"🚀", name:"XP Boost x3",    desc:"3 soat XP 3x",                price:120, color:"#ef4444" },
@@ -24,6 +24,9 @@ const SHOP_ITEMS = [
   { id:"theme_gold",    category:"theme", icon:"✨", name:"Gold mavzu",      desc:"Oltin rangli maxsus mavzu",   price:120, color:"#d97706" },
   { id:"badge_champion",category:"badge", icon:"🏆", name:"Champion Badge", desc:"Profilga Champion nishon",    price:150, color:"#f59e0b" },
   { id:"badge_pro",     category:"badge", icon:"💎", name:"Pro Badge",       desc:"Profilga Pro nishon",         price:200, color:"#8b5cf6" },
+  { id:"snippet_slot_5", category:"dev", icon:"📂", name:"+5 Snippet Slot", desc:"5 ta qo'shimcha kod saqlash joyi", price:100, color:"#10b981" },
+  { id:"theme_dracula",  category:"dev", icon:"🧛", name:"Dracula Theme",  desc:"Editorni qorong'u rejimga o'tkazish", price:200, color:"#8b5cf6" },
+  
 ];
 
 const CATEGORIES = [
@@ -72,54 +75,82 @@ const CoinShop = ({ darkMode, showToast }) => {
       .catch(() => {});
   }, [user]);
 
-  const buyItem = async (item) => {
-    if (!user || buying) return;
-    const notBuyable = owned.includes(item.id) && item.category !== "boost" && item.category !== "xp";
-    if (notBuyable) { showToast?.("Bu mahsulot sizda bor!", "error"); return; }
-    if (coins < item.price) { showToast?.("Yetarli coin yo'q!", "error"); return; }
-
-    setBuying(item.id);
-    try {
-      const wRef  = doc(db, "users", user.uid, "data", "wallet");
-      const wSnap = await getDoc(wRef);
-      const w     = wSnap.exists() ? wSnap.data() : { coins: 0, owned: [], history: [] };
-
-      const newOwned = (item.category !== "boost" && item.category !== "xp")
+ const buyItem = async (item) => {
+  if (!user || buying) return;
+ 
+  const notBuyable =
+    owned.includes(item.id) &&
+    item.category !== "boost" &&
+    item.category !== "xp" &&
+    item.id !== "snippet_slot_5"; // slot bir necha marta sotib olinishi mumkin
+ 
+  if (notBuyable) { showToast?.("Bu mahsulot sizda bor!", "error"); return; }
+  if (coins < item.price) { showToast?.("Yetarli coin yo'q!", "error"); return; }
+ 
+  setBuying(item.id);
+  try {
+    // ── 1. Wallet yangilash ──────────────────────────────────────────────────
+    const wRef  = doc(db, "users", user.uid, "data", "wallet");
+    const wSnap = await getDoc(wRef);
+    const w     = wSnap.exists()
+      ? wSnap.data()
+      : { coins: 0, owned: [], history: [] };
+ 
+    const newOwned =
+      item.category !== "boost" &&
+      item.category !== "xp" &&
+      item.id !== "snippet_slot_5"
         ? [...new Set([...(w.owned || []), item.id])]
         : (w.owned || []);
-
-      const newHistory = [
-        { id: item.id, name: item.name, icon: item.icon, price: item.price, date: new Date().toLocaleDateString("uz") },
-        ...(w.history || []),
-      ].slice(0, 20);
-
-      const newCoins = (w.coins || 0) - item.price;
-
-      // Wallet yangilash — setDoc merge bilan (dynamic import yo'q)
-      await setDoc(wRef, {
-        coins:     newCoins,
-        owned:     newOwned,
-        history:   newHistory,
-        updatedAt: serverTimestamp(),
-      });
-
-      // XP pack bo'lsa stats yangilash
-      if (item.id === "xp_pack_500" || item.id === "xp_pack_1000") {
-        const bonus    = item.id === "xp_pack_500" ? 500 : 1000;
-        const sRef     = doc(db, "users", user.uid, "data", "stats");
-        const sSnap    = await getDoc(sRef);
-        const curXP    = sSnap.exists() ? (sSnap.data().xp || 0) : 0;
-        await setDoc(sRef, { ...(sSnap.data() || {}), xp: curXP + bonus });
-        setXp(curXP + bonus);
-      }
-
-      showToast?.(`✅ "${item.name}" sotib olindi!`, "success");
-    } catch (err) {
-      console.error("buyItem error:", err);
-      showToast?.("Xatolik!", "error");
+ 
+    const newHistory = [
+      {
+        id:    item.id,
+        name:  item.name,
+        icon:  item.icon,
+        price: item.price,
+        date:  new Date().toLocaleDateString("uz"),
+      },
+      ...(w.history || []),
+    ].slice(0, 20);
+ 
+    await setDoc(wRef, {
+      coins:     (w.coins || 0) - item.price,
+      owned:     newOwned,
+      history:   newHistory,
+      updatedAt: serverTimestamp(),
+    });
+ 
+    // ── 2. XP pack bo'lsa stats yangilash ───────────────────────────────────
+    if (item.id === "xp_pack_500" || item.id === "xp_pack_1000") {
+      const bonus  = item.id === "xp_pack_500" ? 500 : 1000;
+      const sRef   = doc(db, "users", user.uid, "data", "stats");
+      const sSnap  = await getDoc(sRef);
+      const curXP  = sSnap.exists() ? (sSnap.data().xp || 0) : 0;
+      await setDoc(sRef, { ...(sSnap.data() || {}), xp: curXP + bonus });
+      setXp(curXP + bonus);
     }
-    setBuying(null);
-  };
+ 
+    // ── 3. snippet_slot_5 bo'lsa maxSnippets +5 qilish ──────────────────────
+    if (item.id === "snippet_slot_5") {
+      const uRef   = doc(db, "users", user.uid);          // users/{uid} hujjati
+      const uSnap  = await getDoc(uRef);
+      const curMax = uSnap.exists()
+        ? (uSnap.data().maxSnippets ?? DEFAULT_MAX_SNIPPETS)
+        : DEFAULT_MAX_SNIPPETS;
+ 
+      await setDoc(uRef, { maxSnippets: curMax + 5 }, { merge: true });
+      // Agar CoinShop ichida maxSnippets state bo'lsa, uni yangilang:
+      // setMaxSnippets(curMax + 5);
+    }
+ 
+    showToast?.(`✅ "${item.name}" sotib olindi!`, "success");
+  } catch (err) {
+    console.error("buyItem error:", err);
+    showToast?.("Xatolik!", "error");
+  }
+  setBuying(null);
+};
 
   const convertXpToCoins = async () => {
     if (!user || converting || xp < XP_PER_COIN) return;

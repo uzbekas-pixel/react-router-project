@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
-import { useSound } from "../context/SoundContext"; // <-- SoundContext
+import { useSound } from "../context/SoundContext";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { usePWA } from "../hooks/usePWA";
+import CodeSnippets from "../routes/Codesnippets"; // ← yangi import
 
 import { LuCalendarCheck } from "react-icons/lu";
 import { LuAward } from "react-icons/lu";
@@ -29,9 +30,9 @@ import { TbBrandSpeedtest } from "react-icons/tb";
 
 // ─── Sound Panel ──────────────────────────────────────────────────────────────
 const SOUND_OPTIONS = [
-  { key: "rain",     label: "Yomg'ir",   icon: <LuCloudRain className="text-blue-400" /> },
-  { key: "lofi",     label: "Lofi",      icon: <LuHeadphones className="text-purple-400" /> },
-  { key: "keyboard", label: "Klaviatura",icon: <LuKeyboard className="text-green-400" /> },
+  { key: "rain",     label: "Yomg'ir",    icon: <LuCloudRain className="text-blue-400" /> },
+  { key: "lofi",     label: "Lofi",       icon: <LuHeadphones className="text-purple-400" /> },
+  { key: "keyboard", label: "Klaviatura", icon: <LuKeyboard className="text-green-400" /> },
 ];
 
 function SoundPanel({ activeSounds, toggleSound, darkMode }) {
@@ -39,49 +40,32 @@ function SoundPanel({ activeSounds, toggleSound, darkMode }) {
     <div
       className="flex flex-col gap-2 p-3"
       style={{
-        background: darkMode
-          ? "rgba(15,23,42,0.85)"
-          : "rgba(255,255,255,0.85)",
+        background: darkMode ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.85)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         borderRadius: "1rem",
-        border: darkMode
-          ? "1px solid rgba(99,102,241,0.25)"
-          : "1px solid rgba(148,163,184,0.3)",
+        border: darkMode ? "1px solid rgba(99,102,241,0.25)" : "1px solid rgba(148,163,184,0.3)",
         boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
         minWidth: 180,
       }}
     >
-      <p
-        className="text-xs font-bold tracking-widest uppercase mb-1"
-        style={{ color: darkMode ? "#94a3b8" : "#64748b" }}
-      >
+      <p className="text-xs font-bold tracking-widest uppercase mb-1"
+        style={{ color: darkMode ? "#94a3b8" : "#64748b" }}>
         Ambience
       </p>
       {SOUND_OPTIONS.map((s) => {
-        // Navbar.jsx ichida 62-qatorni shunday yozing:
-const active = activeSounds && activeSounds[s.key];
+        const active = activeSounds && activeSounds[s.key];
         return (
           <button
             key={s.key}
             onClick={() => toggleSound(s.key)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-           style={{
-  background: active
-    ? "rgba(99, 102, 241, 0.4)" // Tanlanganda biroz to'qroq rang
-    : darkMode
-    ? "rgba(30, 41, 59, 0.6)"
-    : "rgba(241, 245, 249, 0.8)",
-  color: active 
-    ? "#6366f1" // Tanlanganda matn rangi yorqin ko'k
-    : darkMode 
-    ? "#cbd5e1" 
-    : "#475569",
-  border: active 
-    ? "1px solid #6366f1" 
-    : "1px solid transparent",
- boxShadow: active ? "0 0 12px rgba(99, 102, 241, 0.4)" : "none",
-}}
+            style={{
+              background: active ? "rgba(99,102,241,0.4)" : darkMode ? "rgba(30,41,59,0.6)" : "rgba(241,245,249,0.8)",
+              color: active ? "#6366f1" : darkMode ? "#cbd5e1" : "#475569",
+              border: active ? "1px solid #6366f1" : "1px solid transparent",
+              boxShadow: active ? "0 0 12px rgba(99,102,241,0.4)" : "none",
+            }}
           >
             <span className="text-base">{s.icon}</span>
             <span className="flex-1 text-left">{s.label}</span>
@@ -103,17 +87,20 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   const { user, logout } = useAuth();
   const { activeSounds, toggleSound } = useSound();
 
-  const [menuOpen, setMenuOpen]         = useState(false);
-  const [sidebarOpen, setSidebarOpen]   = useState(false);
-  const [isAdmin, setIsAdmin]           = useState(false);
-  const [unreadCount]                   = useState(0);
-  const { isInstallable, installApp }   = usePWA();
-  const [isInstructor, setIsInstructor] = useState(false);
+  const [menuOpen, setMenuOpen]           = useState(false);
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [isAdmin, setIsAdmin]             = useState(false);
+  const [unreadCount]                     = useState(0);
+  const { isInstallable, installApp }     = usePWA();
+  const [isInstructor, setIsInstructor]   = useState(false);
 
   // Sound panel states
   const [desktopSoundOpen, setDesktopSoundOpen] = useState(false);
   const [mobileSoundOpen, setMobileSoundOpen]   = useState(false);
   const desktopSoundRef = useRef(null);
+
+  // ── CodeSnippets panel state ──────────────────────────────────────────────
+  const [snippetsOpen, setSnippetsOpen] = useState(false);
 
   // Close desktop sound panel on outside click
   useEffect(() => {
@@ -126,62 +113,62 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Nav link data ────────────────────────────────────────────────────────────
+  // ── Nav link data ─────────────────────────────────────────────────────────
   const navLinks = [
     { path: "/",            label: t.coursesNav,    icon: <LuBookOpen className="text-blue-400" />,  end: true  },
-    { path: "/instructors", label: t.instructorsNav, icon: <LuUsers className="text-purple-400" />,   end: false },
-    { path: "/pricing",     label: t.pricingNav,    icon: <LuGem className="text-cyan-400" />,        end: false },
-    { path: "/ai-tutor",    label: t.aiTutorTitle,  icon: <LuBot className="text-green-400" />,       end: false },
+    { path: "/instructors", label: t.instructorsNav, icon: <LuUsers className="text-purple-400" />,  end: false },
+    { path: "/pricing",     label: t.pricingNav,    icon: <LuGem className="text-cyan-400" />,       end: false },
+    { path: "/ai-tutor",    label: t.aiTutorTitle,  icon: <LuBot className="text-green-400" />,      end: false },
   ];
 
   const newPages = [
-    { path: "/leaderboard",   label: t.top10,                         icon: <LuTrophy className="text-yellow-400" />          },
-    { path: "/schedule",      label: t.schedule || "Jadval",          icon: <LuCalendar className="text-blue-400" />          },
-    { path: "/promo",         label: t.notifFilterPromo,              icon: <LuGift className="text-pink-400" />              },
-    { path: "/create-course", label: t.createCourse || "Kurs Yarat",  icon: <LuFilePen className="text-orange-400" />         },
-    { path: "/quiz",          label: t.quizTitle,                     icon: <LuTarget className="text-red-400" />             },
-    { path: "/dashboard",     label: t.dashboardTitle,                icon: <LuLayoutDashboard className="text-indigo-400" /> },
-    { path: "/daily",         label: "Kunlik Vazifalar",              icon: <LuCalendarCheck className="text-orange-400" />   },
-    { path: "/friends",       label: "Do'stlar",                      icon: <LuUsers className="text-blue-400" />             },
-    { path: "/referral",      label: "Do'st Taklif",                  icon: <LuGift className="text-pink-400" />              },
-    { path: "/tournament",    label: "Turnir",                        icon: <LuSwords className="text-red-400" />             },
-    { path: "/certificate",   label: "Sertifikat",                    icon: <LuAward className="text-yellow-400" />           },
-    { path: "/shop",          label: "Coin Do'kon",                   icon: <LuCoins className="text-yellow-400" />           },
-    { path: "/settings",      label: t.settingsTitle || "Sozlamalar", icon: <LuSettings className="text-gray-400" />          },
-    { path: "/qa",            label: "Savollar & Javoblar",           icon: <LuMessageCircle className="text-blue-400" />     },
+    { path: "/leaderboard",   label: t.top10,                        icon: <LuTrophy className="text-yellow-400" />          },
+    { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
+    { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
+    { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePen className="text-orange-400" />         },
+    { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
+    { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
+    { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
+    { path: "/friends",       label: "Do'stlar",                     icon: <LuUsers className="text-blue-400" />             },
+    { path: "/referral",      label: "Do'st Taklif",                 icon: <LuGift className="text-pink-400" />              },
+    { path: "/tournament",    label: "Turnir",                       icon: <LuSwords className="text-red-400" />             },
+    { path: "/certificate",   label: "Sertifikat",                   icon: <LuAward className="text-yellow-400" />           },
+    { path: "/shop",          label: "Coin Do'kon",                  icon: <LuCoins className="text-yellow-400" />           },
+    { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
+    { path: "/qa",            label: "Savollar & Javoblar",          icon: <LuMessageCircle className="text-blue-400" />     },
   ];
 
   const sidebarLinks = [
-    { path: "/dashboard",     label: t.dashboardTitle,                icon: <LuLayoutDashboard className="text-indigo-400" /> },
-    { path: "/quiz",          label: t.quizTitle,                     icon: <LuTarget className="text-red-400" />             },
-    { path: "/schedule",      label: t.schedule || "Jadval",          icon: <LuCalendar className="text-blue-400" />          },
-    { path: "/promo",         label: t.notifFilterPromo,              icon: <LuGift className="text-pink-400" />              },
-    { path: "/create-course", label: t.createCourse || "Kurs Yarat",  icon: <LuFilePlus className="text-orange-400" />        },
-    { path: "/chat",          label: t.chatTab,                       icon: <LuMessageSquare className="text-green-400" />    },
-    { path: "/dm",            label: t.dm,                            icon: <LuMail className="text-blue-400" />              },
-    { path: "/daily",         label: "Kunlik Vazifalar",              icon: <LuCalendarCheck className="text-orange-400" />   },
-    { path: "/friends",       label: "Do'stlar",                      icon: <LuUsers className="text-blue-400" />             },
-    { path: "/referral",      label: "Do'st Taklif",                  icon: <LuGift className="text-pink-400" />              },
-    { path: "/tournament",    label: "Turnir",                        icon: <LuSwords className="text-red-400" />             },
-    { path: "/story",         label: t.story,                         icon: <LuInstagram className="text-pink-500" />         },
-    { path: "/games",         label: t.gamesTab,                      icon: <LuGamepad2 className="text-yellow-400" />        },
-    { path: "/code",          label: t.codeTab,                       icon: <LuCode className="text-cyan-400" />              },
-    { path: "/typing",        label: t.typingTab,                     icon: <LuKeyboard className="text-purple-400" />        },
-    { path: "/multiplayer",   label: t.multiTab,                      icon: <TbBrandSpeedtest className="text-emerald-400" /> },
-    { path: "/shop",          label: "Coin Do'kon",                   icon: <LuCoins className="text-yellow-400" />           },
-    { path: "/certificate",   label: "Sertifikat",                    icon: <LuAward className="text-yellow-400" />           },
-    { path: "/profile",       label: t.profileTab,                    icon: <RiUserSmileLine className="text-blue-400" />     },
-    { path: "/settings",      label: t.settingsTitle || "Sozlamalar", icon: <LuSettings className="text-gray-400" />          },
-    { path: "/qa",            label: "Savollar & Javoblar",           icon: <LuMessageCircle className="text-blue-400" />     },
+    { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
+    { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
+    { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
+    { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
+    { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePlus className="text-orange-400" />        },
+    { path: "/chat",          label: t.chatTab,                      icon: <LuMessageSquare className="text-green-400" />    },
+    { path: "/dm",            label: t.dm,                           icon: <LuMail className="text-blue-400" />              },
+    { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
+    { path: "/friends",       label: "Do'stlar",                     icon: <LuUsers className="text-blue-400" />             },
+    { path: "/referral",      label: "Do'st Taklif",                 icon: <LuGift className="text-pink-400" />              },
+    { path: "/tournament",    label: "Turnir",                       icon: <LuSwords className="text-red-400" />             },
+    { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
+    { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
+    { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
+    { path: "/typing",        label: t.typingTab,                    icon: <LuKeyboard className="text-purple-400" />        },
+    { path: "/multiplayer",   label: t.multiTab,                     icon: <TbBrandSpeedtest className="text-emerald-400" /> },
+    { path: "/shop",          label: "Coin Do'kon",                  icon: <LuCoins className="text-yellow-400" />           },
+    { path: "/certificate",   label: "Sertifikat",                   icon: <LuAward className="text-yellow-400" />           },
+    { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
+    { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
+    { path: "/qa",            label: "Savollar & Javoblar",          icon: <LuMessageCircle className="text-blue-400" />     },
     ...(isAdmin
-      ? [{ path: "/admin",      label: t.adminBadge,           icon: <LuShieldCheck className="text-yellow-400" /> }]
+      ? [{ path: "/admin",      label: t.adminBadge,        icon: <LuShieldCheck className="text-yellow-400" /> }]
       : []),
     ...(isInstructor
-      ? [{ path: "/instructor", label: "O'qituvchi Panel",     icon: <LuBookOpen className="text-green-400" /> }]
+      ? [{ path: "/instructor", label: "O'qituvchi Panel",  icon: <LuBookOpen className="text-green-400" /> }]
       : []),
   ];
 
-  // ── Effects ──────────────────────────────────────────────────────────────────
+  // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
     const checkAdmin = async () => {
       if (!user) { setIsAdmin(false); return; }
@@ -198,41 +185,19 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     );
   }, [user]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-  const closeMenu         = () => { onNavClick(); setMenuOpen(false); };
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const closeMenu          = () => { onNavClick(); setMenuOpen(false); };
   const handleInstallClick = () => { installApp(); setMenuOpen(false); setSidebarOpen(false); };
 
-  // ── Shared dark-mode toggle ──────────────────────────────────────────────────
-  const DarkModeToggle = () => (
-    <div
-      onClick={() => setDarkMode(!darkMode)}
-      className="relative w-8 h-8 overflow-hidden cursor-pointer"
-    >
-      <span
-        className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-        style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}
-      >
-        <LuSun className="text-yellow-400 text-xl" />
-      </span>
-      <span
-        className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-        style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}
-      >
-        <LuMoon className="text-blue-300 text-xl" />
-      </span>
-    </div>
-  );
-
-  // Whether any sound is active (for button glow indicator)
   const anySoundActive = activeSounds && activeSounds.length > 0;
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <nav className="bg-slate-800 shadow-lg fixed top-0 left-0 w-full z-50">
         <div className="flex items-center justify-between py-3 px-6">
 
-          {/* ── Logo ─────────────────────────────────────────────────────────── */}
+          {/* ── Logo ──────────────────────────────────────────────────────── */}
           <Link to="/" onClick={onNavClick}>
             <span className="font-semibold text-lg flex items-center gap-3 text-blue-400">
               <BiLogoReact className="text-4xl md:text-5xl animate-spin-slow" />
@@ -240,7 +205,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </span>
           </Link>
 
-          {/* ── Desktop Nav ──────────────────────────────────────────────────── */}
+          {/* ── Desktop Nav ───────────────────────────────────────────────── */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <NavLink
@@ -268,9 +233,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               style={{ position: "relative" }}
               className={({ isActive }) =>
                 `py-1 px-2 rounded-xl transition duration-300 flex items-center ${
-                  isActive
-                    ? "text-sky-300 bg-slate-700"
-                    : "text-white hover:text-sky-300 hover:bg-slate-700"
+                  isActive ? "text-sky-300 bg-slate-700" : "text-white hover:text-sky-300 hover:bg-slate-700"
                 }`
               }
             >
@@ -288,9 +251,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               onClick={onNavClick}
               className={({ isActive }) =>
                 `py-1 px-2 rounded-xl transition duration-300 flex items-center ${
-                  isActive
-                    ? "text-sky-300 bg-slate-700"
-                    : "text-white hover:text-sky-300 hover:bg-slate-700"
+                  isActive ? "text-sky-300 bg-slate-700" : "text-white hover:text-sky-300 hover:bg-slate-700"
                 }`
               }
             >
@@ -298,20 +259,18 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </NavLink>
 
             {/* Dark mode */}
-            {/* Dark mode */}
-              <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
-                <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                  style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
-                  <LuSun className="text-yellow-400 text-xl" />
-                </span>
-                <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                  style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
-                  <LuMoon className="text-blue-300 text-xl" />
-                </span>
-              </div>
+            <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
+              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+                style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
+                <LuSun className="text-yellow-400 text-xl" />
+              </span>
+              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+                style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
+                <LuMoon className="text-blue-300 text-xl" />
+              </span>
+            </div>
 
-
-            {/* ── Language toggle ───────────────────────────────────────── */}
+            {/* Language toggle */}
             <button
               onClick={() => setLang(lang === "en" ? "uz" : "en")}
               className="flex items-center gap-1.5 text-xs font-semibold text-white border border-slate-500 px-3 py-1.5 rounded-xl hover:bg-slate-700 transition"
@@ -320,7 +279,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               {lang === "en" ? "🇺🇿 UZ" : "🇬🇧 EN"}
             </button>
 
-            {/* ── Desktop Sound Button + Panel ─────────────────────────── */}
+            {/* ── Desktop Sound Button + Panel ──────────────────────────── */}
             <div className="relative" ref={desktopSoundRef}>
               <button
                 onClick={() => setDesktopSoundOpen((o) => !o)}
@@ -333,29 +292,38 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                   border: anySoundActive
                     ? "1px solid rgba(99,102,241,0.6)"
                     : "1px solid rgba(71,85,105,0.5)",
-                  boxShadow: anySoundActive
-                    ? "0 0 14px rgba(99,102,241,0.35)"
-                    : "none",
+                  boxShadow: anySoundActive ? "0 0 14px rgba(99,102,241,0.35)" : "none",
                   color: anySoundActive ? "#a5b4fc" : "#fff",
                 }}
               >
                 <LuMusic2 className="text-base" />
               </button>
 
-              {/* Desktop dropdown panel */}
               {desktopSoundOpen && (
-                <div
-                  className="absolute right-0 mt-2 z-50"
-                  style={{ top: "100%" }}
-                >
-                  <SoundPanel
-                    activeSounds={activeSounds}
-                    toggleSound={toggleSound}
-                    darkMode={darkMode}
-                  />
+                <div className="absolute right-0 mt-2 z-50" style={{ top: "100%" }}>
+                  <SoundPanel activeSounds={activeSounds} toggleSound={toggleSound} darkMode={darkMode} />
                 </div>
               )}
             </div>
+
+            {/* ── Code Snippets Button ───────────────────────────────────── */}
+            <button
+              onClick={() => setSnippetsOpen((o) => !o)}
+              title="Kod Parchalarim"
+              className="flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200"
+              style={{
+                background: snippetsOpen
+                  ? "linear-gradient(135deg, rgba(6,182,212,0.35), rgba(99,102,241,0.25))"
+                  : "rgba(51,65,85,1)",
+                border: snippetsOpen
+                  ? "1px solid rgba(6,182,212,0.6)"
+                  : "1px solid rgba(71,85,105,0.5)",
+                boxShadow: snippetsOpen ? "0 0 14px rgba(6,182,212,0.35)" : "none",
+                color: snippetsOpen ? "#67e8f9" : "#fff",
+              }}
+            >
+              <LuCode className="text-base" />
+            </button>
 
             {/* Auth */}
             {user ? (
@@ -386,7 +354,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </button>
           </div>
 
-          {/* ── Mobile Controls ──────────────────────────────────────────────── */}
+          {/* ── Mobile Controls ───────────────────────────────────────────── */}
           <div className="flex md:hidden items-center gap-3">
             <NavLink to="/notifications" style={{ position: "relative", color: "#fff" }}>
               <LuBell className="text-xl text-yellow-300" />
@@ -397,18 +365,17 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               )}
             </NavLink>
 
-             {/* Dark mode */}
-              <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
-                <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                  style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
-                  <LuSun className="text-yellow-400 text-xl" />
-                </span>
-                <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                  style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
-                  <LuMoon className="text-blue-300 text-xl" />
-                </span>
-              </div>
-
+            {/* Dark mode */}
+            <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
+              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+                style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
+                <LuSun className="text-yellow-400 text-xl" />
+              </span>
+              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+                style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
+                <LuMoon className="text-blue-300 text-xl" />
+              </span>
+            </div>
 
             <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-3xl">
               {menuOpen ? <HiX /> : <HiMenu />}
@@ -416,13 +383,12 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
           </div>
         </div>
 
-        {/* ── Mobile Menu ────────────────────────────────────────────────────── */}
+        {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
         <div
           className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${
             menuOpen ? "max-h-[800px] py-3" : "max-h-0"
           }`}
         >
-          {/* Main nav links */}
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
@@ -481,9 +447,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </div>
           )}
 
-          {/* ── Language + Sound row (mobile) ──────────────────────────────── */}
-          <div className="flex items-center gap-3 px-8 mt-3">
-            {/* Language toggle */}
+          {/* Language + Sound + Snippets row (mobile) */}
+          <div className="flex items-center gap-3 px-8 mt-3 flex-wrap">
             <button
               onClick={() => setLang(lang === "en" ? "uz" : "en")}
               className="flex items-center gap-2 text-xs font-semibold text-white border border-slate-500 px-3 py-2 rounded-xl hover:bg-slate-700 transition"
@@ -492,7 +457,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               {lang === "en" ? "🇺🇿 UZ" : "🇬🇧 EN"}
             </button>
 
-            {/* Sound toggle button */}
+            {/* Sound toggle */}
             <button
               onClick={() => setMobileSoundOpen((o) => !o)}
               className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition"
@@ -510,16 +475,31 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               <LuMusic2 className="text-base" />
               🎵 Ovoz
             </button>
+
+            {/* Code Snippets toggle (mobile) */}
+            <button
+              onClick={() => setSnippetsOpen((o) => !o)}
+              className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition"
+              style={{
+                background: snippetsOpen
+                  ? "linear-gradient(135deg, rgba(6,182,212,0.35), rgba(99,102,241,0.25))"
+                  : "rgba(51,65,85,1)",
+                border: snippetsOpen
+                  ? "1px solid rgba(6,182,212,0.6)"
+                  : "1px solid rgba(71,85,105,0.6)",
+                color: snippetsOpen ? "#67e8f9" : "#fff",
+                boxShadow: snippetsOpen ? "0 0 14px rgba(6,182,212,0.3)" : "none",
+              }}
+            >
+              <LuCode className="text-base" />
+              Snippets
+            </button>
           </div>
 
           {/* Mobile sound dropdown */}
           {mobileSoundOpen && (
             <div className="mx-8 mt-2">
-              <SoundPanel
-                activeSounds={activeSounds}
-                toggleSound={toggleSound}
-                darkMode={true}
-              />
+              <SoundPanel activeSounds={activeSounds} toggleSound={toggleSound} darkMode={true} />
             </div>
           )}
 
@@ -582,7 +562,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         </div>
       </nav>
 
-      {/* ── Desktop Sidebar ──────────────────────────────────────────────────── */}
+      {/* ── Desktop Sidebar ───────────────────────────────────────────────────── */}
       <>
         {sidebarOpen && (
           <div
@@ -598,7 +578,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               : "bg-white border-l border-gray-100"
           } ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}
         >
-          {/* Sidebar header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
             <span className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>
               {t.menuTitle || "Menyu"}
@@ -620,7 +599,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </button>
           </div>
 
-          {/* Sidebar links */}
           <div className="flex-1 overflow-y-auto py-3 mt-2 sidebar">
             {sidebarLinks.map((link) => (
               <NavLink
@@ -630,12 +608,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-5 py-3 text-sm font-medium transition ${
                     isActive
-                      ? darkMode
-                        ? "bg-slate-700 text-blue-400"
-                        : "bg-blue-50 text-blue-500"
-                      : darkMode
-                      ? "text-gray-300 hover:bg-slate-700"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? darkMode ? "bg-slate-700 text-blue-400" : "bg-blue-50 text-blue-500"
+                      : darkMode ? "text-gray-300 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-50"
                   }`
                 }
               >
@@ -644,7 +618,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               </NavLink>
             ))}
 
-            {/* PWA Install */}
             {isInstallable && (
               <div className="mt-4 px-4">
                 <button
@@ -658,7 +631,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             )}
           </div>
 
-          {/* Sidebar footer */}
           {user && (
             <div className={`px-5 py-4 border-t ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
               <div className="flex items-center gap-3">
@@ -688,6 +660,14 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
           )}
         </div>
       </>
+
+      {/* ── CodeSnippets floating panel ───────────────────────────────────────── */}
+      <CodeSnippets
+        isOpen={snippetsOpen}
+        onClose={() => setSnippetsOpen(false)}
+        darkMode={darkMode}
+        user={user}
+      />
     </>
   );
 };

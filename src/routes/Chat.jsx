@@ -22,6 +22,8 @@ const MSG_EXPIRE = 24 * 60 * 60 * 1000;
 const Chat = ({ darkMode }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  // Chat komponenti ichida, useEffect dan teparoqda:
+const displayUserName = user?.displayName || "Foydalanuvchi";
   const { t } = useLang();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -286,7 +288,7 @@ const Chat = ({ darkMode }) => {
               <div key={remoteUser.uid} className="relative">
                 <div className="w-40 h-28 rounded-xl overflow-hidden bg-black"
                   ref={(el) => { if (el && remoteUser.videoTrack) remoteUser.videoTrack.play(el); }} />
-                <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full">👤 {t.guest}</span>
+                <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full">👤 {displayUserName}</span>
               </div>
             ))}
             {remoteUsers.length === 0 && (
