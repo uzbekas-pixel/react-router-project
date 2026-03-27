@@ -297,7 +297,7 @@ const DM = ({ darkMode, showToast }) => {
                   <div className="flex items-center justify-between">
                     <p className={`text-sm truncate ${
                       unread > 0
-                        ? "font-bold " + (darkMode ? "text-white" : "text-gray-900")
+                        ? "font-bold " + (darkMode ? "text-white" : "text-gray-899")
                         : "font-semibold " + (darkMode ? "text-white" : "text-gray-900")
                     }`}>
                       {u.displayName || u.email}
