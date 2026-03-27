@@ -22,7 +22,7 @@ import {
   LuGamepad2, LuCode, LuKeyboard, LuLanguages,
   LuUser, LuShieldCheck, LuBell, LuSun, LuMoon,
   LuDownload, LuInfo, LuMessageCircle, LuMusic2,
-  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX,
+  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX,LuRadio
 } from "react-icons/lu";
 import { MdOutlineLogout, MdOutlineLogin } from "react-icons/md";
 import { RiUserSmileLine } from "react-icons/ri";
@@ -144,6 +144,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
     { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePlus className="text-orange-400" />        },
+    { path: "/live",          label: "Jonli Dars",                   icon: <LuRadio className="text-red-400" />              },
     { path: "/chat",          label: t.chatTab,                      icon: <LuMessageSquare className="text-green-400" />    },
     { path: "/dm",            label: t.dm,                           icon: <LuMail className="text-blue-400" />              },
     { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
@@ -473,27 +474,11 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               }}
             >
               <LuMusic2 className="text-base" />
-              🎵 Ovoz
+               Ovoz
             </button>
 
-            {/* Code Snippets toggle (mobile) */}
-            <button
-              onClick={() => setSnippetsOpen((o) => !o)}
-              className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition"
-              style={{
-                background: snippetsOpen
-                  ? "linear-gradient(135deg, rgba(6,182,212,0.35), rgba(99,102,241,0.25))"
-                  : "rgba(51,65,85,1)",
-                border: snippetsOpen
-                  ? "1px solid rgba(6,182,212,0.6)"
-                  : "1px solid rgba(71,85,105,0.6)",
-                color: snippetsOpen ? "#67e8f9" : "#fff",
-                boxShadow: snippetsOpen ? "0 0 14px rgba(6,182,212,0.3)" : "none",
-              }}
-            >
-              <LuCode className="text-base" />
-              Snippets
-            </button>
+            
+           
           </div>
 
           {/* Mobile sound dropdown */}

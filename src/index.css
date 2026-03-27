@@ -3,6 +3,16 @@
 * {
   cursor: none !important;
 }
+/* Loyihadagi BARCHA elementlar uchun scrollbarni vizual yashirish */
+* {
+    -ms-overflow-style: none;  /* IE va Edge uchun */
+    scrollbar-width: none;     /* Firefox uchun */
+}
+
+/* Chrome, Safari va hamma WebKit brauzerlar uchun */
+*::-webkit-scrollbar {
+    display: none;
+}
 .page-transition {
   animation: fadeSlideIn 0.4s ease both;
 }

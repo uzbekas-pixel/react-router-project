@@ -53,6 +53,7 @@ import CoinShop from "./routes/CoinShop";
 import InstructorPanel from "./routes/InstructorPanel";
 import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
+import Live from "./routes/Liveinstructor";
 
 import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
@@ -140,6 +141,7 @@ function App() {
       window.removeEventListener("online", goOnline);
     };
   }, [showToast]);
+  
 
   // Background style
   const bgStyle = customBg
@@ -264,6 +266,11 @@ function App() {
               path="/qa"
               element={<QA darkMode={darkMode} showToast={showToast} />}
             />
+            <Route
+              path="/live"
+              element={<Live darkMode={darkMode} showToast={showToast} />}
+            />
+
 
             {/* ── Auth ── */}
             <Route
