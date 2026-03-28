@@ -54,6 +54,7 @@ import InstructorPanel from "./routes/InstructorPanel";
 import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
+import BattleMode from "./routes/Battlemode";
 
 import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
@@ -302,6 +303,10 @@ function App() {
               element={
                 <ForgotPassword darkMode={darkMode} showToast={showToast} />
               }
+            />
+            <Route
+              path="/battlemode"
+              element={<BattleMode darkMode={darkMode} showToast={showToast} />}
             />
 
             {/* ── Protected ── */}

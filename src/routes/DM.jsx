@@ -8,6 +8,7 @@ import {
   LuSend, LuPaperclip, LuMic, LuKeyboard,
   LuArrowLeft, LuTrash2, LuMessageSquare, LuUser
 } from "react-icons/lu";
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const MSG_EXPIRE = 24 * 60 * 60 * 1000;
@@ -265,7 +266,7 @@ const DM = ({ darkMode, showToast }) => {
                     : darkMode ? "hover:bg-slate-700" : "hover:bg-gray-50"
                 }`}>
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shrink-0" {...getNameStyleByKey(u.nameColor)}>
                     {u.avatarUrl
                       ? <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       : u.displayName?.[0]?.toUpperCase() || "?"}
@@ -299,7 +300,7 @@ const DM = ({ darkMode, showToast }) => {
                       unread > 0
                         ? "font-bold " + (darkMode ? "text-white" : "text-gray-899")
                         : "font-semibold " + (darkMode ? "text-white" : "text-gray-900")
-                    }`}>
+                    }`} {...getNameStyleByKey(u.nameColor)}>
                       {u.displayName || u.email}
                     </p>
                     {unread > 0 && !isSelected && (
@@ -345,7 +346,7 @@ const DM = ({ darkMode, showToast }) => {
             </button>
             <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
               {selectedUser.avatarUrl
-                ? <img src={selectedUser.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ? <img src={selectedUser.avatarUrl} alt="" className="w-full h-full object-cover" {...getNameStyleByKey(selectedUser.nameColor)}/>
                 : selectedUser.displayName?.[0]?.toUpperCase() || "?"}
             </div>
             <div className="min-w-0 flex-1">
@@ -353,7 +354,7 @@ const DM = ({ darkMode, showToast }) => {
               <p
                 onClick={() => navigate(`/profile/${selectedUser.id}`)}
                 className={`text-sm font-semibold truncate cursor-pointer hover:text-blue-400 transition ${darkMode ? "text-white" : "text-gray-900"}`}
-                title="Profilni ko'rish"
+                title="Profilni ko'rish" {...getNameStyleByKey(selectedUser.nameColor)}
               >
                 {selectedUser.displayName || selectedUser.email}
               </p>

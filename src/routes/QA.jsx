@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import ScrollReveal from "../components/ScrollReveal";
 import { LuSend, LuBot, LuUser, LuLoader, LuMessageCircle } from "react-icons/lu";
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const ADMIN_UID = "wr0kldBkU3MDfvRlNqaeOsyv3v63";
@@ -177,7 +178,7 @@ const QA = ({ darkMode, showToast }) => {
         }}>
           <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
             {/* Avatar */}
-            <div style={{ width:40, height:40, borderRadius:"50%", background:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:15, flexShrink:0, overflow:"hidden" }}>
+            <div style={{ width:40, height:40, borderRadius:"50%", background:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:15, flexShrink:0, overflow:"hidden", ...getNameStyleByKey(user.nameColor) }}>
               {user?.photoURL
                 ? <img src={user.photoURL} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
                 : user

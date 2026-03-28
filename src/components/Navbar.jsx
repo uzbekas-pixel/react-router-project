@@ -96,7 +96,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
   // Sound panel states
   const [desktopSoundOpen, setDesktopSoundOpen] = useState(false);
-  const [mobileSoundOpen, setMobileSoundOpen]   = useState(false);
   const desktopSoundRef = useRef(null);
 
   // ── CodeSnippets panel state ──────────────────────────────────────────────
@@ -127,6 +126,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
     { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePen className="text-orange-400" />         },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
+    { path: "/battlemode",    label: "Jang Rejimi",                  icon: <LuSwords className="text-red-400" />             },
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
     { path: "/friends",       label: "Do'stlar",                     icon: <LuUsers className="text-blue-400" />             },
@@ -141,6 +141,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   const sidebarLinks = [
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
+    { path: "/battlemode",    label: "Jang Rejimi",                  icon: <LuSwords className="text-red-400" />             },
     { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
     { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePlus className="text-orange-400" />        },
@@ -154,8 +155,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
     { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
-    { path: "/typing",        label: t.typingTab,                    icon: <LuKeyboard className="text-purple-400" />        },
-    { path: "/multiplayer",   label: t.multiTab,                     icon: <TbBrandSpeedtest className="text-emerald-400" /> },
     { path: "/shop",          label: "Coin Do'kon",                  icon: <LuCoins className="text-yellow-400" />           },
     { path: "/certificate",   label: "Sertifikat",                   icon: <LuAward className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
@@ -457,37 +456,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               <LuLanguages className="text-blue-400" />
               {lang === "en" ? "🇺🇿 UZ" : "🇬🇧 EN"}
             </button>
-
-            {/* Sound toggle */}
-            <button
-              onClick={() => setMobileSoundOpen((o) => !o)}
-              className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition"
-              style={{
-                background: anySoundActive
-                  ? "linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.25))"
-                  : "rgba(51,65,85,1)",
-                border: anySoundActive
-                  ? "1px solid rgba(99,102,241,0.6)"
-                  : "1px solid rgba(71,85,105,0.6)",
-                color: anySoundActive ? "#a5b4fc" : "#fff",
-                boxShadow: anySoundActive ? "0 0 14px rgba(99,102,241,0.3)" : "none",
-              }}
-            >
-              <LuMusic2 className="text-base" />
-               Ovoz
-            </button>
-
-            
-           
           </div>
-
-          {/* Mobile sound dropdown */}
-          {mobileSoundOpen && (
-            <div className="mx-8 mt-2">
-              <SoundPanel activeSounds={activeSounds} toggleSound={toggleSound} darkMode={true} />
-            </div>
-          )}
-
           {/* Admin */}
           {isAdmin && (
             <NavLink

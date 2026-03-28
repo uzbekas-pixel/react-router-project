@@ -6,7 +6,7 @@ import { db } from "../firebase/config";
 import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from "firebase/firestore";
-
+import { getNameStyleByKey } from "../constants/shopConstants";
 // ─── Kurslar ro'yxati ──────────────────────────────────────────────────────────
 const defaultCourses = [
   { id: "html",    title: "HTML Asoslar",       category: "HTML",       color: "#e44d26", total: 12 },
@@ -224,7 +224,7 @@ const Dashboard = ({ darkMode, showToast }) => {
               {photoURL ? <img src={photoURL} alt="av" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{displayName}</p>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111", ...getNameStyleByKey(user?.nameColor)}}>{displayName}</p>
               <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{user?.email}</p>
             </div>
           </div>

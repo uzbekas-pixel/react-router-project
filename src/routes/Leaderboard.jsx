@@ -4,6 +4,7 @@ import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom"; // ← YANGI
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const TABS = [
   { id: "xp",      label: "⭐ XP ball"  },
@@ -110,7 +111,7 @@ const Leaderboard = ({ darkMode }) => {
                 <Avatar user={sorted[1]} size={56}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:18 }}>🥈</span>
               </div>
-              <p style={{ fontWeight:700, fontSize:13, color: sorted[1]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:80, margin:"4px auto 2px" }}>
+              <p style={{ fontWeight:700, fontSize:13, color: sorted[1]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:80, margin:"4px auto 2px" , ...getNameStyleByKey(sorted[1].nameColor)}}>
                 {sorted[1].displayName || sorted[1].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[1])}</p>
@@ -127,7 +128,7 @@ const Leaderboard = ({ darkMode }) => {
                 <Avatar user={sorted[0]} size={68}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:22 }}>🥇</span>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:14, color: sorted[0]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:90 }}>
+              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:14, color: sorted[0]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:90, ...getNameStyleByKey(sorted[0].nameColor) }}>
                 {sorted[0].displayName || sorted[0].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:12, color:"#f59e0b", fontWeight:700 }}>{valueLabel(sorted[0])}</p>
@@ -144,7 +145,7 @@ const Leaderboard = ({ darkMode }) => {
                 <Avatar user={sorted[2]} size={52}/>
                 <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:16 }}>🥉</span>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:12, color: sorted[2]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:75 }}>
+              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:12, color: sorted[2]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:75, ...getNameStyleByKey(sorted[2].nameColor) }}>
                 {sorted[2].displayName || sorted[2].email?.split("@")[0]}
               </p>
               <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[2])}</p>
@@ -206,7 +207,7 @@ const Leaderboard = ({ darkMode }) => {
                   </span>
                   <Avatar user={u} size={38}/>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ margin:0, fontWeight:600, fontSize:13, color: !isMe ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                    <p style={{ margin:0, fontWeight:600, fontSize:13, color: !isMe ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...getNameStyleByKey(u.nameColor)}}>
                       {u.displayName || u.email?.split("@")[0]}
                       {isMe && <span style={{ marginLeft:6, fontSize:10, background:"#3b82f6", color:"#fff", padding:"1px 6px", borderRadius:4 }}>Siz</span>}
                     </p>

@@ -11,7 +11,7 @@ import {
   LuCamera, LuVideo, LuSend, LuTrash2,
   LuHeart, LuMessageCircle, LuX,
 } from "react-icons/lu";
-
+import { getNameStyleByKey } from "../constants/shopConstants";
 const IMGBB_KEY    = "2166816880e7d95d3a1fccc6a40a0a2b";
 const STORY_EXPIRE = 24 * 60 * 60 * 1000;
 const IMAGE_DURATION = 5000; // Rasm uchun 5 soniya
@@ -354,7 +354,7 @@ const Story = ({ darkMode, showToast }) => {
             >
               {user?.photoURL
                 ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
-                : <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                : <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-bold" style={getNameStyleByKey(user.nameColor)}>
                     {user?.displayName?.[0]?.toUpperCase() || "?"}
                   </div>
               }

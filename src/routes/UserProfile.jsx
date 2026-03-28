@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import ScrollReveal from "../components/ScrollReveal";
 import { LuUser, LuPhone, LuArrowLeft, LuMail, LuStar, LuFlame, LuTrophy, LuBookOpen } from "react-icons/lu";
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const UserProfile = ({ darkMode }) => {
   const { userId } = useParams();
@@ -88,7 +89,7 @@ const UserProfile = ({ darkMode }) => {
               {profile.avatarUrl || profile.photoURL ? (
                 <img src={profile.avatarUrl || profile.photoURL} alt="avatar" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white text-3xl font-bold" style={getNameStyleByKey(profile.nameColor)}>
                   {profile.displayName?.[0]?.toUpperCase() || profile.email?.[0]?.toUpperCase() || "?"}
                 </div>
               )}

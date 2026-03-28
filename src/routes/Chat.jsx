@@ -116,6 +116,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
     await addDoc(collection(db, "messages"), {
       text: sendText, uid: user.uid,
       name: user.displayName || user.email,
+      nameColor: user.nameColor || "",
       avatar: user.photoURL || null,
       type: "text", reactions: {},
       replyTo: replyData || null,
@@ -162,6 +163,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
       await addDoc(collection(db, "messages"), {
         text: "", imageUrl: data.data.url,
         uid: user.uid, name: user.displayName || user.email,
+        nameColor: user.nameColor || "",
         avatar: user.photoURL || null,
         type: "image", reactions: {},
         createdAt: serverTimestamp(),
@@ -186,6 +188,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
           await addDoc(collection(db, "messages"), {
             text: "", audioData: reader.result,
             uid: user.uid, name: user.displayName || user.email,
+            nameColor: user.nameColor || "",
             avatar: user.photoURL || null,
             type: "audio", reactions: {},
             createdAt: serverTimestamp(),

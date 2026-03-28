@@ -13,6 +13,7 @@ import {
   LuX, LuPen, LuRadio, LuEye, 
   LuMic, LuMicOff, LuUserMinus,
 } from "react-icons/lu";
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const ZEGO_APP_ID        = 77698519;
 const ZEGO_SERVER_SECRET = "640db04ef5b4b66c82185215c289bd00";
@@ -659,7 +660,7 @@ const InstructorPanel = ({ darkMode, showToast }) => {
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28, flexWrap:"wrap", gap:12 }}>
             <div>
               <span style={{ display:"inline-block", background:"#d1fae5", color:"#065f46", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #6ee7b7" }}>👨‍🏫 O'qituvchi Panel</span>
-              <h2 style={{ fontSize:24, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111" }}>Xush kelibsiz, {user?.displayName || "O'qituvchi"}!</h2>
+              <h2 style={{ fontSize:24, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111", ...getNameStyleByKey(user.nameColor) }}>Xush kelibsiz, {user?.displayName || "O'qituvchi"}!</h2>
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={() => setShowLive(true)} style={{ padding:"12px 20px", borderRadius:12, border:"none", background:"#ef4444", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, boxShadow:"0 4px 16px #ef444455" }}>

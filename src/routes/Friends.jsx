@@ -12,6 +12,7 @@ import {
   LuCheck, LuX, LuUser,
 } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
+import { getNameStyleByKey } from "../constants/shopConstants";
 
 const LEVELS = [
   { level: 1, name: "Yangi boshlovchi", minXP: 0,     color: "#6b7280", badge: "🌱" },
@@ -55,7 +56,7 @@ const UserCard = ({ u, status, onAdd, onAccept, onDecline, onRemove, onMessage, 
         {/* Ism - bosiladigan */}
         <p
           onClick={() => onViewProfile && onViewProfile(u.id)}
-          style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 14, color: "#3b82f6", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}
+          style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 14, color: "#3b82f6", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer", ...getNameStyleByKey(u.nameColor) }}
         >
           {u.displayName || u.email?.split("@")[0]}
         </p>
