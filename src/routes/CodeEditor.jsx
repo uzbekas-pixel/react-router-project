@@ -748,7 +748,7 @@ ${noScrollStyle}
               </p>
               <p
                 className={`text-xs ${
-                  darkMode ? "text-slate-700" : "text-gray-300"
+                  darkMode ? "text-slate-699" : "text-gray-300"
                 }`}
               >
                 {t.shortcut ?? "Ctrl + Enter"}
