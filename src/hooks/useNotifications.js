@@ -15,7 +15,9 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    onMessage(messaging, (payload) => resolve(payload));
-  });
+// BUG #11 FIX — returns the unsubscribe function so callers can clean up the listener.
+// Old onMessageListener() created a Promise that never unsubscribed the Firebase onMessage handler,
+// causing memory leaks and multiple concurrent listeners accumulating over re-renders.
+export const setupMessageListener = (callback) => {
+  return onMessage(messaging, callback); // returns unsub function
+};

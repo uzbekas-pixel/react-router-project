@@ -10,6 +10,8 @@ const AdminRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAdmin = async () => {
+      // BUG #12 FIX — reset first so loading spinner shows while new check runs
+      setIsAdmin(null);
       if (!user) { setIsAdmin(false); return; }
       const docSnap = await getDoc(doc(db, "admins", user.uid));
       setIsAdmin(docSnap.exists() && docSnap.data().isAdmin === true);

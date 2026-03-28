@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import { LuHand, LuCheck } from "react-icons/lu";
+import { LuHand, LuCheck, LuTrash2 } from "react-icons/lu";
 
 // ─── ZegoCloud credentials ─────────────────────────────────────────────────────
 const ZEGO_APP_ID        = 77698519;
@@ -30,7 +30,6 @@ const CMD_RAISE_HAND = "RAISE_HAND";
 const CMD_HAND_DOWN  = "HAND_DOWN";
 const CMD_ACCEPT     = "ACCEPT_COHOST";
 const CMD_REMOVE     = "REMOVE_COHOST";
-const CMD_MUTE       = "MUTE_COHOST";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 const formatTime = (ts) => {
@@ -95,15 +94,16 @@ const WatchView = ({ live, currentUser, onBack }) => {
   const [isQuestion, setIsQuestion] = useState(false);
   const [chatOpen,   setChatOpen]   = useState(true);
   const [zegoError,  setZegoError]  = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Floating reactions
   const [floatingReactions, setFloatingReactions] = useState([]);
 
   // Raise hand
-  const [handRaised,    setHandRaised]    = useState(false);
-  const [isCohost,      setIsCohost]      = useState(false);
-  const [coHostNotif,   setCoHostNotif]   = useState(false); // accepted toast
-  const [removedNotif,  setRemovedNotif]  = useState(false);
+  const [handRaised,   setHandRaised]   = useState(false);
+  const [isCohost,     setIsCohost]     = useState(false);
+  const [coHostNotif,  setCoHostNotif]  = useState(false);
+  const [removedNotif, setRemovedNotif] = useState(false);
 
   const zegoRef    = useRef(null);
   const zegoInst   = useRef(null);
@@ -153,86 +153,113 @@ const WatchView = ({ live, currentUser, onBack }) => {
     return () => unsub();
   }, [live?.id]);
 
-  // ── In-room command handler (receive reactions from others + cohost cmds) ──
-const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashlandi
+  // ── In-room command handler ────────────────────────────────────────────────
+  // FIX 1: Reactions endi barcha foydalanuvchilarga ko'rinadi (broadcast).
+  // FIX 2: Raise Hand komandasi o'qituvchiga ham yetib boradi — chunki
+  //        sendInRoomCommand(cmd, []) barcha xona a'zolariga broadcast qiladi,
+  //        shu jumladan o'qituvchi (Host) ham. Host tomonida
+  //        onInRoomCommandReceived ishga tushadi.
+ const handleInRoomCommand = useCallback((fromUser, command) => {
   try {
+    // 1. ZegoCloud 2 ta parametr yuboradi: fromUser va command. 
+    // Bizga aynan command (JSON string) kerak.
     const parsed = JSON.parse(command);
+    console.log("Kelgan buyruq:", parsed);
+
     if (parsed.type === CMD_REACTION) {
-      setFloatingReactions((prev) => [...prev, {
-        id:          `r_${Date.now()}_${prev.length}`,
-        emoji:       parsed.emoji,
-        rightOffset: 60 + Math.random() * 80,
-        riseAmount:  80 + Math.random() * 60,
-      }]);
-    } else if (parsed.type === CMD_ACCEPT && parsed.uid === currentUser?.uid) {
+      setFloatingReactions((prev) => [
+        ...prev,
+        {
+          id: `r_${Date.now()}_${Math.random()}`,
+          emoji: parsed.emoji,
+          rightOffset: 60 + Math.random() * 80,
+          riseAmount: 80 + Math.random() * 60,
+        },
+      ]);
+    } 
+    // 2. O'qituvchi qabul qilganini tekshirish
+    else if (parsed.type === CMD_ACCEPT && parsed.uid === currentUser?.uid) {
       setIsCohost(true);
-      setHandRaised(false);
+      setHandRaised(false); // <--- MANA SHU QATOR YOZUVNI O'CHIRADI
       setCoHostNotif(true);
       setTimeout(() => setCoHostNotif(false), 4000);
-    } else if (parsed.type === CMD_REMOVE && parsed.uid === currentUser?.uid) {
+    } 
+    // 3. O'qituvchi sahnadan chetlatganini tekshirish
+    else if (parsed.type === CMD_REMOVE && parsed.uid === currentUser?.uid) {
       setIsCohost(false);
       setRemovedNotif(true);
       setTimeout(() => setRemovedNotif(false), 4000);
     }
   } catch (_err) {
-    console.error("Failed to parse in-room command:", _err);
+    console.error("Xabarni parse qilishda xatolik:", _err);
   }
-}, [currentUser]);
+}, [currentUser]); // currentUser o'zgarganda funksiya yangilanishi kerak
 
   // ── ZegoUIKit — Audience / CoHost ─────────────────────────────────────────
-  useEffect(() => {
-    if (!currentUser || !live?.channelName) return;
-    const raf = requestAnimationFrame(() => {
-      if (!zegoRef.current) {
-        setZegoError("Video konteyneri yuklanmadi. Qaytadan urinib ko'ring.");
-        return;
-      }
-      try {
-        const token = ZegoUIKitPrebuilt.generateKitTokenForTest(
-          ZEGO_APP_ID, ZEGO_SERVER_SECRET,
-          live.channelName,
-          currentUser.uid,
-          currentUser.displayName || "Tomoshabin"
-        );
-        const zc = ZegoUIKitPrebuilt.create(token);
-        zegoInst.current = zc;
+  // FIX 3: Zego'ning o'z "Room messages" panelini CSS yordamida yashiramiz.
+  //        showTextChat:false parametri ZegoUIKit v2+ da mavjud, lekin
+  //        ba'zi versiyalarda ishlamaydi — shuning uchun CSS override ham qo'shamiz.
+ useEffect(() => {
+  if (!currentUser || !live?.channelName) return;
 
-        zc.joinRoom({
-          container: zegoRef.current,
-          scenario: {
-            mode:   ZegoUIKitPrebuilt.LiveStreaming,
-            config: {
-              // Role switches to CoHost once instructor accepts
-              role: isCohost ? ZegoUIKitPrebuilt.Cohost : ZegoUIKitPrebuilt.Audience,
-            },
+  const raf = requestAnimationFrame(() => {
+    if (!zegoRef.current) {
+      setZegoError("Video konteyneri yuklanmadi. Qaytadan urinib ko'ring.");
+      return;
+    }
+    try {
+      const token = ZegoUIKitPrebuilt.generateKitTokenForTest(
+        ZEGO_APP_ID, 
+        ZEGO_SERVER_SECRET,
+        live.channelName,
+        currentUser.uid,
+        currentUser.displayName || "Tomoshabin"
+      );
+      
+      const zc = ZegoUIKitPrebuilt.create(token);
+      zegoInst.current = zc;
+
+      zc.joinRoom({
+        container: zegoRef.current,
+        scenario: {
+          mode: ZegoUIKitPrebuilt.LiveStreaming,
+          config: {
+            role: isCohost ? ZegoUIKitPrebuilt.Cohost : ZegoUIKitPrebuilt.Audience,
           },
-          showPreJoinView:         false,
-          showLeavingView:         false,
-          showRoomDetailsButton:   false,
-          showScreenSharingButton: false,
-          showUserList:            false,
-          onInRoomCommandReceived: handleInRoomCommand,
-          onError: (err) => {
-            console.error("Zego audience error:", err);
-            setZegoError("Ulanishda xatolik. Sahifani yangilang.");
-          },
-        });
-      } catch (err) {
-        console.error("Zego init error:", err);
-        setZegoError("Zego initsializatsiya xatosi: " + err.message);
-      }
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-      try { zegoInst.current?.destroy?.(); } catch (_err) {
-        console.error("Zego destroy error:", _err);
-      }
-      zegoInst.current = null;
-    };
-  // isCohost intentionally not in deps — changing role requires re-join
+        },
+        showPreJoinView: false,
+        showLeavingView: false,
+        showRoomDetailsButton: false,
+        showScreenSharingButton: false,
+        showUserList: false,
+        showTextChat: false,
+        showRoomMessageButton: false,
+        
+        // MANA SHU YERDA BUYRUQLARNI QABUL QILADI
+        onInRoomCommandReceived: handleInRoomCommand, 
+        
+        onError: (err) => {
+          console.error("Zego audience error:", err);
+          setZegoError("Ulanishda xatolik. Sahifani yangilang.");
+        },
+      });
+    } catch (err) {
+      console.error("Zego init error:", err);
+      setZegoError("Zego initsializatsiya xatosi: " + err.message);
+    }
+  });
+
+  return () => {
+    cancelAnimationFrame(raf);
+    try { 
+      zegoInst.current?.destroy?.(); 
+    } catch (_err) {
+      console.error("Zego destroy error:", _err);
+    }
+    zegoInst.current = null;
+  };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [live, currentUser, handleInRoomCommand]);
-
+}, [live, currentUser, handleInRoomCommand]);
   // ── Send chat / question ──────────────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     if (!msgInput.trim() || !currentUser || !live?.id) return;
@@ -254,37 +281,80 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
     } catch (err) { console.warn("Message send failed:", err); }
   }, [msgInput, isQuestion, currentUser, live]);
 
+  // ── Delete own message ────────────────────────────────────────────────────
+  // FIX 4: Foydalanuvchi o'z xabarini o'chira oladi
+  const deleteMessage = useCallback(async (msgId) => {
+    if (!live?.id || !currentUser) return;
+    setDeletingId(msgId);
+    try {
+      await deleteDoc(doc(db, "liveLessons", live.id, "messages", msgId));
+    } catch (err) {
+      console.warn("Delete message failed:", err);
+    } finally {
+      setDeletingId(null);
+    }
+  }, [live?.id, currentUser]);
+
   // ── Send emoji reaction via Zego in-room command ──────────────────────────
- const sendReaction = (emoji) => {
-  const cmd = JSON.stringify({ type: CMD_REACTION, emoji });
-  try { zegoInst.current?.sendInRoomCommand?.(cmd, []); } catch (_err) {
-    console.error("Failed to send reaction command:", _err);
+  // FIX 5: [] → broadcast. Zego'da bo'sh array = xona barcha a'zolariga yuborish.
+  //        O'qituvchi tomoni ham CMD_REACTION ni qabul qiladi va floating ko'rsatadi.
+// Reaction yuborish funksiyasi
+const sendReaction = useCallback((emoji) => {
+  if (!zegoInst.current) return;
+
+  const cmd = JSON.stringify({ 
+    type: CMD_REACTION, 
+    emoji: emoji,
+    // O'qituvchiga kim yuborganini ko'rsatish uchun (ixtiyoriy)
+    senderName: auth.currentUser?.displayName || "O'quvchi" 
+  });
+
+  try {
+    // FIX: Ikkinchi parametr [] bo'lsa, xabarni xonadagi HAMMAga yuboradi
+    zegoInst.current.sendInRoomCommand(cmd, []);
+    
+    // O'zida ham animatsiya chiqishi uchun
+    setFloatingReactions((prev) => [
+      ...prev,
+      {
+        id: `r_${Date.now()}_${Math.random()}`,
+        emoji,
+        rightOffset: 60 + Math.random() * 80,
+        riseAmount: 80 + Math.random() * 60,
+      },
+    ]);
+  } catch (err) {
+    console.error("Reaction yuborishda xato:", err);
   }
-  setFloatingReactions((prev) => [...prev, {
-    id:          `r_${Date.now()}_${prev.length}`,
-    emoji,
-    rightOffset: 60 + Math.random() * 80,
-    riseAmount:  80 + Math.random() * 60,
-  }]);
-};
+}, []);
 
   // ── Raise / lower hand ────────────────────────────────────────────────────
-  const toggleHand = () => {
+  // FIX 6: [] bilan broadcast — o'qituvchi (Host) ham CMD_RAISE_HAND ni oladi
+  const toggleHand = useCallback(() => {
     if (!zegoInst.current || !currentUser) return;
     if (handRaised) {
       const cmd = JSON.stringify({ type: CMD_HAND_DOWN, uid: currentUser.uid });
-      try { zegoInst.current.sendInRoomCommand?.(cmd, []); } catch (_err) {
+      try {
+        zegoInst.current.sendInRoomCommand?.(cmd, []);
+      } catch (_err) {
         console.error("Failed to send hand down command:", _err);
       }
       setHandRaised(false);
     } else {
-      const cmd = JSON.stringify({ type: CMD_RAISE_HAND, uid: currentUser.uid, name: currentUser.displayName || "Tomoshabin" });
-      try { zegoInst.current.sendInRoomCommand?.(cmd, []); } catch (_err) {
+      const cmd = JSON.stringify({
+        type: CMD_RAISE_HAND,
+        uid:  currentUser.uid,
+        name: currentUser.displayName || "Tomoshabin",
+      });
+      try {
+        // [] = broadcast — o'qituvchi ham oladi
+        zegoInst.current.sendInRoomCommand?.(cmd, []);
+      } catch (_err) {
         console.error("Failed to send hand raise command:", _err);
       }
       setHandRaised(true);
     }
-  };
+  }, [handRaised, currentUser]);
 
   return (
     <div className="fixed inset-0 z-50 bg-[#060a14] flex flex-col">
@@ -335,7 +405,7 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Video area ── */}
-        <div className="flex-1 relative" style={{ minHeight:0 }}>
+        <div className="flex-1 relative" style={{ minHeight: 0 }}>
 
           {/* Error overlay */}
           {zegoError && (
@@ -350,39 +420,53 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
           )}
 
           {/* Zego container */}
-          <div ref={zegoRef} className="w-full h-full" style={{ minHeight:0 }}/>
+          <div ref={zegoRef} className="w-full h-full" style={{ minHeight: 0 }}/>
 
           {/* ── Floating Reactions Layer ── */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-           {floatingReactions.map((r) => (
-  <FloatingReaction
-    key={r.id}
-    emoji={r.emoji}
-    rightOffset={r.rightOffset}
-    riseAmount={r.riseAmount}
-    onDone={() => setFloatingReactions((prev) => prev.filter((x) => x.id !== r.id))}
-  />
-))}
+            {floatingReactions.map((r) => (
+              <FloatingReaction
+                key={r.id}
+                emoji={r.emoji}
+                rightOffset={r.rightOffset}
+                riseAmount={r.riseAmount}
+                onDone={() => setFloatingReactions((prev) => prev.filter((x) => x.id !== r.id))}
+              />
+            ))}
           </div>
 
           {/* ── Reaction + Raise Hand Bar ── */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-50"
-            style={{ background:"rgba(0,0,0,0.55)", backdropFilter:"blur(8px)", padding:"8px 14px", borderRadius:40, border:"1px solid rgba(255,255,255,0.1)" }}>
+          <div
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-50"
+            style={{
+              background:    "rgba(0,0,0,0.55)",
+              backdropFilter:"blur(8px)",
+              padding:       "8px 14px",
+              borderRadius:  40,
+              border:        "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => sendReaction(emoji)}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all duration-100"
-                style={{ background:"rgba(255,255,255,0.07)", border:"none" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.18)"; e.currentTarget.style.transform="scale(1.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.transform="scale(1)"; }}
+                style={{ background: "rgba(255,255,255,0.07)", border: "none" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background  = "rgba(255,255,255,0.18)";
+                  e.currentTarget.style.transform   = "scale(1.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background  = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.transform   = "scale(1)";
+                }}
               >
                 {emoji}
               </button>
             ))}
 
             {/* Divider */}
-            <div style={{ width:1, height:24, background:"rgba(255,255,255,0.15)", margin:"0 4px" }}/>
+            <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.15)", margin: "0 4px" }}/>
 
             {/* Raise Hand Button */}
             <button
@@ -396,8 +480,8 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
                 fontSize:   12,
                 fontWeight: 700,
               }}
-              onMouseEnter={(e) => { if (!handRaised) { e.currentTarget.style.background="rgba(255,255,255,0.15)"; } }}
-              onMouseLeave={(e) => { if (!handRaised) { e.currentTarget.style.background="rgba(255,255,255,0.07)"; } }}
+              onMouseEnter={(e) => { if (!handRaised) e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
+              onMouseLeave={(e) => { if (!handRaised) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
             >
               <LuHand size={15} style={{ animation: handRaised ? "wave 0.6s ease infinite alternate" : "none" }}/>
               {handRaised ? "Tushirish" : "🖐️ So'rash"}
@@ -406,8 +490,15 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
 
           {/* ── Toast: Accepted as co-host ── */}
           {coHostNotif && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
-              style={{ background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.4)", backdropFilter:"blur(8px)", animation:"slideDown 0.3s ease" }}>
+            <div
+              className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
+              style={{
+                background:    "rgba(16,185,129,0.15)",
+                border:        "1px solid rgba(16,185,129,0.4)",
+                backdropFilter:"blur(8px)",
+                animation:     "slideDown 0.3s ease",
+              }}
+            >
               <span className="text-xl">🎙️</span>
               <div>
                 <p className="m-0 text-green-300 font-bold text-sm">Sahnaga qo'shildingiz!</p>
@@ -418,8 +509,15 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
 
           {/* ── Toast: Removed from stage ── */}
           {removedNotif && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
-              style={{ background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.3)", backdropFilter:"blur(8px)", animation:"slideDown 0.3s ease" }}>
+            <div
+              className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
+              style={{
+                background:    "rgba(239,68,68,0.12)",
+                border:        "1px solid rgba(239,68,68,0.3)",
+                backdropFilter:"blur(8px)",
+                animation:     "slideDown 0.3s ease",
+              }}
+            >
               <span className="text-xl">👋</span>
               <p className="m-0 text-red-300 font-bold text-sm">Sahna tugadi</p>
             </div>
@@ -427,21 +525,33 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
 
           {/* ── Hand raised indicator (own feedback) ── */}
           {handRaised && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full"
-              style={{ background:"rgba(245,158,11,0.15)", border:"1px solid rgba(245,158,11,0.4)", backdropFilter:"blur(8px)" }}>
-              <span style={{ animation:"wave 0.6s ease infinite alternate", display:"inline-block" }}>🖐️</span>
-              <span className="text-yellow-400 text-xs font-bold">Qo'lingiz ko'tarilgan — o'qituvchi javob beradi</span>
+            <div
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background:    "rgba(245,158,11,0.15)",
+                border:        "1px solid rgba(245,158,11,0.4)",
+                backdropFilter:"blur(8px)",
+              }}
+            >
+              <span style={{ animation: "wave 0.6s ease infinite alternate", display: "inline-block" }}>🖐️</span>
+              <span className="text-yellow-400 text-xs font-bold">
+                Qo'lingiz ko'tarilgan — o'qituvchi javob beradi
+              </span>
             </div>
           )}
         </div>
 
         {/* ── Chat panel ── */}
-        <div className={`flex flex-col border-l border-white/10 bg-[#0a1020] transition-all duration-300 ${chatOpen ? "w-80" : "w-0 overflow-hidden"}`}>
+        <div
+          className={`flex flex-col border-l border-white/10 bg-[#0a1020] transition-all duration-300 ${
+            chatOpen ? "w-80" : "w-0 overflow-hidden"
+          }`}
+        >
           <div className="px-4 py-3 border-b border-white/10 shrink-0 flex items-center justify-between">
             <span className="text-white/60 text-sm font-semibold">💬 Jonli Chat</span>
-            {messages.filter(m => m.isQuestion && !m.answered).length > 0 && (
+            {messages.filter((m) => m.isQuestion && !m.answered).length > 0 && (
               <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/30">
-                ❓ {messages.filter(m => m.isQuestion && !m.answered).length} savol
+                ❓ {messages.filter((m) => m.isQuestion && !m.answered).length} savol
               </span>
             )}
           </div>
@@ -452,51 +562,111 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
                 <div className="text-3xl mb-2">💬</div>
                 <p className="text-white/25 text-xs">Birinchi xabarni yozing!</p>
               </div>
-            ) : messages.map((m) => (
-              <div
-                key={m.id}
-                className="flex gap-2.5 group"
-                style={{
-                  opacity:    m.isQuestion && m.answered ? 0.4 : 1,
-                  transition: "opacity 0.5s",
-                  padding:    m.isQuestion ? "10px" : "0",
-                  borderRadius: m.isQuestion ? 10 : 0,
-                  background: m.isQuestion && !m.answered
-                    ? "rgba(245,158,11,0.07)"
-                    : "transparent",
-                  border: m.isQuestion && !m.answered
-                    ? "1px solid rgba(245,158,11,0.25)"
-                    : "none",
-                }}
-              >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${m.isInstructor ? "bg-red-500/30 border border-red-500/50 text-red-300" : "bg-blue-500/20 border border-blue-500/30 text-blue-300"}`}>
-                  {m.avatar ? <img src={m.avatar} alt="" className="w-full h-full object-cover"/> : m.name?.[0]?.toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                    <span className={`text-xs font-bold ${m.isInstructor ? "text-red-400" : "text-blue-400"}`}>{m.name}</span>
-                    {m.isInstructor && (
-                      <span className="text-[9px] font-bold bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30">HOST</span>
+            ) : (
+              messages.map((m) => {
+                const isOwn = m.uid === currentUser?.uid;
+                return (
+                  <div
+                    key={m.id}
+                    className="flex gap-2.5 group"
+                    style={{
+                      opacity:      m.isQuestion && m.answered ? 0.4 : 1,
+                      transition:   "opacity 0.5s",
+                      padding:      m.isQuestion ? "10px" : "2px 0",
+                      borderRadius: m.isQuestion ? 10 : 0,
+                      background:   m.isQuestion && !m.answered
+                        ? "rgba(245,158,11,0.07)"
+                        : "transparent",
+                      border: m.isQuestion && !m.answered
+                        ? "1px solid rgba(245,158,11,0.25)"
+                        : "none",
+                    }}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${
+                        m.isInstructor
+                          ? "bg-red-500/30 border border-red-500/50 text-red-300"
+                          : "bg-blue-500/20 border border-blue-500/30 text-blue-300"
+                      }`}
+                    >
+                      {m.avatar
+                        ? <img src={m.avatar} alt="" className="w-full h-full object-cover"/>
+                        : m.name?.[0]?.toUpperCase()}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <span
+                          className={`text-xs font-bold ${
+                            m.isInstructor ? "text-red-400" : isOwn ? "text-emerald-400" : "text-blue-400"
+                          }`}
+                        >
+                          {m.name} {isOwn && <span className="text-[9px] text-white/30 font-normal">(siz)</span>}
+                        </span>
+                        {m.isInstructor && (
+                          <span className="text-[9px] font-bold bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30">
+                            HOST
+                          </span>
+                        )}
+                        {m.isQuestion && (
+                          <span className="text-[9px] font-bold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-full border border-yellow-500/30">
+                            ❓ SAVOL
+                          </span>
+                        )}
+                        {m.isQuestion && m.answered && (
+                          <span className="text-[9px] font-bold bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/30">
+                            <LuCheck size={8} style={{ display: "inline", marginRight: 2 }}/>Javob
+                          </span>
+                        )}
+                        <span className="text-white/20 text-[10px] ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          {formatTime(m.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed wrap-break-words m-0">{m.text}</p>
+                    </div>
+
+                    {/* FIX 4: O'z xabarini o'chirish tugmasi */}
+                    {isOwn && (
+                      <button
+                        onClick={() => deleteMessage(m.id)}
+                        disabled={deletingId === m.id}
+                        title="Xabarni o'chirish"
+                        className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer"
+                        style={{
+                          background: "rgba(239,68,68,0.1)",
+                          border:     "1px solid rgba(239,68,68,0.25)",
+                          color:      deletingId === m.id ? "rgba(239,68,68,0.3)" : "rgba(239,68,68,0.7)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(239,68,68,0.22)";
+                          e.currentTarget.style.color      = "#ef4444";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(239,68,68,0.1)";
+                          e.currentTarget.style.color      = "rgba(239,68,68,0.7)";
+                        }}
+                      >
+                        {deletingId === m.id ? (
+                          <span
+                            style={{
+                              width:           10,
+                              height:          10,
+                              borderRadius:    "50%",
+                              border:          "1.5px solid rgba(239,68,68,0.5)",
+                              borderTopColor:  "transparent",
+                              display:         "inline-block",
+                              animation:       "spin 0.7s linear infinite",
+                            }}
+                          />
+                        ) : (
+                          <LuTrash2 size={11}/>
+                        )}
+                      </button>
                     )}
-                    {/* Question badge — only on student's own questions or all questions */}
-                    {m.isQuestion && (
-                      <span className="text-[9px] font-bold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-full border border-yellow-500/30">
-                        ❓ SAVOL
-                      </span>
-                    )}
-                    {m.isQuestion && m.answered && (
-                      <span className="text-[9px] font-bold bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/30">
-                        <LuCheck size={8} style={{ display:"inline", marginRight:2 }}/>Javob
-                      </span>
-                    )}
-                    <span className="text-white/20 text-[10px] ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      {formatTime(m.createdAt)}
-                    </span>
                   </div>
-                  <p className="text-white/80 text-sm leading-relaxed wrap-break-words m-0">{m.text}</p>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
             <div ref={chatBottom}/>
           </div>
 
@@ -544,15 +714,31 @@ const handleInRoomCommand = useCallback((command) => {  // _fromUser olib tashla
         </div>
       </div>
 
+      {/*
+        FIX 3 (CSS override): Agar showTextChat:false parametri ishlamasa,
+        Zego'ning ichki "Room messages" panelini CSS bilan yashiramiz.
+        Bu selector Zego DOM strukturasiga bog'liq — versiyaga qarab o'zgarishi mumkin.
+      */}
       <style>{`
         @keyframes wave {
           from { transform: rotate(-15deg); }
           to   { transform: rotate(15deg); }
         }
         @keyframes slideDown {
-          from { opacity:0; transform:translate(-50%, -10px); }
-          to   { opacity:1; transform:translate(-50%, 0); }
+          from { opacity: 0; transform: translate(-50%, -10px); }
+          to   { opacity: 1; transform: translate(-50%, 0); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Zego ichki chat panelini yashirish */
+        .zego-room-message-list,
+        .zego-chat-message-list,
+        [class*="ZegoRoomMessage"],
+        [class*="ZegoChat"],
+        [class*="zego-im"],
+        [class*="RoomMessage"],
+        [class*="MessageList"],
+        .zego-uikit-room-message { display: none !important; }
       `}</style>
     </div>
   );
@@ -573,7 +759,8 @@ const LiveInstructor = () => {
     const qLive = query(collection(db, "liveLessons"), where("status", "==", "live"));
     const unsubLive = onSnapshot(qLive, (snap) => {
       setLiveLessons(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (b.startedAt?.seconds || 0) - (a.startedAt?.seconds || 0))
       );
       setLoading(false);
@@ -581,7 +768,8 @@ const LiveInstructor = () => {
     const qEnded = query(collection(db, "liveLessons"), where("status", "==", "ended"));
     const unsubEnded = onSnapshot(qEnded, (snap) => {
       setEndedLessons(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (b.startedAt?.seconds || 0) - (a.startedAt?.seconds || 0))
           .slice(0, 20)
       );
@@ -596,19 +784,30 @@ const LiveInstructor = () => {
   }
 
   const LiveCard = ({ live }) => (
-    <div onClick={() => setWatching(live)}
-      className="group relative bg-white/5 hover:bg-white/8 border border-white/10 hover:border-red-500/30 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer">
+    <div
+      onClick={() => setWatching(live)}
+      className="group relative bg-white/5 hover:bg-white/8 border border-white/10 hover:border-red-500/30 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer"
+    >
       <div className="relative h-40 bg-linear-to-br from-red-900/30 via-[#0f172a] to-purple-900/20 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage:"radial-gradient(circle, rgba(239,68,68,0.4) 1px, transparent 1px)", backgroundSize:"24px 24px" }}/>
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgba(239,68,68,0.4) 1px, transparent 1px)",
+            backgroundSize:  "24px 24px",
+          }}
+        />
         <div className="w-16 h-16 rounded-2xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-2xl font-bold text-red-300 overflow-hidden z-10">
-          {live.instructorPhoto ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/> : live.instructorName?.[0]?.toUpperCase()}
+          {live.instructorPhoto
+            ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/>
+            : live.instructorName?.[0]?.toUpperCase()}
         </div>
         <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
           <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-pulse"/>LIVE
         </div>
         <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/60 text-white/80 text-[10px] px-2 py-1 rounded-full">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
           </svg>
           {live.viewers || 0}
         </div>
@@ -624,7 +823,9 @@ const LiveInstructor = () => {
         <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2 leading-snug">{live.title}</h3>
         <div className="flex items-center gap-2 mt-2">
           <div className="w-5 h-5 rounded-full bg-white/10 overflow-hidden flex items-center justify-center text-[9px] text-white/60">
-            {live.instructorPhoto ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/> : live.instructorName?.[0]?.toUpperCase()}
+            {live.instructorPhoto
+              ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/>
+              : live.instructorName?.[0]?.toUpperCase()}
           </div>
           <span className="text-white/50 text-xs">{live.instructorName}</span>
           <span className="text-white/25 text-xs ml-auto">{timeAgo(live.startedAt)}</span>
@@ -642,7 +843,9 @@ const LiveInstructor = () => {
   const EndedCard = ({ live }) => (
     <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/8 transition-all duration-200">
       <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-lg font-bold text-white/40 shrink-0 overflow-hidden">
-        {live.instructorPhoto ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/> : live.instructorName?.[0]?.toUpperCase()}
+        {live.instructorPhoto
+          ? <img src={live.instructorPhoto} alt="" className="w-full h-full object-cover"/>
+          : live.instructorName?.[0]?.toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-white/80 font-semibold text-sm truncate">{live.title}</p>
@@ -651,8 +854,10 @@ const LiveInstructor = () => {
           <span className="text-white/20 text-xs">·</span>
           <span className="text-white/40 text-xs">{timeAgo(live.startedAt)}</span>
           {live.viewers > 0 && (
-            <><span className="text-white/20 text-xs">·</span>
-            <span className="text-white/40 text-xs">{live.viewers} tomoshabin</span></>
+            <>
+              <span className="text-white/20 text-xs">·</span>
+              <span className="text-white/40 text-xs">{live.viewers} tomoshabin</span>
+            </>
           )}
         </div>
       </div>
@@ -689,14 +894,25 @@ const LiveInstructor = () => {
 
         <div className="flex gap-2 mb-8">
           {[
-            { id:"live",  label:"🔴 Hozir Live",    count:liveLessons.length  },
-            { id:"ended", label:"📼 O'tgan Efirlar", count:endedLessons.length },
+            { id: "live",  label: "🔴 Hozir Live",    count: liveLessons.length  },
+            { id: "ended", label: "📼 O'tgan Efirlar", count: endedLessons.length },
           ].map((t) => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer border ${activeTab===t.id ? "bg-white/10 border-white/20 text-white" : "bg-transparent border-white/10 text-white/40 hover:text-white/60 hover:border-white/15"}`}>
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer border ${
+                activeTab === t.id
+                  ? "bg-white/10 border-white/20 text-white"
+                  : "bg-transparent border-white/10 text-white/40 hover:text-white/60 hover:border-white/15"
+              }`}
+            >
               {t.label}
               {t.count > 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab===t.id?"bg-white/20 text-white":"bg-white/10 text-white/40"}`}>
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === t.id ? "bg-white/20 text-white" : "bg-white/10 text-white/40"
+                  }`}
+                >
                   {t.count}
                 </span>
               )}

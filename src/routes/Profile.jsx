@@ -82,7 +82,7 @@ const handleAvatarChange = async (e) => {
          photoURL: avatarPreview || "",
         email: user.email,
         updatedAt: new Date().toISOString(),
-      });
+      }, { merge: true }); // BUG #4 FIX: merge:true prevents deleting other fields (maxSnippets, coins, etc.)
       showConfetti();
       showToast(t.profileUpdated, "success");
     } catch {

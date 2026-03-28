@@ -196,7 +196,41 @@ const LiveLesson = ({ showToast, user, onClose }) => {
         showRoomDetailsButton:false, showScreenSharingButton:true, showUserList:false,
         onLeaveRoom: () => stopLive(liveDocIdRef.current, false),
         // ✅ O'quvchilardan kelgan commandlar shu yerda qabul qilinadi
-        onInRoomCommandReceived: handleInRoomCommand,
+        // ... boshqa sozlamalar (container, scenario va h.k.)
+onInRoomCommandReceived: (fromUser, command) => {
+  try {
+    const data = JSON.parse(command);
+    console.log("Yangi buyruq:", data);
+
+    // 1. Reaksiyalarni chiqarish
+    if (data.type === CMD_REACTION) {
+      setFloatingReactions((prev) => [
+        ...prev,
+        {
+          id: `r_${Date.now()}_${Math.random()}`,
+          emoji: data.emoji,
+          rightOffset: 50 + Math.random() * 150,
+          riseAmount: 100 + Math.random() * 100,
+        },
+      ]);
+    }
+
+    // 2. Qo'l ko'tarish logikasi
+    if (data.type === CMD_RAISE_HAND) {
+      setRaisedHands((prev) => {
+        if (prev.find((h) => h.uid === data.uid)) return prev;
+        return [...prev, { uid: data.uid, name: data.name || fromUser.userName }];
+      });
+    }
+
+    // 3. Qo'lni tushirish
+    if (data.type === CMD_HAND_DOWN) {
+      setRaisedHands((prev) => prev.filter((h) => h.uid !== data.uid));
+    }
+  } catch (error) {
+    console.error("Xabarni o'qishda xato:", error);
+  }
+}, handleInRoomCommand,
       });
 
       setIsLive(true);
@@ -249,16 +283,36 @@ const LiveLesson = ({ showToast, user, onClose }) => {
     catch (e) { console.warn(e); }
   };
 
-  const acceptCohost = (uid, name) => {
-    if (!zegoInst.current) return;
-    try { zegoInst.current.sendInRoomCommand?.(JSON.stringify({ type:CMD_ACCEPT, uid }), [uid]); } catch (_err) {
-      console.error(_err);
-    }
+const acceptCohost = (uid, name) => {
+  if (!zegoInst.current) return;
+  
+  try {
+    // FIX: [uid] o'rniga [] (bo'sh massiv) ishlatamiz. 
+    // Bu xabarni xonadagi hamma eshitadi va o'quvchi o'z ID-sini tekshirib qo'lini tushiradi.
+    const cmd = JSON.stringify({ 
+      type: CMD_ACCEPT, 
+      uid: uid 
+    });
+    
+    zegoInst.current.sendInRoomCommand?.(cmd, []); 
+    
+    // O'qituvchi interfeysini yangilash
     setRaisedHands((prev) => prev.filter((h) => h.uid !== uid));
     setHandNotif(null);
-    setCohosts((prev) => [...prev, { uid, name, muted:false }]);
-    showToast?.(`${name} sahnaga qo'shildi! 🎙️`, "success");
-  };
+    
+    // Cohostlar ro'yxatiga qo'shish
+    setCohosts((prev) => {
+      if (prev.find(c => c.uid === uid)) return prev;
+      return [...prev, { uid, name, muted: false }];
+    });
+
+    if (typeof showToast === "function") {
+      showToast(`${name} sahnaga qo'shildi! 🎙️`, "success");
+    }
+  } catch (_err) {
+    console.error("Cohost qabul qilishda xato:", _err);
+  }
+};
 
   const removeCohost = (uid) => {
     if (!zegoInst.current) return;

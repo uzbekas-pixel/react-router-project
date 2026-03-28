@@ -19,15 +19,20 @@ export const AuthProvider = ({ children }) => {
           const userRef = doc(db, "users", currentUser.uid);
           const snap = await getDoc(userRef);
           if (!snap.exists()) {
-            // Yangi foydalanuvchi — birinchi marta yozamiz
+            // Yangi foydalanuvchi — birinchi marta yozamiz (xp/streak/courses/quizAvg for Leaderboard denorm)
             await setDoc(userRef, {
               displayName: currentUser.displayName || "",
-              email: currentUser.email || "",
-              avatarUrl: currentUser.photoURL || "",
-              phone: "",
-              bio: "",
-              uid: currentUser.uid,
-              createdAt: new Date().toISOString(),
+              email:       currentUser.email || "",
+              avatarUrl:   currentUser.photoURL || "",
+              phone:       "",
+              bio:         "",
+              uid:         currentUser.uid,
+              createdAt:   new Date().toISOString(),
+              // DENORM defaults — Leaderboard reads these directly from users/{uid}
+              xp:      0,
+              streak:  0,
+              courses: 0,
+              quizAvg: 0,
             });
           } else {
             // Mavjud foydalanuvchi — displayName va avatarni yangilaymiz
@@ -37,7 +42,7 @@ export const AuthProvider = ({ children }) => {
               avatarUrl: currentUser.photoURL || snap.data().avatarUrl || "",
             });
           }
-        } catch {console.log("Error")}
+        } catch (err) { console.error("AuthProvider: Failed to write user doc to Firestore:", err); }
       }
     });
     return () => unsub();

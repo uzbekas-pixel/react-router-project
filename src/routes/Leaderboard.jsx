@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
-import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom"; // ← YANGI
 
@@ -32,49 +32,30 @@ const Leaderboard = ({ darkMode }) => {
   const navigate          = useNavigate(); // ← YANGI
   const [activeTab, setActiveTab] = useState("xp");
   const [users, setUsers]         = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading]     = useState(true); // BUG #6 FIX: initialize true, avoids setState-in-effect lint
   const [period, setPeriod]       = useState("all");
 
   useEffect(() => {
-  setTimeout(() => setLoading(true), 0);
+    // DENORM READ: users/{uid} now has xp, streak, courses, quizAvg written by Quiz/DailyTasks/CourseDetail
+    // Zero sub-collection reads needed — down from N×9 getDoc calls per snapshot to 0.
+    let cancelled = false;
 
-  const unsub = onSnapshot(collection(db, "users"), async (snap) => {
-    const baseUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const unsub = onSnapshot(collection(db, "users"), (snap) => {
+      if (cancelled) return;
+      const enriched = snap.docs.map((d) => ({
+        id:      d.id,
+        ...d.data(),
+        xp:      d.data().xp      || 0,
+        streak:  d.data().streak  || 0,
+        courses: d.data().courses || 0,
+        quizAvg: d.data().quizAvg || 0,
+      }));
+      setUsers(enriched);
+      setLoading(false);
+    });
 
-    const enriched = await Promise.all(
-      baseUsers.map(async (u) => {
-        try {
-          const statsSnap = await getDoc(doc(db, "users", u.id, "data", "stats"));
-          const stats     = statsSnap.exists() ? statsSnap.data() : {};
-
-          const progressSnap = await Promise.all(
-            ["1","2","3","4","5","6","7","8"].map((id) =>
-              getDoc(doc(db, "users", u.id, "progress", id))
-            )
-          );
-          const completedCourses = progressSnap.filter(
-            (s) => s.exists() && s.data().progress === 100
-          ).length;
-
-          return {
-            ...u,
-            xp:      stats.xp     || 0,
-            streak:  stats.streak || 0,
-            courses: completedCourses,
-            quizAvg: stats.quizAvg || 0,
-          };
-        } catch {
-          return { ...u, xp: 0, streak: 0, courses: 0, quizAvg: 0 };
-        }
-      })
-    );
-
-    setUsers(enriched);
-    setLoading(false);
-  });
-
-  return () => unsub();
-}, []);
+    return () => { cancelled = true; unsub(); };
+  }, []);
 
   const sorted = [...users]
     .sort((a, b) => (b[activeTab] || 0) - (a[activeTab] || 0))

@@ -3,7 +3,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { db } from "../firebase/config";
 import {
-  doc, getDoc, setDoc, onSnapshot, serverTimestamp,
+  doc, getDoc, setDoc, onSnapshot, serverTimestamp, runTransaction, increment,
 } from "firebase/firestore";
 import {
   LuCoins, LuShoppingBag, LuZap, LuStar,
@@ -67,12 +67,13 @@ const CoinShop = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
-  // XP yuklash (bir marta)
+  // Real-time XP listener (BUG #14 FIX — replaces one-time getDoc to prevent stale XP)
   useEffect(() => {
     if (!user) return;
-    getDoc(doc(db, "users", user.uid, "data", "stats"))
-      .then((s) => { if (s.exists()) setXp(s.data().xp || 0); })
-      .catch(() => {});
+    const unsub = onSnapshot(doc(db, "users", user.uid, "data", "stats"), (snap) => {
+      if (snap.exists()) setXp(snap.data().xp || 0);
+    });
+    return () => unsub();
   }, [user]);
 
  const buyItem = async (item) => {
@@ -89,36 +90,39 @@ const CoinShop = ({ darkMode, showToast }) => {
  
   setBuying(item.id);
   try {
-    // ── 1. Wallet yangilash ──────────────────────────────────────────────────
-    const wRef  = doc(db, "users", user.uid, "data", "wallet");
-    const wSnap = await getDoc(wRef);
-    const w     = wSnap.exists()
-      ? wSnap.data()
-      : { coins: 0, owned: [], history: [] };
- 
-    const newOwned =
-      item.category !== "boost" &&
-      item.category !== "xp" &&
-      item.id !== "snippet_slot_5"
-        ? [...new Set([...(w.owned || []), item.id])]
-        : (w.owned || []);
- 
-    const newHistory = [
-      {
-        id:    item.id,
-        name:  item.name,
-        icon:  item.icon,
-        price: item.price,
-        date:  new Date().toLocaleDateString("uz"),
-      },
-      ...(w.history || []),
-    ].slice(0, 20);
- 
-    await setDoc(wRef, {
-      coins:     (w.coins || 0) - item.price,
-      owned:     newOwned,
-      history:   newHistory,
-      updatedAt: serverTimestamp(),
+    const wRef = doc(db, "users", user.uid, "data", "wallet");
+
+    // BUG #2 FIX — use Firestore transaction to prevent double-spend race condition
+    await runTransaction(db, async (transaction) => {
+      const wSnap = await transaction.get(wRef);
+      const w = wSnap.exists() ? wSnap.data() : { coins: 0, owned: [], history: [] };
+
+      if ((w.coins || 0) < item.price) throw new Error("INSUFFICIENT_COINS");
+
+      const newOwned =
+        item.category !== "boost" &&
+        item.category !== "xp" &&
+        item.id !== "snippet_slot_5"
+          ? [...new Set([...(w.owned || []), item.id])]
+          : (w.owned || []);
+
+      const newHistory = [
+        {
+          id:    item.id,
+          name:  item.name,
+          icon:  item.icon,
+          price: item.price,
+          date:  new Date().toLocaleDateString("uz"),
+        },
+        ...(w.history || []),
+      ].slice(0, 20);
+
+      transaction.set(wRef, {
+        coins:     (w.coins || 0) - item.price,
+        owned:     newOwned,
+        history:   newHistory,
+        updatedAt: serverTimestamp(),
+      });
     });
  
     // ── 2. XP pack bo'lsa stats yangilash ───────────────────────────────────
@@ -128,6 +132,8 @@ const CoinShop = ({ darkMode, showToast }) => {
       const sSnap  = await getDoc(sRef);
       const curXP  = sSnap.exists() ? (sSnap.data().xp || 0) : 0;
       await setDoc(sRef, { ...(sSnap.data() || {}), xp: curXP + bonus });
+      // DENORM — mirror xp to users/{uid} for Leaderboard
+      await setDoc(doc(db, "users", user.uid), { xp: increment(bonus) }, { merge: true });
       setXp(curXP + bonus);
     }
  
@@ -140,8 +146,6 @@ const CoinShop = ({ darkMode, showToast }) => {
         : DEFAULT_MAX_SNIPPETS;
  
       await setDoc(uRef, { maxSnippets: curMax + 5 }, { merge: true });
-      // Agar CoinShop ichida maxSnippets state bo'lsa, uni yangilang:
-      // setMaxSnippets(curMax + 5);
     }
  
     showToast?.(`✅ "${item.name}" sotib olindi!`, "success");

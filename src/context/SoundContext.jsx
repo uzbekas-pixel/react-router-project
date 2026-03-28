@@ -1,23 +1,43 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 // 1. Context yaratish
 const SoundContext = createContext();
 
 export const SoundProvider = ({ children }) => {
-  // Audio ob'ektlarini yaratish
-const sounds = {
-  // Fayl yo'llari public papkasidan boshlanadi
-  rain: useRef(new Audio('/sounds/rain.mp3')),
-  lofi: useRef(new Audio('/sounds/lofi.mp3')),
-  keyboard: useRef(new Audio('/sounds/keyboard.mp3')),
-};
+  // BUG #15 FIX — Audio objects created inside useEffect (not inline) so they can be
+  // properly cleaned up (paused + src cleared) when SoundProvider unmounts.
+  // Previously, audio was created inline which: (a) violated hooks rules, (b) leaked
+  // playing audio as a zombie when the component unmounted (e.g. hot reload).
+  const rainRef     = useRef(null);
+  const lofiRef     = useRef(null);
+  const keyboardRef = useRef(null);
+
+  useEffect(() => {
+    rainRef.current     = new Audio('/sounds/rain.mp3');
+    lofiRef.current     = new Audio('/sounds/lofi.mp3');
+    keyboardRef.current = new Audio('/sounds/keyboard.mp3');
+
+    // Cleanup: stop and release audio resources on unmount
+    return () => {
+      [rainRef, lofiRef, keyboardRef].forEach((r) => {
+        if (r.current) {
+          r.current.pause();
+          r.current.src = '';
+          r.current = null;
+        }
+      });
+    };
+  }, []);
+
+  const sounds = { rain: rainRef, lofi: lofiRef, keyboard: keyboardRef };
 
   const [activeSounds, setActiveSounds] = useState({ rain: false, lofi: false, keyboard: false });
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
 
   const toggleSound = (name) => {
-    const audio = sounds[name].current;
+    const audio = sounds[name]?.current;
+    if (!audio) return;
     if (activeSounds[name]) {
       audio.pause();
     } else {
@@ -30,14 +50,17 @@ const sounds = {
 
   const updateVolume = (val) => {
     setVolume(val);
-    Object.values(sounds).forEach(s => s.current.volume = isMuted ? 0 : val);
+    Object.values(sounds).forEach(s => {
+      if (s.current) s.current.volume = isMuted ? 0 : val;
+    });
   };
 
-  // 'setIsMuted' ishlatilmayotgani uchun xato bermasligi uchun uni ham qo'shib qo'yamiz
   const toggleMute = () => {
     const newMuteStatus = !isMuted;
     setIsMuted(newMuteStatus);
-    Object.values(sounds).forEach(s => s.current.volume = newMuteStatus ? 0 : volume);
+    Object.values(sounds).forEach(s => {
+      if (s.current) s.current.volume = newMuteStatus ? 0 : volume;
+    });
   };
 
   return (
@@ -47,7 +70,7 @@ const sounds = {
   );
 };
 
-// 2. Hook yaratish (Faqat bitta export bo'lishi uchun ehtiyotkorlik bilan)
+// 2. Hook yaratish
 /* eslint-disable react-refresh/only-export-components */
 export const useSound = () => {
   const context = useContext(SoundContext);

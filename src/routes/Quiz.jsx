@@ -330,6 +330,8 @@ const Quiz = ({ darkMode, showToast }) => {
   const timerRef  = useRef(null);
   // FIX #2 — cascading renders uchun pending side-effects ref'da saqlanadi
   const pendingRef = useRef(null);
+  // BUG #1 FIX — double-submission guard
+  const savingRef  = useRef(false);
 
   const currentDiffLabel = useMemo(() => getDifficultyFromScore(quizAvg) ?? "Barcha", [quizAvg]);
 
@@ -344,7 +346,10 @@ const Quiz = ({ darkMode, showToast }) => {
   const startQuiz = useCallback((quiz) => {
     clearInterval(timerRef.current);
     pendingRef.current = null;
+    savingRef.current = false;
     const questions = buildQuestions(quiz);
+    const quizState = { quiz: { ...quiz, questions }, currentQ: 0, answers: [], streak: 0 };
+    try { sessionStorage.setItem("activeQuiz", JSON.stringify(quizState)); } catch (e) { void e; /* sessionStorage unavailable */ }
     setSelectedQuiz({ ...quiz, questions });
     setCurrentQ(0);
     setSelected(null);
@@ -360,13 +365,15 @@ const Quiz = ({ darkMode, showToast }) => {
     setSelected((prev) => {
       if (prev !== null) return prev;
       clearInterval(timerRef.current);
+      pendingRef.current = null;
       return idx;
     });
   }, []);
 
-  // ── saveQuizResult ────────────────────────────────────────────────────────
+  // ── saveQuizResult ── BUG #1 FIX: savingRef mutex prevents double-submit ──
   const saveQuizResult = useCallback(async (pct, score, totalQ, category) => {
-    if (!user) return;
+    if (!user || savingRef.current) return;
+    savingRef.current = true;
     try {
       const statsRef  = doc(db, "users", user.uid, "data", "stats");
       const statsSnap = await getDoc(statsRef);
@@ -376,11 +383,19 @@ const Quiz = ({ darkMode, showToast }) => {
       const newAvg    = Math.round(((old.quizAvg || 0) * oldCount + pct) / newCount);
       const xpGained  = score * 5;
 
+      const xpAfter = (old.xp || 0) + xpGained;
+
       await setDoc(statsRef, {
-        xp:        (old.xp || 0) + xpGained,
+        xp:        xpAfter,
         quizAvg:   newAvg,
         quizCount: newCount,
         streak:    old.streak || 0,
+      }, { merge: true });
+
+      // DENORM — mirror xp + quizAvg onto users/{uid} for zero-read Leaderboard
+      await setDoc(doc(db, "users", user.uid), {
+        xp:      xpAfter,
+        quizAvg: newAvg,
       }, { merge: true });
 
       await setDoc(
@@ -396,6 +411,8 @@ const Quiz = ({ darkMode, showToast }) => {
       showToast?.(`+${xpGained} XP qo'shildi! ✅`, "success");
     } catch (err) {
       console.error("Quiz save error:", err);
+    } finally {
+      savingRef.current = false;
     }
   }, [user, showToast]);
 
@@ -406,6 +423,9 @@ const Quiz = ({ darkMode, showToast }) => {
     const wrongByDiff = finalAnswers
       .map((a, i) => (!a.correct ? { category, difficulty: questions[i]?.difficulty } : null))
       .filter(Boolean);
+
+    // BUG #7 FIX — quiz done, clear sessionStorage
+    try { sessionStorage.removeItem("activeQuiz"); } catch (e) { void e; /* non-critical */ }
 
     setResultData({ score, pct, wrongByDiff, questions, answers: finalAnswers });
     setScreen("result");
@@ -468,6 +488,28 @@ const Quiz = ({ darkMode, showToast }) => {
   }, [screen, selected, currentQ, handleNext]);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
+
+  // BUG #7 FIX — restore quiz from sessionStorage on mount (browser refresh recovery)
+  useEffect(() => {
+    if (screen !== "select") return;
+    try {
+      const saved = sessionStorage.getItem("activeQuiz");
+      if (!saved) return;
+      const state = JSON.parse(saved);
+      if (!state?.quiz?.questions?.length) { sessionStorage.removeItem("activeQuiz"); return; }
+      clearInterval(timerRef.current);
+      pendingRef.current = null;
+      setSelectedQuiz(state.quiz);
+      setCurrentQ(state.currentQ || 0);
+      setAnswers(state.answers || []);
+      setStreak(state.streak || 0);
+      setSelected(null);
+      setTimeLeft(TIMER);
+      setResultData(null);
+      setScreen("playing");
+    } catch (e) { void e; sessionStorage.removeItem("activeQuiz"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // SELECT SCREEN

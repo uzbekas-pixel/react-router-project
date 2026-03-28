@@ -32,7 +32,7 @@ import AdminRoute from "./components/AdminRoute";
 import Chat from "./routes/Chat";
 import {
   requestNotificationPermission,
-  onMessageListener,
+  setupMessageListener,
 } from "./hooks/useNotifications";
 import { useAuth } from "./context/useAuth";
 import TypingGame from "./routes/TypingGame";
@@ -112,18 +112,18 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    onMessageListener()
-      .then((payload) => {
-        if (payload?.notification) {
-          showToast(
-            `${payload.notification.title}: ${payload.notification.body}`,
-            "info",
-          );
-        }
-      })
-      .catch(() => {});
+    // BUG #11 FIX — setupMessageListener returns unsubscribe; old onMessageListener() never cleaned up
+    const unsub = setupMessageListener((payload) => {
+      if (payload?.notification) {
+        showToast(
+          `${payload.notification.title}: ${payload.notification.body}`,
+          "info",
+        );
+      }
+    });
+    return () => unsub();
   }, [showToast]);
-  useEffect(() => {}, [showToast]);
+  // BUG #17 FIX — removed empty useEffect(() => {}, [showToast]) dead code
   // App.jsx da mavjud useEffect lardan biriga yoki alohida qo'shing:
   useEffect(() => {
     const goOffline = () => {
@@ -230,7 +230,11 @@ function App() {
             {/* ── O'quv ── */}
             <Route
               path="/quiz"
-              element={<Quiz darkMode={darkMode} showToast={showToast} />}
+              element={
+                <ProtectedRoute>
+                  <Quiz darkMode={darkMode} showToast={showToast} />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/dashboard"

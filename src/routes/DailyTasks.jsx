@@ -3,7 +3,7 @@ import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp,
+  doc, getDoc, setDoc, serverTimestamp, increment,
 } from "firebase/firestore";
 import {
   LuFlame, LuStar, LuZap, LuTrophy, LuCheck,
@@ -87,17 +87,23 @@ const DailyTasks = ({ darkMode, showToast }) => {
             createdAt:  serverTimestamp(),
           });
 
-          // Stats yangilash
+          // BUG #9 FIX — use increment() to avoid streak/XP race on two tabs
           await setDoc(
             doc(db, "users", user.uid, "data", "stats"),
-            { xp: newXP, streak: newStreak },
+            { xp: increment(10), streak: increment(1) },
             { merge: true }
           );
-
+          // Read back for local state accuracy
+          const refreshed = await getDoc(doc(db, "users", user.uid, "data", "stats"));
+          const freshData = refreshed.exists() ? refreshed.data() : {};
+          const freshXP     = freshData.xp     || newXP;
+          const freshStreak = freshData.streak || newStreak;
+          // DENORM — mirror xp + streak onto users/{uid} for zero-read Leaderboard
+          await setDoc(doc(db, "users", user.uid), { xp: freshXP, streak: freshStreak }, { merge: true });
           if (!cancelled) {
             setTasks(newTasks);
-            setXp(newXP);
-            setStreak(newStreak);
+            setXp(freshXP);
+            setStreak(freshStreak);
           }
         }
       } catch (err) {
@@ -115,33 +121,29 @@ const DailyTasks = ({ darkMode, showToast }) => {
   const addXP = useCallback(async (amount) => {
   if (!user) return;
 
-  const newXP     = xp + amount;
-  const oldLevel  = getLevel(xp);
-  const newLevel  = getLevel(newXP);
+  const oldLevel = getLevel(xp);
 
-  // Avval state yangilaymiz
-  setXp(newXP);
-
-  // Keyin Firestore ga yozamiz
+  // BUG #3 FIX — use server-side increment() to avoid stale xp closure value overwriting real DB data
   try {
     const statsRef = doc(db, "users", user.uid, "data", "stats");
-    const snap     = await getDoc(statsRef);
-    if (snap.exists()) {
-      await updateDoc(statsRef, { xp: newXP, streak });
-    } else {
-      await setDoc(statsRef, { xp: newXP, streak });
+    await setDoc(statsRef, { xp: increment(amount), streak }, { merge: true });
+
+    // Read back real value to check level-up correctly
+    const snap = await getDoc(statsRef);
+    const newXP = snap.exists() ? (snap.data().xp ?? xp + amount) : xp + amount;
+    setXp(newXP);
+
+    // DENORM — mirror xp onto users/{uid} for zero-read Leaderboard
+    await setDoc(doc(db, "users", user.uid), { xp: newXP, streak }, { merge: true });
+
+    const newLevel = getLevel(newXP);
+    if (newLevel.level > oldLevel.level) {
+      setLevelUpAnim(true);
+      showToast?.(`🎉 ${newLevel.badge} ${newLevel.name} darajasiga ko'tarildingiz!`, "success");
+      setTimeout(() => setLevelUpAnim(false), 3000);
     }
   } catch (err) {
     console.error("addXP error:", err);
-    // Xato bo'lsa eski qiymatga qaytamiz
-    setXp(xp);
-  }
-
-  // Level up tekshirish
-  if (newLevel.level > oldLevel.level) {
-    setLevelUpAnim(true);
-    showToast?.(`🎉 ${newLevel.badge} ${newLevel.name} darajasiga ko'tarildingiz!`, "success");
-    setTimeout(() => setLevelUpAnim(false), 3000);
   }
 }, [user, xp, streak, showToast]);
 

@@ -39,6 +39,7 @@ const Dashboard = ({ darkMode, showToast }) => {
   const { t } = useLang();
   const [activeTab, setActiveTab]   = useState("overview");
   const [loading, setLoading]       = useState(true);
+  const [marking, setMarking]       = useState(null); // BUG #13 FIX: prevent double-click race
   const [courses, setCourses]       = useState([]);
   const [activity, setActivity]     = useState([]);
   const [stats, setStats]           = useState({ totalMinutes: 0, quizAvg: 0, streak: 0 });
@@ -118,9 +119,10 @@ const Dashboard = ({ darkMode, showToast }) => {
 
   // ─── Dars belgilash ───────────────────────────────────────────────────────
   const markLesson = async (courseId) => {
-    if (!user) return;
+    if (!user || marking) return; // BUG #13 FIX: block concurrent calls
     const course = courses.find((c) => c.id === courseId);
     if (!course || course.completed >= course.total) return;
+    setMarking(courseId);
 
     const newCompleted = course.completed + 1;
     const newProgress  = Math.round((newCompleted / course.total) * 100);
@@ -162,6 +164,7 @@ const Dashboard = ({ darkMode, showToast }) => {
     const newWeekly = { ...weekly, [today]: (weekly[today] || 0) + 30 };
     await setDoc(weeklyRef, newWeekly);
     setWeekly(newWeekly);
+    setMarking(null); // release guard
   };
 
   const unlockAchievement = async (key) => {
@@ -314,7 +317,7 @@ const Dashboard = ({ darkMode, showToast }) => {
                   <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{c.completed}/{c.total} dars</p>
                 </div>
                 {c.progress < 100
-                  ? <button onClick={() => markLesson(c.id)} style={{ padding: "7px 14px", borderRadius: 8, background: c.color, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>{t.markLesson}</button>
+                  ? <button onClick={() => markLesson(c.id)} disabled={marking === c.id} style={{ padding: "7px 14px", borderRadius: 8, background: marking === c.id ? "#94a3b8" : c.color, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: marking === c.id ? "default" : "pointer", flexShrink: 0, opacity: marking === c.id ? 0.7 : 1 }}>{marking === c.id ? "..." : t.markLesson}</button>
                   : <span style={{ padding: "6px 12px", borderRadius: 20, background: "#d1fae5", color: "#065f46", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>✅ {t.completedCourses}</span>
                 }
               </div>
