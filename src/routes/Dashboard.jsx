@@ -298,7 +298,7 @@ const Dashboard = ({ darkMode, showToast }) => {
               
               {totalMin === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 opacity-50 grayscale">
-                  <LuBarChart3 size={40} className="mb-4 text-slate-400" />
+                  <LuActivity size={40} className="mb-4 text-slate-400" />
                   <p className="text-slate-400 font-bold">{t.noActivity}</p>
                 </div>
               ) : (

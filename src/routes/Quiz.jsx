@@ -668,7 +668,7 @@ const Quiz = ({ darkMode, showToast }) => {
                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-1 transition-all ${
                       a.correct ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
                     }`}>
-                      {a.correct ? <LuCheckCircle2 size={22}/> : <LuXCircle size={22}/>}
+                      {a.correct ? <LuCheck size={22}/> : <LuXCircle size={22}/>}
                     </div>
                     <div className="flex-1">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
