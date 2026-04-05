@@ -1535,6 +1535,14 @@ export const translations = {
     haveQuestion: "Have a question?",
     contactUs: "Contact us →",
 
+    planNamePro: "Pro Reja",
+    planNamePremium: "Premium",
+    badgePopular: "Ommabop",
+    badgeFull: "Eng Zo'ri",
+    loginRequired: "Reja tanlash uchun profilingizga kiring!",
+    alreadySelected: "Siz allaqachon shu rejani tanlagansiz!",
+  
+
     // ── NEW: Quiz ────────────────────────────────────────────────────────────
     quizBadge: "Test your knowledge",
     quizTitle: "Quiz / Test",

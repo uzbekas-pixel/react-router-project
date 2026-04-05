@@ -89,12 +89,13 @@ const Pricing = ({ darkMode, showToast }) => {
     if (!user) { showToast?.(t.loginRequired, "error"); return; }
     if (userPlan === plan.id) { showToast?.(t.alreadySelected, "info"); return; }
     setLoading(plan.id);
-    try {
+  try {
       await setDoc(doc(db, "users", user.uid), {
         plan:        plan.id,
-        planName:    plan.name,
+        // O'ZGARISH: Agar tarjima yo'q bo'lsa, xato bermasligi uchun qattiq matn qo'shildi
+        planName:    plan.name || plan.id, 
         planBilling: billing,
-        planPrice:   plan.price[billing],
+        planPrice:   plan.price[billing] || 0,
         planStarted: serverTimestamp(),
       }, { merge: true });
       setUserPlan(plan.id);

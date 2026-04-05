@@ -10,7 +10,7 @@ import { getNameStyleByKey } from "../constants/shopConstants";
 import { 
   LuBook, 
   
-
+LuCheck,
   LuClock, 
   LuTarget, 
   LuTrophy, 
@@ -19,7 +19,6 @@ import {
   LuCrown, 
   LuStar, 
   LuActivity, 
- LuCheck, 
   LuAward, 
   LuChevronRight,
 
@@ -257,24 +256,26 @@ const Dashboard = ({ darkMode, showToast }) => {
         ))}
       </div>
 
-      {/* Tabs System */}
-      <div className="mb-10 flex gap-2 p-1.5 rounded-2xl bg-slate-900/10 dark:bg-slate-900/40 border dark:border-white/5 backdrop-blur-md">
+     {/* Tabs System */}
+      <div className="mb-6 md:mb-10 flex gap-1 sm:gap-2 p-1.5 rounded-2xl bg-slate-900/10 dark:bg-slate-900/40 border dark:border-white/5 backdrop-blur-md">
         {[
-          { id: "overview", label: t.overviewTab, icon: <LuActivity size={16} /> }, 
-          { id: "courses", label: t.coursesTab, icon: <LuBook size={16} /> }, 
-          { id: "achievements", label: t.achievementsTab, icon: <LuAward size={16} /> }
+          { id: "overview", label: t.overviewTab, icon: <LuActivity size={20} className="sm:w-4 sm:h-4" /> }, 
+          { id: "courses", label: t.coursesTab, icon: <LuBook size={20} className="sm:w-4 sm:h-4" /> }, 
+          { id: "achievements", label: t.achievementsTab, icon: <LuAward size={20} className="sm:w-4 sm:h-4" /> }
         ].map((tab) => (
           <button 
             key={tab.id} 
             onClick={() => setActiveTab(tab.id)} 
-            className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl text-sm font-black transition-all duration-500 ${
+            title={tab.label} // Telefonda ikonka ustiga bosib turganda nomi chiqishi uchun
+            className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-2 sm:px-6 rounded-xl text-sm font-black transition-all duration-500 ${
               activeTab === tab.id 
                 ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 active:scale-95" 
-                : "text-slate-500 hover:text-slate-400"
+                : "text-slate-500 hover:text-slate-400 hover:bg-slate-800/30"
             }`}
           >
             {tab.icon}
-            {tab.label}
+            {/* O'ZGARISH: Yozuv faqat sm (640px) dan katta ekranlarda ko'rinadi */}
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -395,7 +396,7 @@ const Dashboard = ({ darkMode, showToast }) => {
                     </button>
                   ) : (
                     <div className="px-6 py-2 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-black uppercase tracking-widest border border-emerald-500/20">
-                      <LuCheckCircle className="inline mr-2" /> {t.completedCourses}
+                      <LuCheck className="inline mr-2" /> {t.completedCourses}
                     </div>
                   )}
                 </div>

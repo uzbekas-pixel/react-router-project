@@ -252,23 +252,43 @@ const SnakeGame = ({ darkMode }) => {
 
         {/* Game over overlay */}
         {display.gameOver && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-            <Leaderboard game="snake" />
-            <p className="text-white text-2xl font-extrabold">{t.gameOver}</p>
-<p className="text-yellow-400 text-lg font-bold">{t.score}: {display.score}</p>
-            <button onClick={reset}
-  className="px-6 py-2 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
-  <FaRedo /> {t.again}
-</button>
-            {user && (
-             <button onClick={() => saveScore(user, "snake", display.score)}
-  className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl flex items-center gap-2">
-  <FaSave /> {t.saveScore}
-</button>
-            )}
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-start py-4 overflow-y-auto">
+            {/* 1. Peshqadamlar jadvali - masshtab biroz kichraytirildi */}
+            <div className="w-full px-4 mb-2 transform scale-90 origin-top">
+              <Leaderboard game="snake" />
+            </div>
+
+            {/* 2. Natijalar va Tugmalar - pastki qismga chiroyli blok qilib joylandi */}
+            <div className="flex flex-col items-center gap-2 mt-auto mb-6 bg-slate-900/80 p-5 rounded-4xl backdrop-blur-md border border-white/10 shadow-2xl">
+              <p className="text-rose-500 text-2xl font-black uppercase tracking-tighter animate-pulse">
+                {t.gameOver}
+              </p>
+              <p className="text-yellow-400 text-3xl font-black mb-3">
+                {t.score}: {display.score}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button 
+                  onClick={reset}
+                  className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40"
+                >
+                  <FaRedo /> {t.again}
+                </button>
+                
+                {user && (
+                  <button 
+                    onClick={() => saveScore(user, "snake", display.score)}
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40"
+                  >
+                    <FaSave /> {t.saveScore}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
+
 
       {/* Mobile controls */}
       <div className="mt-4 grid grid-cols-3 gap-2 md:hidden">

@@ -189,27 +189,34 @@ const QA = ({ darkMode, showToast }) => {
 
             {/* Input */}
             <div style={{ flex:1 }}>
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-                }}
-                placeholder={user ? "Savolingizni yozing... (Enter — yuborish)" : "Savol yuborish uchun tizimga kiring"}
-                disabled={!user || sending}
-                rows={3}
-                style={{
-                  width:"100%", padding:"12px 14px", borderRadius:12,
-                  border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`,
-                  background:darkMode?"#0f172a":"#f8fafc",
-                  color:darkMode?"#f1f5f9":"#111",
-                  fontSize:14, resize:"none", outline:"none",
-                  boxSizing:"border-box", fontFamily:"inherit",
-                  transition:"border-color 0.2s",
-                }}
-                onFocus={(e) => e.target.style.borderColor="#3b82f6"}
-                onBlur={(e)  => e.target.style.borderColor=darkMode?"#334155":"#e5e7eb"}
-              />
+             <textarea
+  value={inputText}
+  onChange={(e) => setInputText(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) { 
+      e.preventDefault(); 
+      handleSend(); 
+    }
+  }}
+  // TIZIMGA KIRMAGAN BO'LSA HAM INPUT KO'RINISHI UCHUN:
+  placeholder={user ? "Savolingizni yozing..." : "Savol yuborish uchun tizimga kiring"}
+  // SENDING BO'LGANDAGINA BLOKLAYMIZ
+  disabled={sending} 
+  rows={3}
+  style={{
+    width: "100%", 
+    padding: "12px 14px", 
+    borderRadius: 12,
+    border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`,
+    background: darkMode ? "#0f172a" : "#f8fafc",
+    color: darkMode ? "#f1f5f9" : "#111",
+    fontSize: 14, 
+    resize: "none", 
+    outline: "none",
+    boxSizing: "border-box",
+    opacity: sending ? 0.7 : 1 // Sending payti biroz xiralashadi
+  }}
+/>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:8 }}>
                 <span style={{ fontSize:11, color:"#9ca3af" }}>
                   {inputText.length}/500 belgi

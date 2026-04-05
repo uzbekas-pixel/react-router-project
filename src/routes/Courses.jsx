@@ -8,7 +8,7 @@ import {
   LuStar, LuUsers, LuGraduationCap, LuSearch, 
   LuHeart, LuBot, LuX, LuPuzzle, LuLaptop, 
   LuMessageSquare, LuRocket, LuArrowRight,
-  LuTarget,LuCheck
+  LuTarget,LuCheck,LuLayoutDashboard
 } from "react-icons/lu";
 import CourseDetail from "./CourseDetail";
 
@@ -75,7 +75,7 @@ const AIPreviewModal = ({ course, onClose, darkMode, onDetail, t }) => {
     { icon: <LuLaptop />, label: t.interactiveLabLabel, desc: t.interactiveLabDesc },
     { icon: <LuPuzzle />, label: t.miniQuizLabel, desc: t.miniQuizDesc },
     { icon: <LuMessageSquare />, label: t.aiChatLabel, desc: t.aiChatDesc },
-    { icon: <LuBarChart3 />, label: t.progressTrackerLabel, desc: t.progressTrackerDesc },
+    { icon: <LuLayoutDashboard />, label: t.progressTrackerLabel, desc: t.progressTrackerDesc },
   ];
 
   const modalBg   = darkMode ? "#080d1a"        : "#f8fafc";
@@ -140,7 +140,7 @@ const AIPreviewModal = ({ course, onClose, darkMode, onDetail, t }) => {
                   <div style={{ fontSize: 11, color: textSub }}>{f.desc}</div>
                 </div>
                 <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${accentColor}22`, border: `1px solid ${accentColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: accentColor, fontWeight: 800 }}>
-                  <LuCheckCircle />
+                  <LuCheck />
                 </div>
               </div>
             ))}

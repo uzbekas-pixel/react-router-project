@@ -15,9 +15,9 @@ import {
   LuZap, 
   LuAtom, 
   LuLanguages, 
-
+LuInfo,
   LuTimer,
- 
+ LuCheck,
   LuSettings, 
 
 
@@ -151,6 +151,11 @@ Where "answer" is the index (0-3) of the correct option.`;
         generationConfig: { temperature: 1.0, maxOutputTokens: 500 },
       }),
     });
+    // MANA SHU QATORLARNI QO'SHING:
+if (res.status === 429) {
+  console.error("Gemini API limiti tugadi, statik savollarga o'tilmoqda...");
+  return null; 
+}
     if (!res.ok) throw new Error("API xatolik");
     const data   = await res.json();
     const raw    = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
@@ -212,7 +217,7 @@ const ExplanationBox = memo(({ explanation, darkMode }) => {
   return (
     <div className={`mt-6 p-4 rounded-2xl border ${darkMode ? "bg-blue-500/5 border-blue-500/20 text-blue-300" : "bg-blue-50 border-blue-100 text-blue-700"}`}>
       <div className="flex gap-3">
-        <LuHelpCircle className="shrink-0 mt-0.5" size={18} />
+        <LuInfo className="shrink-0 mt-0.5" size={18} />
         <p className="text-sm leading-relaxed font-medium">
           {explanation}
         </p>
@@ -481,7 +486,7 @@ const Quiz = ({ darkMode, showToast }) => {
               darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
             }`}
           >
-            ← {t.exitQuiz}
+             {t.exitQuiz}
           </button>
           <div className="flex items-center gap-4">
             {streak >= 2 && (
@@ -583,7 +588,7 @@ const Quiz = ({ darkMode, showToast }) => {
                           ? "bg-white/20 text-white"
                           : darkMode ? "bg-slate-900/60 text-slate-500 group-hover:text-white" : "bg-white text-slate-400 shadow-sm"
                       }`}>
-                        {selected !== null && isCorrectAnswer ? <LuCheckCircle2 /> : selected !== null && isUserSelection ? <LuXCircle /> : String.fromCharCode(65 + i)}
+                        {selected !== null && isCorrectAnswer ? <LuCheck /> : selected !== null && isUserSelection ? <LuXCircle /> : String.fromCharCode(65 + i)}
                       </div>
                       <span className="flex-1">{opt}</span>
                     </button>
