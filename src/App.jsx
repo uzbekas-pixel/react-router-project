@@ -3,7 +3,6 @@ import { Routes, Route, useLocation } from "react-router";
 import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Courses from "./routes/Courses";
-import Instructors from "./routes/Instructors";
 import Pricing from "./routes/Pricing";
 import Quiz from "./routes/Quiz";
 import Dashboard from "./routes/Dashboard";
@@ -15,7 +14,6 @@ import PromoCode from "./routes/PromoCode";
 import CreateCourse from "./routes/CreateCourse";
 import Onboarding from "./components/Onboarding";
 import { useOnboarding } from "./hooks/useOnboarding";
-
 import ScrollToTop from "./components/ScrollToTop";
 import CustomCursor from "./components/CustomCursor";
 import ParticleBackground from "./components/ParticleBackground";
@@ -55,7 +53,6 @@ import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
 import BattleMode from "./routes/Battlemode";
-
 import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -142,7 +139,6 @@ function App() {
       window.removeEventListener("online", goOnline);
     };
   }, [showToast]);
-  
 
   // Background style
   const bgStyle = customBg
@@ -213,12 +209,7 @@ function App() {
                 />
               }
             />
-            <Route
-              path="/instructors"
-              element={
-                <Instructors darkMode={darkMode} showToast={showToast} />
-              }
-            />
+
             <Route
               path="/pricing"
               element={<Pricing darkMode={darkMode} showToast={showToast} />}
@@ -275,7 +266,6 @@ function App() {
               path="/live"
               element={<Live darkMode={darkMode} showToast={showToast} />}
             />
-
 
             {/* ── Auth ── */}
             <Route
@@ -489,7 +479,6 @@ function App() {
 
       <ScrollToTop darkMode={darkMode} />
       <BottomNav darkMode={darkMode} />
-     
     </div>
   );
 }

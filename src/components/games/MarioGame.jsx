@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "../../context/useAuth";
+import { useLang } from "../../context/useLang";
 import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
+import { FaStar, FaCoins, FaHeart, FaGlobe, FaGamepad, FaSkull, FaTrophy, FaArrowLeft, FaArrowRight, FaArrowUp, FaPlay, FaRedo } from "react-icons/fa";
 
 const W = 800, H = 400;
 const GRAVITY = 0.5;
@@ -620,20 +622,22 @@ const MarioGame = ({ darkMode }) => {
     return () => cancelAnimationFrame(rafRef.current);
   }, [gameState, initState, user]);
 
+  const { t } = useLang();
+
   // MBtn endi tashqarida — bu yerda e'lon qilinmaydi
 
   return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", minHeight:"calc(100vh-130px)", padding:"20px 16px 80px", background:darkMode?"#0f172a":"#1a1a2e" }}>
-      <h2 style={{ color:"#ffd700", fontWeight:800, fontSize:24, marginBottom:8, textShadow:"2px 2px 0 #8b0000" }}>
-        🍄 Super Mario
+      <h2 style={{ color:"#ffd700", fontWeight:800, fontSize:24, marginBottom:8, textShadow:"2px 2px 0 #8b0000", display: "flex", alignItems: "center", gap: "8px" }}>
+        <FaGamepad style={{ fontSize: "24px" }} /> Super Mario
       </h2>
 
       {gameState==="playing" && (
         <div style={{ display:"flex", gap:20, marginBottom:8, color:"#fff", fontFamily:"monospace", fontSize:14, fontWeight:700 }}>
-          <span>⭐ {displayScore}</span>
-          <span>🪙 ×{displayCoins}</span>
-          <span>❤️ ×{displayLives}</span>
-          <span>🌍 {displayLevel}-1</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><FaStar color="#f59e0b" /> {displayScore}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><FaCoins color="#eab308" /> ×{displayCoins}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><FaHeart color="#ef4444" /> ×{displayLives}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><FaGlobe color="#3b82f6" /> {displayLevel}-1</span>
         </div>
       )}
 
@@ -643,29 +647,29 @@ const MarioGame = ({ darkMode }) => {
 
         {gameState==="menu" && (
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
-            <div style={{ fontSize:64 }}>🍄</div>
+            <FaGamepad style={{ fontSize:64, color: "#fff" }} />
             <h2 style={{ color:"#ffd700", fontSize:32, fontWeight:800, margin:0, textShadow:"2px 2px 0 #8b0000" }}>SUPER MARIO</h2>
-            <p style={{ color:"#fff", fontSize:13, margin:0 }}>PC: ← → harakat, ↑ / Space — sakrash</p>
-            <p style={{ color:"rgba(255,255,255,0.6)", fontSize:12, margin:0 }}>Mushroom — kattalashish | Goomba ustidan bosish</p>
+            <p style={{ color:"#fff", fontSize:13, margin:0, textAlign: "center" }}>{t.marioPcControls || "PC: ← → harakat, ↑ / Space — sakrash"}</p>
+            <p style={{ color:"rgba(255,255,255,0.6)", fontSize:12, margin:0, textAlign: "center" }}>{t.marioMobileControls || "Mushroom — kattalashish | Goomba ustidan bosish"}</p>
             <button onClick={startGame}
-              style={{ marginTop:8, padding:"14px 44px", background:"#e8a020", color:"#fff", border:"none", borderRadius:12, fontSize:20, fontWeight:800, cursor:"pointer", boxShadow:"0 4px 0 #8b6020" }}>
-              ▶ BOSHLASH
+              style={{ marginTop:8, padding:"14px 44px", background:"#e8a020", color:"#fff", border:"none", borderRadius:12, fontSize:20, fontWeight:800, cursor:"pointer", boxShadow:"0 4px 0 #8b6020", display: "flex", alignItems: "center", gap: "8px" }}>
+              <FaPlay /> {t.startGameBtn || "BOSHLASH"}
             </button>
             <button onClick={() => setShowLB(!showLB)}
-              style={{ padding:"8px 22px", background:"transparent", color:"#ffd700", border:"2px solid #ffd700", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer" }}>
-              🏆 Leaderboard
+              style={{ padding:"8px 22px", background:"transparent", color:"#ffd700", border:"2px solid #ffd700", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+              <FaTrophy /> Leaderboard
             </button>
           </div>
         )}
 
         {gameState==="gameover" && (
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.82)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
-            <div style={{ fontSize:56 }}>💀</div>
+            <FaSkull style={{ fontSize:56, color: "#e5e7eb" }} />
             <h2 style={{ color:"#ef4444", fontSize:30, fontWeight:800, margin:0 }}>GAME OVER</h2>
             <p style={{ color:"#ffd700", fontSize:20, margin:0, fontWeight:700 }}>Score: {displayScore}</p>
             <button onClick={startGame}
-              style={{ padding:"12px 32px", background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:16, fontWeight:700, cursor:"pointer" }}>
-              🔄 Qayta
+              style={{ padding:"12px 32px", background:"#3b82f6", color:"#fff", border:"none", borderRadius:10, fontSize:16, fontWeight:700, cursor:"pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+              <FaRedo /> {t.restartBtn || "Qayta"}
             </button>
             <button onClick={() => setGameState("menu")}
               style={{ padding:"9px 22px", background:"transparent", color:"#fff", border:"1px solid #fff", borderRadius:10, fontSize:13, cursor:"pointer" }}>
@@ -676,13 +680,13 @@ const MarioGame = ({ darkMode }) => {
 
         {gameState==="win" && (
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.82)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
-            <div style={{ fontSize:64 }}>🏆</div>
-            <h2 style={{ color:"#ffd700", fontSize:30, fontWeight:800, margin:0 }}>G'ALABA!</h2>
-            <p style={{ color:"#fff", fontSize:16, margin:0 }}>Barcha 3 levelni tugatdingiz!</p>
+            <FaTrophy style={{ fontSize:64, color: "#eab308" }} />
+            <h2 style={{ color:"#ffd700", fontSize:30, fontWeight:800, margin:0 }}>{t.wordleWin || "G'ALABA!"}</h2>
+            <p style={{ color:"#fff", fontSize:16, margin:0 }}>{t.wonAllLevels || "Barcha 3 levelni tugatdingiz!"}</p>
             <p style={{ color:"#ffd700", fontSize:22, fontWeight:700, margin:0 }}>Score: {displayScore}</p>
             <button onClick={startGame}
-              style={{ padding:"12px 32px", background:"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:16, fontWeight:700, cursor:"pointer" }}>
-              🔄 Qaytadan
+              style={{ padding:"12px 32px", background:"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:16, fontWeight:700, cursor:"pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+              <FaRedo /> {t.restartBtn || "Qaytadan"}
             </button>
           </div>
         )}
@@ -690,10 +694,10 @@ const MarioGame = ({ darkMode }) => {
 
       {gameState==="playing" && (
         <div style={{ display:"flex", gap:10, marginTop:10, alignItems:"center" }}>
-          <MBtn keysRef={keysRef} code="ArrowLeft"  label="◀"/>
-          <MBtn keysRef={keysRef} code="ArrowRight" label="▶"/>
+          <MBtn keysRef={keysRef} code="ArrowLeft"  label={<FaArrowLeft />} />
+          <MBtn keysRef={keysRef} code="ArrowRight" label={<FaArrowRight />} />
           <div style={{ width:20 }}/>
-          <MBtn keysRef={keysRef} code="Space" label="🅰" style={{ background:"rgba(239,68,68,0.35)", borderColor:"#ef4444" }}/>
+          <MBtn keysRef={keysRef} code="Space" label={<FaArrowUp />} style={{ background:"rgba(239,68,68,0.35)", borderColor:"#ef4444" }}/>
         </div>
       )}
 

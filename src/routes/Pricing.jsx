@@ -4,6 +4,15 @@ import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { 
+  LuCheck, 
+  LuX, 
+  LuZap, 
+  LuShieldCheck, 
+  LuCrown, 
+  LuPhone,
+  LuInfo,
+} from "react-icons/lu";
 
 const Pricing = ({ darkMode, showToast }) => {
   const { t } = useLang();
@@ -21,8 +30,12 @@ const Pricing = ({ darkMode, showToast }) => {
 
   const plans = [
     {
-      id: "free", name: t.free || "Bepul", price: { monthly: 0, yearly: 0 },
-      color: "#10b981", badge: null,
+      id: "free", 
+      name: t.freeLabel, 
+      price: { monthly: 0, yearly: 0 },
+      color: "emerald",
+      icon: <LuShieldCheck size={28} />,
+      badge: null,
       features: [
         { text: t.feat5FreeCourses, ok: true },
         { text: t.featLimitedVideo, ok: true },
@@ -35,8 +48,12 @@ const Pricing = ({ darkMode, showToast }) => {
       ],
     },
     {
-      id: "pro", name: "Pro", price: { monthly: 99000, yearly: 79000 },
-      color: "#3b82f6", badge: "Eng mashhur",
+      id: "pro", 
+      name: t.planNamePro, 
+      price: { monthly: 99000, yearly: 79000 },
+      color: "blue",
+      icon: <LuZap size={28} />,
+      badge: t.badgePopular,
       features: [
         { text: t.featAllCourses, ok: true },
         { text: t.featUnlimitedVideo, ok: true },
@@ -49,8 +66,12 @@ const Pricing = ({ darkMode, showToast }) => {
       ],
     },
     {
-      id: "premium", name: "Premium", price: { monthly: 199000, yearly: 159000 },
-      color: "#8b5cf6", badge: "To'liq imkoniyat",
+      id: "premium", 
+      name: t.planNamePremium, 
+      price: { monthly: 199000, yearly: 159000 },
+      color: "indigo",
+      icon: <LuCrown size={28} />,
+      badge: t.badgeFull,
       features: [
         { text: t.featAllCourses, ok: true },
         { text: t.featUnlimitedVideo, ok: true },
@@ -65,8 +86,8 @@ const Pricing = ({ darkMode, showToast }) => {
   ];
 
   const selectPlan = async (plan) => {
-    if (!user) { showToast?.("Avval tizimga kiring!", "error"); return; }
-    if (userPlan === plan.id) { showToast?.("Bu obuna allaqachon tanlangan!", "info"); return; }
+    if (!user) { showToast?.(t.loginRequired, "error"); return; }
+    if (userPlan === plan.id) { showToast?.(t.alreadySelected, "info"); return; }
     setLoading(plan.id);
     try {
       await setDoc(doc(db, "users", user.uid), {
@@ -77,38 +98,44 @@ const Pricing = ({ darkMode, showToast }) => {
         planStarted: serverTimestamp(),
       }, { merge: true });
       setUserPlan(plan.id);
-      showToast?.(`${plan.name} rejasi tanlandi! 🎉`, "success");
+      showToast?.(`${plan.name} ${t.planSelected}`, "success");
     } catch (err) {
       console.error(err);
-      showToast?.("Xatolik yuz berdi!", "error");
+      showToast?.(t.errorOccurred, "error");
     }
     setLoading(null);
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto", padding: "40px 20px 80px" }}>
+    <div className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24">
       <ScrollReveal direction="up">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 12, border: "1px solid #bfdbfe" }}>
+        <div className="text-center max-w-2xl mx-auto mb-16 md:mb-24">
+          <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
             {t.pricingBadge}
           </span>
-          <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: darkMode ? "#f1f5f9" : "#111" }}>
+          <h2 className={`text-4xl md:text-5xl font-black mb-6 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
             {t.pricingTitle}
           </h2>
-          <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>{t.pricingDesc}</p>
+          <p className="text-slate-500 text-lg mb-10">{t.pricingDesc}</p>
 
-          <div style={{ display: "inline-flex", gap: 0, background: darkMode ? "#1e293b" : "#f1f5f9", borderRadius: 10, padding: 4 }}>
+          <div className={`inline-flex p-1 rounded-2xl border transition-all duration-500 ${
+            darkMode ? "bg-slate-900/40 border-white/5" : "bg-slate-100 border-slate-200"
+          }`}>
             {["monthly", "yearly"].map((b) => (
-              <button key={b} onClick={() => setBilling(b)} style={{
-                padding: "8px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-                background: billing === b ? "#3b82f6" : "transparent",
-                color: billing === b ? "#fff" : "#6b7280",
-                fontSize: 13, fontWeight: 600, transition: "all 0.2s",
-                display: "flex", alignItems: "center", gap: 6,
-              }}>
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                className={`relative px-8 py-3 rounded-xl text-sm font-bold transition-all duration-500 flex items-center gap-3 ${
+                  billing === b 
+                    ? "bg-blue-500 text-white shadow-xl shadow-blue-500/25 scale-[1.02]" 
+                    : "text-slate-500 hover:text-slate-400"
+                }`}
+              >
                 {b === "monthly" ? t.monthly : t.yearly}
                 {b === "yearly" && (
-                  <span style={{ background: "#fef08a", color: "#713f12", fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4 }}>-20%</span>
+                  <span className="bg-yellow-400 text-slate-900 text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">
+                    -20%
+                  </span>
                 )}
               </button>
             ))}
@@ -116,72 +143,92 @@ const Pricing = ({ darkMode, showToast }) => {
         </div>
       </ScrollReveal>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, alignItems: "stretch" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {plans.map((plan, i) => {
-          const price    = plan.price[billing];
-          const isPro    = plan.id === "pro";
-          const selected = userPlan === plan.id;
+          const price = plan.price[billing];
+          const isMain = plan.id === "pro";
+          const isSelected = userPlan === plan.id;
+          
           return (
             <ScrollReveal key={plan.id} direction="up" delay={i * 100}>
-              <div style={{
-                background: darkMode ? "#1e293b" : "#fff",
-                borderRadius: 18,
-                border: `${isPro || selected ? 2 : 1}px solid ${selected ? "#10b981" : isPro ? plan.color : darkMode ? "#334155" : "#e5e7eb"}`,
-                padding: "28px 24px", position: "relative",
-                boxShadow: isPro ? `0 8px 32px ${plan.color}33` : "none",
-                height: "100%", boxSizing: "border-box",
-                display: "flex", flexDirection: "column",
-              }}>
-                {selected && (
-                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#10b981", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 14px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                    ✅ Faol obuna
+              <div className={`relative flex flex-col h-full rounded-[2.5rem] p-8 md:p-10 transition-all duration-500 group ${
+                isSelected 
+                  ? "ring-2 ring-emerald-500 bg-emerald-500/5 shadow-2xl shadow-emerald-500/10" 
+                  : isMain 
+                    ? `ring-1 ring-blue-500/50 ${darkMode ? "bg-slate-900/40 shadow-2xl shadow-blue-500/10" : "bg-white shadow-2xl shadow-slate-100"}`
+                    : `${darkMode ? "bg-slate-900/40 hover:bg-slate-900/60" : "bg-white hover:bg-slate-50"} border border-white/5`
+              }`} style={{ backdropFilter: "blur(20px)" }}>
+                
+                {isSelected && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-lg shadow-emerald-500/40">
+                    {t.activePlan}
                   </div>
                 )}
-                {!selected && plan.badge && (
-                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: plan.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 14px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                {!isSelected && plan.badge && (
+                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-${plan.color}-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-lg`}>
                     {plan.badge}
                   </div>
                 )}
 
-                <div style={{ marginBottom: 20 }}>
-                  <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 16, color: plan.color }}>{plan.name}</p>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                    <span style={{ fontSize: 32, fontWeight: 800, color: darkMode ? "#f1f5f9" : "#111" }}>
+                <div className="mb-10">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500 ${
+                    darkMode ? `bg-${plan.color}-500/10 text-${plan.color}-400` : `bg-${plan.color}-50 text-${plan.color}-600`
+                  }`}>
+                    {plan.icon}
+                  </div>
+                  <h3 className={`text-xl font-bold mb-2 ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{plan.name}</h3>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`text-4xl font-black ${darkMode ? "text-white" : "text-slate-900"}`}>
                       {price === 0 ? t.freeLabel : price.toLocaleString()}
                     </span>
-                    {price > 0 && <span style={{ fontSize: 13, color: "#6b7280" }}>{t.perMonth}</span>}
+                    {price > 0 && <span className="text-slate-500 text-sm font-medium">{t.perMonth}</span>}
                   </div>
                   {billing === "yearly" && price > 0 && (
-                    <p style={{ margin: "4px 0 0", fontSize: 12, color: "#10b981" }}>{t.yearlySave}</p>
+                    <p className="mt-2 text-xs font-bold text-emerald-500 uppercase tracking-wide">{t.yearlySave}</p>
                   )}
                 </div>
 
-                <div style={{ flex: 1, marginBottom: 20 }}>
+                <div className="flex-1 space-y-5 mb-10">
                   {plan.features.map((f, fi) => (
-                    <div key={fi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                      <span style={{ width: 18, height: 18, borderRadius: "50%", background: f.ok ? (plan.color + "22") : "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: f.ok ? plan.color : "#9ca3af", flexShrink: 0 }}>
-                        {f.ok ? "✓" : "✕"}
+                    <div key={fi} className="flex items-center gap-4 group/item">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        f.ok 
+                          ? darkMode ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+                          : darkMode ? "bg-slate-800 text-slate-600" : "bg-slate-100 text-slate-300"
+                      }`}>
+                        {f.ok ? <LuCheck size={14} /> : <LuX size={14} />}
+                      </div>
+                      <span className={`text-sm tracking-tight transition-colors ${
+                        f.ok 
+                          ? darkMode ? "text-slate-300 group-hover/item:text-white" : "text-slate-600 group-hover/item:text-slate-900" 
+                          : "text-slate-500 line-through opacity-50"
+                      }`}>
+                        {f.text}
                       </span>
-                      <span style={{ fontSize: 13, color: f.ok ? (darkMode ? "#e2e8f0" : "#374151") : "#9ca3af" }}>{f.text}</span>
                     </div>
                   ))}
                 </div>
 
                 <button
                   onClick={() => selectPlan(plan)}
-                  disabled={loading === plan.id || selected}
-                  style={{
-                    width: "100%", padding: "12px 0",
-                    background: selected ? "#10b981" : isPro ? plan.color : "transparent",
-                    color: selected || isPro ? "#fff" : plan.color,
-                    border: `2px solid ${selected ? "#10b981" : plan.color}`,
-                    borderRadius: 10, fontSize: 14, fontWeight: 700,
-                    cursor: loading === plan.id || selected ? "default" : "pointer",
-                    opacity: loading === plan.id ? 0.7 : 1,
-                    transition: "all 0.2s",
-                  }}
+                  disabled={loading === plan.id || isSelected}
+                  className={`w-full py-4 rounded-2xl text-sm font-black transition-all duration-500 relative overflow-hidden group/btn ${
+                    isSelected 
+                      ? "bg-emerald-500 text-white cursor-default" 
+                      : isMain 
+                        ? "bg-blue-500 text-white hover:bg-blue-400 shadow-xl shadow-blue-500/25 active:scale-95"
+                        : darkMode 
+                          ? "bg-slate-800 text-white hover:bg-slate-700 border border-white/5 active:scale-95" 
+                          : "bg-slate-100 text-slate-900 hover:bg-slate-200 border border-slate-200 active:scale-95"
+                  }`}
                 >
-                  {loading === plan.id ? "⏳..." : selected ? "✅ Faol" : plan.id === "free" ? t.startFree : t.selectPlan}
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {loading === plan.id ? (
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : isSelected ? (
+                      <><LuCheck size={18} /> {t.activePlan}</>
+                    ) : plan.id === "free" ? t.startFree : t.selectPlan}
+                  </span>
                 </button>
               </div>
             </ScrollReveal>
@@ -190,13 +237,20 @@ const Pricing = ({ darkMode, showToast }) => {
       </div>
 
       <ScrollReveal direction="up" delay={200}>
-        <div style={{ marginTop: 48, textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#6b7280" }}>
-            {t.haveQuestion}{" "}
-            <a href="tel:+998330345644" style={{ color: "#3b82f6", fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>
+        <div className="mt-20 text-center">
+          <div className={`inline-flex items-center gap-4 px-8 py-4 rounded-3xl border ${
+            darkMode ? "bg-slate-900/40 border-white/5 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-500"
+          }`}>
+            <LuInfo className="text-blue-500" size={20} />
+            <span className="text-sm font-medium">{t.haveQuestion}</span>
+            <a 
+              href="tel:+998330345644" 
+              className="flex items-center gap-2 text-blue-500 font-bold hover:text-blue-400 transition-colors"
+            >
+              <LuPhone size={16} />
               {t.contactUs}
             </a>
-          </p>
+          </div>
         </div>
       </ScrollReveal>
     </div>

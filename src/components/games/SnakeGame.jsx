@@ -3,7 +3,7 @@ import { useLang } from "../../context/useLang";
 import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
 import { useAuth } from "../../context/useAuth";
-import { FaPlay, FaRedo, FaSave } from "react-icons/fa";
+import { FaPlay, FaRedo, FaSave, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaBug } from "react-icons/fa";
 
 const GRID = 20;
 const CELL = 18;
@@ -209,7 +209,9 @@ const SnakeGame = ({ darkMode }) => {
 
       {/* Score */}
       <div className="flex items-center justify-between w-full max-w-xs mb-4 mt-6">
-        <h2 className={`text-xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>🐍 Snake</h2>
+        <h2 className={`text-xl font-extrabold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+          <FaBug className="text-green-500" /> Snake
+        </h2>
         <div className="flex items-center gap-3">
           <span className={`text-sm font-bold ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
             {t.score}: {display.score}
@@ -238,7 +240,7 @@ const SnakeGame = ({ darkMode }) => {
         {/* Start overlay */}
         {!display.running && !display.gameOver && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-            <p className="text-white text-xl font-extrabold">🐍 Snake</p>
+            <p className="text-white text-xl font-extrabold flex items-center gap-2"><FaBug className="text-green-500" /> Snake</p>
 <p className="text-gray-400 text-xs">{t.pcControls}</p>
 <p className="text-gray-400 text-xs">{t.mobileControls}</p>
            <button onClick={reset}
@@ -271,9 +273,9 @@ const SnakeGame = ({ darkMode }) => {
       {/* Mobile controls */}
       <div className="mt-4 grid grid-cols-3 gap-2 md:hidden">
         {[
-          [null, { label: "⬆️", d: { x: 0, y: -1 } }, null],
-          [{ label: "⬅️", d: { x: -1, y: 0 } }, null, { label: "➡️", d: { x: 1, y: 0 } }],
-          [null, { label: "⬇️", d: { x: 0, y: 1 } }, null],
+          [null, { label: <FaArrowUp />, d: { x: 0, y: -1 } }, null],
+          [{ label: <FaArrowLeft />, d: { x: -1, y: 0 } }, null, { label: <FaArrowRight />, d: { x: 1, y: 0 } }],
+          [null, { label: <FaArrowDown />, d: { x: 0, y: 1 } }, null],
         ].map((row, ri) => row.map((btn, ci) => (
           <div key={`${ri}-${ci}`} className="flex items-center justify-center">
             {btn ? (

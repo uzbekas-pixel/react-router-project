@@ -46,7 +46,7 @@ const askGemini = async (question) => {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 512,
+          maxOutputTokens: 4096,
         },
       }),
     }

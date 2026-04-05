@@ -6,7 +6,7 @@ import { useSound } from "../context/SoundContext";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { usePWA } from "../hooks/usePWA";
-import CodeSnippets from "../routes/Codesnippets"; // ← yangi import
+import CodeSnippets from "../routes/Codesnippets";
 
 import { LuCalendarCheck } from "react-icons/lu";
 import { LuAward } from "react-icons/lu";
@@ -22,20 +22,19 @@ import {
   LuGamepad2, LuCode, LuKeyboard, LuLanguages,
   LuUser, LuShieldCheck, LuBell, LuSun, LuMoon,
   LuDownload, LuInfo, LuMessageCircle, LuMusic2,
-  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX,LuRadio
+  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX, LuRadio, LuLogOut, LuMenu, LuX
 } from "react-icons/lu";
 import { MdOutlineLogout, MdOutlineLogin } from "react-icons/md";
 import { RiUserSmileLine } from "react-icons/ri";
 import { TbBrandSpeedtest } from "react-icons/tb";
 
 // ─── Sound Panel ──────────────────────────────────────────────────────────────
-const SOUND_OPTIONS = [
-  { key: "rain",     label: "Yomg'ir",    icon: <LuCloudRain className="text-blue-400" /> },
-  { key: "lofi",     label: "Lofi",       icon: <LuHeadphones className="text-purple-400" /> },
-  { key: "keyboard", label: "Klaviatura", icon: <LuKeyboard className="text-green-400" /> },
-];
-
-function SoundPanel({ activeSounds, toggleSound, darkMode }) {
+function SoundPanel({ activeSounds, toggleSound, darkMode, t }) {
+  const SOUND_OPTIONS = [
+    { key: "rain",     label: t?.ambienceRain || "Yomg'ir",    icon: <LuCloudRain className="text-blue-400" /> },
+    { key: "lofi",     label: t?.ambienceLofi || "Lofi",       icon: <LuHeadphones className="text-purple-400" /> },
+    { key: "keyboard", label: t?.ambienceKeyboard || "Klaviatura", icon: <LuKeyboard className="text-green-400" /> },
+  ];
   return (
     <div
       className="flex flex-col gap-2 p-3"
@@ -51,7 +50,7 @@ function SoundPanel({ activeSounds, toggleSound, darkMode }) {
     >
       <p className="text-xs font-bold tracking-widest uppercase mb-1"
         style={{ color: darkMode ? "#94a3b8" : "#64748b" }}>
-        Ambience
+        {t?.ambienceTitle || "Ambience"}
       </p>
       {SOUND_OPTIONS.map((s) => {
         const active = activeSounds && activeSounds[s.key];
@@ -115,56 +114,37 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   // ── Nav link data ─────────────────────────────────────────────────────────
   const navLinks = [
     { path: "/",            label: t.coursesNav,    icon: <LuBookOpen className="text-blue-400" />,  end: true  },
-    { path: "/instructors", label: t.instructorsNav, icon: <LuUsers className="text-purple-400" />,  end: false },
     { path: "/pricing",     label: t.pricingNav,    icon: <LuGem className="text-cyan-400" />,       end: false },
     { path: "/ai-tutor",    label: t.aiTutorTitle,  icon: <LuBot className="text-green-400" />,      end: false },
   ];
 
-  const newPages = [
-    { path: "/leaderboard",   label: t.top10,                        icon: <LuTrophy className="text-yellow-400" />          },
-    { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
-    { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
-    { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePen className="text-orange-400" />         },
-    { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
-    { path: "/battlemode",    label: "Jang Rejimi",                  icon: <LuSwords className="text-red-400" />             },
-    { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
-    { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
-    { path: "/friends",       label: "Do'stlar",                     icon: <LuUsers className="text-blue-400" />             },
-    { path: "/referral",      label: "Do'st Taklif",                 icon: <LuGift className="text-pink-400" />              },
-    { path: "/tournament",    label: "Turnir",                       icon: <LuSwords className="text-red-400" />             },
-    { path: "/certificate",   label: "Sertifikat",                   icon: <LuAward className="text-yellow-400" />           },
-    { path: "/shop",          label: "Coin Do'kon",                  icon: <LuCoins className="text-yellow-400" />           },
-    { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
-    { path: "/qa",            label: "Savollar & Javoblar",          icon: <LuMessageCircle className="text-blue-400" />     },
-  ];
 
   const sidebarLinks = [
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
-    { path: "/battlemode",    label: "Jang Rejimi",                  icon: <LuSwords className="text-red-400" />             },
+    { path: "/battlemode",    label: t.battleModeNav,                icon: <LuSwords className="text-red-400" />             },
     { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
-    { path: "/create-course", label: t.createCourse || "Kurs Yarat", icon: <LuFilePlus className="text-orange-400" />        },
-    { path: "/live",          label: "Jonli Dars",                   icon: <LuRadio className="text-red-400" />              },
+    { path: "/live",          label: t.liveClassNav,                 icon: <LuRadio className="text-red-400" />              },
     { path: "/chat",          label: t.chatTab,                      icon: <LuMessageSquare className="text-green-400" />    },
     { path: "/dm",            label: t.dm,                           icon: <LuMail className="text-blue-400" />              },
-    { path: "/daily",         label: "Kunlik Vazifalar",             icon: <LuCalendarCheck className="text-orange-400" />   },
-    { path: "/friends",       label: "Do'stlar",                     icon: <LuUsers className="text-blue-400" />             },
-    { path: "/referral",      label: "Do'st Taklif",                 icon: <LuGift className="text-pink-400" />              },
-    { path: "/tournament",    label: "Turnir",                       icon: <LuSwords className="text-red-400" />             },
+    { path: "/daily",         label: t.dailyTasksNav,                icon: <LuCalendarCheck className="text-orange-400" />   },
+    { path: "/friends",       label: t.friendsNav,                   icon: <LuUsers className="text-blue-400" />             },
+    { path: "/referral",      label: t.referralNav,                  icon: <LuGift className="text-pink-400" />              },
+    { path: "/tournament",    label: t.tournamentNav,                icon: <LuSwords className="text-red-400" />             },
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
     { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
-    { path: "/shop",          label: "Coin Do'kon",                  icon: <LuCoins className="text-yellow-400" />           },
-    { path: "/certificate",   label: "Sertifikat",                   icon: <LuAward className="text-yellow-400" />           },
+    { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
+    { path: "/certificate",   label: t.certificateNav,               icon: <LuAward className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
     { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
-    { path: "/qa",            label: "Savollar & Javoblar",          icon: <LuMessageCircle className="text-blue-400" />     },
+    { path: "/qa",            label: t.qaNav,                        icon: <LuMessageCircle className="text-blue-400" />     },
     ...(isAdmin
       ? [{ path: "/admin",      label: t.adminBadge,        icon: <LuShieldCheck className="text-yellow-400" /> }]
       : []),
     ...(isInstructor
-      ? [{ path: "/instructor", label: "O'qituvchi Panel",  icon: <LuBookOpen className="text-green-400" /> }]
+      ? [{ path: "/instructor", label: t.instructorPanelNav,icon: <LuBookOpen className="text-green-400" /> }]
       : []),
   ];
 
@@ -194,14 +174,41 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <nav className="bg-slate-800 shadow-lg fixed top-0 left-0 w-full z-50">
+      <nav 
+        className="fixed top-0 left-0 w-full z-50 transition-all duration-300"
+        style={{
+          background: darkMode ? "rgba(15, 23, 42, 0.75)" : "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: darkMode ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.05)",
+          boxShadow: darkMode ? "0 4px 30px rgba(0, 0, 0, 0.3)" : "0 4px 30px rgba(0, 0, 0, 0.05)"
+        }}
+      >
         <div className="flex items-center justify-between py-3 px-6">
 
           {/* ── Logo ──────────────────────────────────────────────────────── */}
-          <Link to="/" onClick={onNavClick}>
-            <span className="font-semibold text-lg flex items-center gap-3 text-blue-400">
-              <BiLogoReact className="text-4xl md:text-5xl animate-spin-slow" />
-              <span className="font-semibold text-lg md:text-xl">Uzbekas Pixel</span>
+          <Link to="/" onClick={onNavClick} className="hover:opacity-90 transition-opacity">
+            <span className="flex items-center gap-3">
+              <svg className="logo-svg-group" width="44" height="44" viewBox="0 0 72 72" fill="none">
+                <circle cx="36" cy="36" r="34" fill={darkMode ? "#0d1224" : "#f8fafc"} stroke={darkMode ? "#1e2a50" : "#e2e8f0"} strokeWidth="1"/>
+                <polygon points="36,14 44,28 52,14 52,50 44,36 36,50 28,36 20,50 20,14 28,28" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinejoin="round" opacity="0.25" />
+                <circle cx="36" cy="36" r="10" fill={darkMode ? "#1a1f3a" : "#fff"} stroke="#4f46e5" strokeWidth="1.5"/>
+                <circle cx="36" cy="36" r="5" fill="#4f46e5" opacity="0.8"/>
+                <circle cx="36" cy="36" r="2.5" fill="#a5b4fc"/>
+                <g className="orbit-dot-1"><circle cx="36" cy="36" r="4" fill="#60a5fa" opacity="0.95"/><circle cx="36" cy="36" r="2" fill="#bfdbfe"/></g>
+                <g className="orbit-dot-2"><circle cx="36" cy="36" r="3" fill="#a78bfa" opacity="0.9"/><circle cx="36" cy="36" r="1.5" fill="#ddd6fe"/></g>
+              </svg>
+              <span className="flex flex-col gap-[2px]">
+                <span className="flex items-center gap-2">
+                  <span className={`font-black text-[20px] tracking-tight leading-none ${darkMode ? "text-slate-100" : "text-slate-900"}`}>
+                    {t.uzbekasPixel?.split(" ")[0] || "Uzbekas"}
+                  </span>
+                  <span className="logo-badge text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-[5px] px-[7px] py-[2px] tracking-widest">
+                    EDU
+                  </span>
+                </span>
+                <span className="text-[11px] font-normal text-indigo-500 tracking-[4px]">PIXEL</span>
+              </span>
             </span>
           </Link>
 
@@ -214,301 +221,148 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                 end={link.end}
                 onClick={onNavClick}
                 className={({ isActive }) =>
-                  `py-1 px-3 text-sm font-light rounded-2xl transition duration-300 flex items-center gap-1.5 ${
+                  `py-2 px-4 text-sm font-medium rounded-2xl transition-all duration-300 flex items-center gap-2 ${
                     isActive
-                      ? "text-sky-300 bg-slate-700"
-                      : "text-white hover:text-sky-300 hover:bg-slate-700"
+                      ? "text-blue-400 bg-blue-500/10 border border-blue-500/20"
+                      : `${darkMode ? "text-slate-300" : "text-slate-600"} hover:text-blue-400 hover:bg-blue-500/5`
                   }`
                 }
               >
-                <span className="text-base">{link.icon}</span>
+                {link.icon}
                 {link.label}
               </NavLink>
             ))}
 
-            {/* Notifications */}
-            <NavLink
-              to="/notifications"
-              onClick={onNavClick}
-              style={{ position: "relative" }}
-              className={({ isActive }) =>
-                `py-1 px-2 rounded-xl transition duration-300 flex items-center ${
-                  isActive ? "text-sky-300 bg-slate-700" : "text-white hover:text-sky-300 hover:bg-slate-700"
-                }`
-              }
-            >
-              <LuBell className="text-lg text-yellow-300" />
-              {unreadCount > 0 && (
-                <span style={{ position: "absolute", top: -2, right: -2, background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 10, lineHeight: 1.4 }}>
-                  {unreadCount}
-                </span>
-              )}
-            </NavLink>
+            <div className="h-6 w-px bg-slate-700/50 mx-2" />
 
-            {/* Leaderboard */}
-            <NavLink
-              to="/leaderboard"
-              onClick={onNavClick}
-              className={({ isActive }) =>
-                `py-1 px-2 rounded-xl transition duration-300 flex items-center ${
-                  isActive ? "text-sky-300 bg-slate-700" : "text-white hover:text-sky-300 hover:bg-slate-700"
-                }`
-              }
-            >
-              <LuTrophy className="text-lg text-yellow-400" />
-            </NavLink>
+            <div className="flex items-center gap-3">
+              {/* Leaderboard */}
+              <NavLink to="/leaderboard" onClick={onNavClick} className={({ isActive }) => `p-2 rounded-xl transition-all ${isActive ? "text-yellow-400 bg-yellow-400/10" : "text-slate-400 hover:text-yellow-400 hover:bg-yellow-400/5"}`}>
+                <LuTrophy size={20} />
+              </NavLink>
 
-            {/* Dark mode */}
-            <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
-              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
-                <LuSun className="text-yellow-400 text-xl" />
-              </span>
-              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
-                <LuMoon className="text-blue-300 text-xl" />
-              </span>
-            </div>
+              {/* Notifications */}
+              <NavLink to="/notifications" onClick={onNavClick} className={({ isActive }) => `p-2 rounded-xl relative transition-all ${isActive ? "text-blue-400 bg-blue-400/10" : "text-slate-400 hover:text-blue-400 hover:bg-blue-400/5"}`}>
+                <LuBell size={20} />
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-800" />}
+              </NavLink>
 
-            {/* Language toggle */}
-            <button
-              onClick={() => setLang(lang === "en" ? "uz" : "en")}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white border border-slate-500 px-3 py-1.5 rounded-xl hover:bg-slate-700 transition"
-            >
-              <LuLanguages className="text-blue-400" />
-              {lang === "en" ? "🇺🇿 UZ" : "🇬🇧 EN"}
-            </button>
-
-            {/* ── Desktop Sound Button + Panel ──────────────────────────── */}
-            <div className="relative" ref={desktopSoundRef}>
-              <button
-                onClick={() => setDesktopSoundOpen((o) => !o)}
-                title="Ambience Tovuqlari"
-                className="flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200"
-                style={{
-                  background: anySoundActive
-                    ? "linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.25))"
-                    : "rgba(51,65,85,1)",
-                  border: anySoundActive
-                    ? "1px solid rgba(99,102,241,0.6)"
-                    : "1px solid rgba(71,85,105,0.5)",
-                  boxShadow: anySoundActive ? "0 0 14px rgba(99,102,241,0.35)" : "none",
-                  color: anySoundActive ? "#a5b4fc" : "#fff",
-                }}
-              >
-                <LuMusic2 className="text-base" />
+              {/* Dark mode */}
+              <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-slate-400 hover:text-blue-400 transition-colors">
+                {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}
               </button>
 
-              {desktopSoundOpen && (
-                <div className="absolute right-0 mt-2 z-50" style={{ top: "100%" }}>
-                  <SoundPanel activeSounds={activeSounds} toggleSound={toggleSound} darkMode={darkMode} />
-                </div>
-              )}
-            </div>
-
-            {/* ── Code Snippets Button ───────────────────────────────────── */}
-            <button
-              onClick={() => setSnippetsOpen((o) => !o)}
-              title="Kod Parchalarim"
-              className="flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200"
-              style={{
-                background: snippetsOpen
-                  ? "linear-gradient(135deg, rgba(6,182,212,0.35), rgba(99,102,241,0.25))"
-                  : "rgba(51,65,85,1)",
-                border: snippetsOpen
-                  ? "1px solid rgba(6,182,212,0.6)"
-                  : "1px solid rgba(71,85,105,0.5)",
-                boxShadow: snippetsOpen ? "0 0 14px rgba(6,182,212,0.35)" : "none",
-                color: snippetsOpen ? "#67e8f9" : "#fff",
-              }}
-            >
-              <LuCode className="text-base" />
-            </button>
-
-            {/* Auth */}
-            {user ? (
-              <button
-                onClick={logout}
-                className="py-1 px-3 text-sm text-red-400 border border-red-400 rounded-xl hover:bg-red-400 hover:text-white transition duration-300 flex items-center gap-1.5"
-              >
-                <MdOutlineLogout className="text-base" />
-                {t.logout}
+              {/* Language */}
+              <button onClick={() => setLang(lang === "en" ? "uz" : "en")} className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${darkMode ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
+                {lang === "en" ? "UZ" : "EN"}
               </button>
-            ) : (
-              <Link
-                to="/login"
-                onClick={onNavClick}
-                className="py-1 px-3 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-400 rounded-xl transition duration-300 flex items-center gap-1.5"
-              >
-                <MdOutlineLogin className="text-base" />
-                {t.login}
-              </Link>
-            )}
 
-            {/* Sidebar trigger */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="w-9 h-9 bg-slate-700 hover:bg-slate-600 text-white rounded-xl flex items-center justify-center text-lg transition font-bold"
-            >
-              ›
-            </button>
+              {/* Ambience */}
+              <div className="relative" ref={desktopSoundRef}>
+                <button onClick={() => setDesktopSoundOpen(!desktopSoundOpen)} className={`p-2 rounded-xl transition-all ${anySoundActive ? "text-indigo-400 bg-indigo-400/10" : "text-slate-400 hover:text-indigo-400"}`}>
+                  <LuMusic2 size={20} />
+                </button>
+                {desktopSoundOpen && (
+                  <div className="absolute right-0 mt-3 top-full">
+                    <SoundPanel activeSounds={activeSounds} toggleSound={toggleSound} darkMode={darkMode} t={t} />
+                  </div>
+                )}
+              </div>
+              
+
+              {/* Auth */}
+              {user ? (
+                <button onClick={logout} className="ml-2 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-red-400 hover:bg-red-400/10 transition-colors border border-red-400/20">
+                  <LuLogOut size={18} />
+                  {t.logout}
+                </button>
+              ) : (
+                <Link to="/login" onClick={onNavClick} className="ml-2 px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/25">
+                  {t.login}
+                </Link>
+              )}
+
+              {/* Menu */}
+              <button onClick={() => setSidebarOpen(true)} className={`p-2 rounded-xl transition-all ${darkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-100"}`}>
+                <LuMenu size={20} />
+              </button>
+            </div>
           </div>
 
           {/* ── Mobile Controls ───────────────────────────────────────────── */}
           <div className="flex md:hidden items-center gap-3">
-            <NavLink to="/notifications" style={{ position: "relative", color: "#fff" }}>
-              <LuBell className="text-xl text-yellow-300" />
-              {unreadCount > 0 && (
-                <span style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 4px", borderRadius: 8 }}>
-                  {unreadCount}
-                </span>
-              )}
-            </NavLink>
-
-            {/* Dark mode */}
-            <div onClick={() => setDarkMode(!darkMode)} className="relative w-8 h-8 overflow-hidden cursor-pointer">
-              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                style={{ transform: darkMode ? "translateY(100%)" : "translateY(0%)", opacity: darkMode ? 0 : 1 }}>
-                <LuSun className="text-yellow-400 text-xl" />
-              </span>
-              <span className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                style={{ transform: darkMode ? "translateY(0%)" : "translateY(-100%)", opacity: darkMode ? 1 : 0 }}>
-                <LuMoon className="text-blue-300 text-xl" />
-              </span>
-            </div>
-
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-3xl">
-              {menuOpen ? <HiX /> : <HiMenu />}
+            
+            {/* 1. TIL ALMASHTIRISH TUGMASI (Yangi qo'shildi) */}
+            <button 
+              onClick={() => setLang(lang === "en" ? "uz" : "en")} 
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${darkMode ? "border-slate-700 text-slate-300 bg-slate-800" : "border-slate-200 text-slate-600 bg-slate-50"}`}
+            >
+              {lang === "en" ? "UZ" : "EN"}
             </button>
+
+            {/* 2. KUNDUZGI/TUNGI REJIM */}
+            <button onClick={() => setDarkMode(!darkMode)} className="text-slate-400">
+              {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}
+            </button>
+            
+            {/* 3. MENYU OCHISH/YOPISH */}
+            <button onClick={() => setMenuOpen(!menuOpen)} className={`text-2xl transition-colors ${darkMode ? "text-white" : "text-slate-900"}`}>
+              {menuOpen ? <LuX /> : <LuMenu />}
+            </button>
+            
           </div>
         </div>
 
-        {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
-        <div
-          className={`md:hidden bg-slate-800 overflow-hidden transition-all duration-300 ${
-            menuOpen ? "max-h-[800px] py-3" : "max-h-0"
-          }`}
-        >
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              end={link.end}
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `flex items-center gap-3 py-2 px-8 text-base font-light transition duration-300 ${
-                  isActive
-                    ? "text-sky-300 bg-slate-700 font-semibold"
-                    : "text-white hover:text-sky-300 hover:bg-slate-700"
-                }`
-              }
-            >
-              <span className="text-xl">{link.icon}</span>
-              {link.label}
-            </NavLink>
-          ))}
+      {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
+        <div className={`md:hidden transition-all duration-500 ease-in-out ${menuOpen ? "max-h-[85vh] overflow-y-auto border-t border-slate-700/30" : "max-h-0 overflow-hidden"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(20px)" }}>
+          <div className="p-6 pb-32 flex flex-col gap-2">
+            {navLinks.map((link) => (
+              <NavLink key={link.path} to={link.path} end={link.end} onClick={closeMenu} className={({ isActive }) => `flex items-center gap-4 p-4 rounded-2xl text-lg font-medium transition-all ${isActive ? "bg-blue-500/10 text-blue-400" : darkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"}`}>
+                <span className="text-xl">{link.icon}</span>
+                {link.label}
+              </NavLink>
+            ))}
+            
+            <div className="h-px bg-slate-700/30 my-4" />
+            
+            <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{t.newPagesTitle}</p>
+           <div className="grid grid-cols-3 gap-2">
+  {/* O'ZGARISH: .filter() orqali faqat telefonda /live sahifasi yashirildi */}
+  {sidebarLinks.filter(link => link.path !== "/live").map((link) => (
+    <NavLink 
+      key={link.path} 
+      to={link.path} 
+      onClick={closeMenu} 
+      className={({ isActive }) => `flex flex-col items-center justify-center p-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"}`}
+    >
+      <span className="text-2xl mb-1 opacity-80">{link.icon}</span>
+      <span className="text-[10px] font-medium text-center leading-tight truncate w-full">{link.label}</span>
+    </NavLink>
+  ))}
+</div>
 
-          {/* New pages chips */}
-          <div className="px-4 pt-3 pb-2 border-t border-slate-700 mt-1">
-            <p className="text-xs text-gray-500 font-semibold mb-2 px-4">
-              {t.newPages || "Yangi sahifalar"}
-            </p>
-            <div className="flex flex-wrap gap-2 px-4">
-              {newPages.map((link) => (
-                <NavLink
-                  key={link.path}
-                  to={link.path}
-                  onClick={closeMenu}
-                  className={({ isActive }) =>
-                    `flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition ${
-                      isActive
-                        ? "bg-blue-500 text-white"
-                        : "bg-slate-700 text-gray-300 hover:bg-slate-600"
-                    }`
-                  }
-                >
-                  <span>{link.icon}</span>
-                  {link.label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-
-          {/* PWA Install */}
-          {isInstallable && (
-            <div className="px-8 py-2 border-t border-slate-700 mt-2">
-              <button
-                onClick={handleInstallClick}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all shadow-lg active:scale-95"
-              >
-                <LuDownload className="text-lg" />
-                {t.installApp || "Ilovani o'rnatish"}
-              </button>
-            </div>
-          )}
-
-          {/* Language + Sound + Snippets row (mobile) */}
-          <div className="flex items-center gap-3 px-8 mt-3 flex-wrap">
-            <button
-              onClick={() => setLang(lang === "en" ? "uz" : "en")}
-              className="flex items-center gap-2 text-xs font-semibold text-white border border-slate-500 px-3 py-2 rounded-xl hover:bg-slate-700 transition"
-            >
-              <LuLanguages className="text-blue-400" />
-              {lang === "en" ? "🇺🇿 UZ" : "🇬🇧 EN"}
-            </button>
-          </div>
-          {/* Admin */}
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `flex items-center gap-3 py-2 px-8 text-base font-light transition duration-300 ${
-                  isActive ? "text-yellow-300 bg-slate-700" : "text-yellow-400 hover:bg-slate-700"
-                }`
-              }
-            >
-              <LuShieldCheck className="text-xl text-yellow-400" />
-              {t.admin}
-            </NavLink>
-          )}
-
-          {/* User info */}
-          <div className="px-8 py-3 border-t border-slate-700 mt-2">
-            {user ? (
-              <>
-                <Link
-                  to="/profile"
-                  onClick={closeMenu}
-                  className="flex items-center gap-3 mb-3 hover:opacity-80 transition"
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-blue-400">
-                    {user.photoURL ? (
-                      <img src={user.photoURL} alt="avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">{user.displayName || t.user}</p>
-                    <p className="text-gray-400 text-xs">{user.email}</p>
-                  </div>
-                </Link>
-                <button
-                  onClick={() => { logout(); setMenuOpen(false); }}
-                  className="flex items-center gap-2 text-sm text-red-400 border border-red-400 px-3 py-1 rounded-xl hover:bg-red-400 hover:text-white transition"
-                >
-                  <MdOutlineLogout />
-                  {t.logout}
+            <div className="mt-auto pt-6 border-t border-slate-700/30">
+              {isInstallable && (
+                <button onClick={handleInstallClick} className="w-full py-4 mb-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/20">
+                  <LuDownload size={20}/>
+                  {t.installApp}
                 </button>
-              </>
+              )}
+            </div>
+
+            {user ? (
+              <div className="mt-8 flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <LuUser size={40} className="text-slate-400" />
+                  <div>
+                    <p className="text-sm font-bold text-white">{user.displayName || t.userLabel}</p>
+                    <p className="text-xs text-slate-400">{user.email}</p>
+                  </div>
+                </div>
+                <button onClick={logout} className="p-2 text-red-400"><LuLogOut size={20}/></button>
+              </div>
             ) : (
-              <Link
-                to="/login"
-                onClick={closeMenu}
-                className="flex items-center gap-2 text-base font-light text-blue-400 hover:text-blue-300 transition"
-              >
-                <MdOutlineLogin className="text-xl" />
+              <Link to="/login" onClick={closeMenu} className="mt-8 w-full py-4 bg-blue-500 text-white rounded-2xl font-bold text-center shadow-lg shadow-blue-500/25">
                 {t.login}
               </Link>
             )}
@@ -516,104 +370,48 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         </div>
       </nav>
 
-      {/* ── Desktop Sidebar ───────────────────────────────────────────────────── */}
-      <>
-        {sidebarOpen && (
-          <div
-            className="hidden md:block fixed inset-0 z-998 bg-black/40"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        <div
-          className={`hidden md:flex fixed top-0 right-0 h-full z-999 flex-col w-64 transition-transform duration-300 shadow-2xl ${
-            darkMode
-              ? "bg-slate-900 border-l border-slate-800"
-              : "bg-white border-l border-gray-100"
-          } ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`}
-        >
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
-            <span className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>
-              {t.menuTitle || "Menyu"}
-            </span>
-            {isInstallable && (
-              <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 animate-pulse">
-                PWA Ready
-              </span>
-            )}
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
-                darkMode
-                  ? "bg-slate-700 text-white hover:bg-slate-600"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              <HiX />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto py-3 mt-2 sidebar">
-            {sidebarLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                onClick={() => { onNavClick(); setSidebarOpen(false); }}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-5 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? darkMode ? "bg-slate-700 text-blue-400" : "bg-blue-50 text-blue-500"
-                      : darkMode ? "text-gray-300 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-50"
-                  }`
-                }
-              >
-                <span className="text-lg shrink-0">{link.icon}</span>
-                {link.label}
-              </NavLink>
-            ))}
-
-            {isInstallable && (
-              <div className="mt-4 px-4">
-                <button
-                  onClick={handleInstallClick}
-                  className="w-full py-3 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all shadow-lg hover:shadow-blue-500/20 active:scale-95"
-                >
-                  <LuDownload className="text-lg" />
-                  {t.installApp || "Ilovani o'rnatish"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {user && (
-            <div className={`px-5 py-4 border-t ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-blue-400 shrink-0">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    user.displayName?.[0]?.toUpperCase() || "?"
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
-                    {user.displayName || t.user}
-                  </p>
-                  <p className={`text-xs truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                    {user.email}
-                  </p>
-                </div>
-                <button
-                  onClick={logout}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-400 hover:text-white transition border border-red-400 shrink-0"
-                >
-                  <MdOutlineLogout className="text-base" />
-                </button>
-              </div>
+      {/* ── Sidebar ───────────────────────────────────────────────────── */}
+      <div className={`fixed inset-0 z-60 transition-opacity duration-500 ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-80 transition-transform duration-500 ease-out shadow-2xl overflow-y-auto ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.9)" : "rgba(255, 255, 255, 0.9)", backdropFilter: "blur(40px)", borderLeft: "1px solid rgba(255,255,255,0.1)" }}>
+          <div className="p-6 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className={`font-black text-xl ${darkMode ? "text-white" : "text-slate-900"}`}>{t.menuTitle}</h2>
+              <button onClick={() => setSidebarOpen(false)} className={`p-2 rounded-xl ${darkMode ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-900"}`}><LuX size={20}/></button>
             </div>
-          )}
+
+            <div className="flex flex-col gap-1 flex-1">
+              {/* Nav asosiy linklar */}
+              {navLinks.map((link) => (
+                <NavLink key={link.path} to={link.path} end={link.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}>
+                  <span className="text-xl opacity-75">{link.icon}</span>
+                  <span className="font-medium">{link.label}</span>
+                </NavLink>
+              ))}
+
+              <div className="h-px bg-slate-700/30 my-3" />
+              <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t.newPagesTitle}</p>
+
+              {/* O'ZGARTIRILDI: Yangi sahifalar — barchasi (sidebarLinks ishlatildi) */}
+              {sidebarLinks.map((link) => (
+                <NavLink key={link.path} to={link.path} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}>
+                  <span className="text-xl opacity-75">{link.icon}</span>
+                  <span className="font-medium">{link.label}</span>
+                </NavLink>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-6 border-t border-slate-700/30">
+              {isInstallable && (
+                <button onClick={handleInstallClick} className="w-full py-4 mb-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/20">
+                  <LuDownload size={20}/>
+                  {t.installApp}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </>
+      </div>
 
       {/* ── CodeSnippets floating panel ───────────────────────────────────────── */}
       <CodeSnippets

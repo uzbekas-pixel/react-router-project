@@ -1,46 +1,68 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
-import { useNavigate } from "react-router-dom"; // ← YANGI
+import { useNavigate } from "react-router-dom";
+import { useLang } from "../context/useLang";
 import { getNameStyleByKey } from "../constants/shopConstants";
+import { 
+  LuTrophy, 
+  LuMedal, 
+  LuFlame, 
+  LuGraduationCap, 
+  LuStar, 
+  LuTarget, 
+  LuChevronRight, 
+  LuTrendingUp, 
+  LuCrown,
+  LuSearch,
 
-const TABS = [
-  { id: "xp",      label: "⭐ XP ball"  },
-  { id: "courses", label: "📚 Kurslar"   },
-  { id: "quiz",    label: "🎯 Quiz"       },
-  { id: "streak",  label: "🔥 Streak"     },
-];
+} from "react-icons/lu";
 
-const MEDAL = { 0: "🥇", 1: "🥈", 2: "🥉" };
-
-const Avatar = ({ user, size = 40 }) => {
+const Avatar = ({ user, size = 48, className = "" }) => {
   const initials = (user.displayName || user.email || "?")[0].toUpperCase();
   const colors   = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#06b6d4"];
   const color    = colors[initials.charCodeAt(0) % colors.length];
+  const photo    = user.photoURL || user.avatarUrl || user.avatar;
+
   return (
-    <div style={{ width:size, height:size, borderRadius:"50%", background:color, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:size*0.38, flexShrink:0, overflow:"hidden" }}>
-      {user.photoURL || user.avatarUrl || user.avatar
-        ? <img src={user.photoURL || user.avatarUrl || user.avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-        : initials}
+    <div 
+      className={`rounded-2xl flex items-center justify-center text-white font-black overflow-hidden border-2 border-white/10 shadow-lg shrink-0 ${className}`}
+      style={{ 
+        width: size, 
+        height: size, 
+        backgroundColor: photo ? "transparent" : color,
+        fontSize: size * 0.35 
+      }}
+    >
+      {photo ? (
+        <img src={photo} alt="" className="w-full h-full object-cover" />
+      ) : (
+        initials
+      )}
     </div>
   );
 };
 
 const Leaderboard = ({ darkMode }) => {
-  const { user }          = useAuth();
-  const navigate          = useNavigate(); // ← YANGI
+  const { t } = useLang();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("xp");
-  const [users, setUsers]         = useState([]);
-  const [loading, setLoading]     = useState(true); // BUG #6 FIX: initialize true, avoids setState-in-effect lint
-  const [period, setPeriod]       = useState("all");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("all");
+
+  const TABS = useMemo(() => [
+    { id: "xp",      label: t.lbTabXP,      icon: <LuStar size={16} /> },
+    { id: "courses", label: t.lbTabCourses, icon: <LuGraduationCap size={16} /> },
+    { id: "quiz",    label: t.lbTabQuiz,    icon: <LuTarget size={16} /> },
+    { id: "streak",  label: t.lbTabStreak,  icon: <LuFlame size={16} /> },
+  ], [t]);
 
   useEffect(() => {
-    // DENORM READ: users/{uid} now has xp, streak, courses, quizAvg written by Quiz/DailyTasks/CourseDetail
-    // Zero sub-collection reads needed — down from N×9 getDoc calls per snapshot to 0.
     let cancelled = false;
-
     const unsub = onSnapshot(collection(db, "users"), (snap) => {
       if (cancelled) return;
       const enriched = snap.docs.map((d) => ({
@@ -54,176 +76,286 @@ const Leaderboard = ({ darkMode }) => {
       setUsers(enriched);
       setLoading(false);
     });
-
     return () => { cancelled = true; unsub(); };
   }, []);
 
-  const sorted = [...users]
+  const sorted = useMemo(() => [...users]
     .sort((a, b) => (b[activeTab] || 0) - (a[activeTab] || 0))
-    .filter((u) => (u[activeTab] || 0) > 0);
+    .filter((u) => (u[activeTab] || 0) > 0), [users, activeTab]);
 
   const myRank = sorted.findIndex((u) => u.id === user?.uid);
   const myData = myRank >= 0 ? sorted[myRank] : null;
 
   const valueLabel = (u) => {
-    if (activeTab === "xp")      return `${(u.xp || 0).toLocaleString()} XP`;
-    if (activeTab === "courses") return `${u.courses || 0} kurs`;
+    if (activeTab === "xp")      return `${(u.xp || 0).toLocaleString()} ${t.lbValueXP}`;
+    if (activeTab === "courses") return `${u.courses || 0} ${t.lbValueCourses}`;
     if (activeTab === "quiz")    return `${u.quizAvg || 0}%`;
-    if (activeTab === "streak")  return `${u.streak || 0} kun`;
+    if (activeTab === "streak")  return `${u.streak || 0} ${t.lbValueStreak}`;
     return "";
   };
 
-  // ← YANGI: profilga o'tish (o'zining profiliga emas)
   const handleUserClick = (u) => {
-    if (u.id === user?.uid) return; // o'zining profiliga o'tmaslik
+    if (u.id === user?.uid) return;
     navigate(`/profile/${u.id}`);
   };
 
+  const getMedalIcon = (rank) => {
+    if (rank === 0) return <LuCrown size={24} className="text-amber-500" />;
+    if (rank === 1) return <LuMedal size={20} className="text-slate-400" />;
+    if (rank === 2) return <LuMedal size={18} className="text-amber-700" />;
+    return <span className="text-xs font-black text-slate-500 tabular-nums">#{rank + 1}</span>;
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-slate-500 text-sm font-black tracking-widest animate-pulse uppercase">{t.loadingData}</p>
+    </div>
+  );
+
   return (
-    <div style={{ width:"100%", maxWidth:800, margin:"0 auto", padding:"40px 16px 80px" }}>
+    <div className="w-full max-w-5xl mx-auto px-6 py-12 md:py-20 lg:py-28">
+      {/* Header Section */}
       <ScrollReveal direction="up">
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12, marginBottom:28 }}>
+        <div className="flex flex-wrap items-center justify-between gap-8 mb-16">
           <div>
-            <span style={{ display:"inline-block", background:"#eff6ff", color:"#3b82f6", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #bfdbfe" }}>
-              🏆 Reyting
+            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <LuTrophy className="inline mr-2" /> {t.lbSubtitle}
             </span>
-            <h2 style={{ fontSize:26, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111" }}>Leaderboard</h2>
+            <h1 className={`text-4xl md:text-6xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+              {t.lbTitle}
+            </h1>
           </div>
-          <div style={{ display:"flex", gap:6, background:darkMode?"#1e293b":"#f1f5f9", borderRadius:10, padding:4 }}>
-            {[{id:"all",label:"Barchasi"},{id:"month",label:"Oy"},{id:"week",label:"Hafta"}].map((p) => (
-              <button key={p.id} onClick={() => setPeriod(p.id)}
-                style={{ padding:"6px 14px", borderRadius:8, border:"none", cursor:"pointer", background:period===p.id?"#3b82f6":"transparent", color:period===p.id?"#fff":darkMode?"#94a3b8":"#374151", fontSize:12, fontWeight:600, transition:"all 0.2s" }}>
+
+          <div className={`flex p-1.5 rounded-2xl border backdrop-blur-xl ${
+            darkMode ? "bg-slate-900/40 border-white/5" : "bg-white/80 border-slate-200 shadow-xl"
+          }`}>
+            {[
+              { id: "all", label: t.lbPeriodAll },
+              { id: "month", label: t.lbPeriodMonth },
+              { id: "week", label: t.lbPeriodWeek }
+            ].map((p) => (
+              <button 
+                key={p.id} 
+                onClick={() => setPeriod(p.id)}
+                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all duration-300 ${
+                  period === p.id 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" 
+                    : "text-slate-500 hover:text-blue-400"
+                }`}
+              >
                 {p.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Top 3 podium */}
+        {/* Top 3 Podium */}
         {!loading && sorted.length >= 3 && (
-          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:12, marginBottom:28 }}>
-            {/* 2nd */}
-            <div
-              onClick={() => handleUserClick(sorted[1])}
-              style={{ textAlign:"center", flex:1, cursor: sorted[1]?.id === user?.uid ? "default" : "pointer" }}
+          <div className="flex items-end justify-center gap-4 md:gap-10 mb-20 px-4">
+            {/* 2nd Place */}
+            <div 
+              onClick={() => handleUserClick(sorted[1])} 
+              className="flex-1 text-center cursor-pointer group"
             >
-              <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
-                <Avatar user={sorted[1]} size={56}/>
-                <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:18 }}>🥈</span>
+              <div className="relative inline-block mb-6 transition-transform duration-500 group-hover:scale-110">
+                <div className="p-1.5 rounded-4xl bg-linear-to-br from-slate-400 to-slate-600 shadow-2xl shadow-slate-500/20">
+                  <Avatar user={sorted[1]} size={80} className="rounded-3xl" />
+                </div>
+                <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-xl border-2 border-slate-400 text-slate-400">
+                  <LuMedal size={24} />
+                </div>
               </div>
-              <p style={{ fontWeight:700, fontSize:13, color: sorted[1]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:80, margin:"4px auto 2px" , ...getNameStyleByKey(sorted[1].nameColor)}}>
-                {sorted[1].displayName || sorted[1].email?.split("@")[0]}
+              <p 
+                className={`text-sm font-black mb-1 truncate max-w-[120px] mx-auto ${darkMode ? "text-white" : "text-slate-900"}`}
+                style={getNameStyleByKey(sorted[1].nameColor)}
+              >
+                {sorted[1].displayName}
               </p>
-              <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[1])}</p>
-              <div style={{ height:70, background:"#94a3b8", borderRadius:"8px 8px 0 0", marginTop:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ color:"#fff", fontWeight:800, fontSize:18 }}>2</span>
+              <p className="text-xs font-black text-blue-500 uppercase tracking-widest mb-6">
+                {valueLabel(sorted[1])}
+              </p>
+              <div className={`h-24 md:h-32 rounded-t-[2.5rem] border-x border-t flex items-center justify-center backdrop-blur-xl ${
+                darkMode ? "bg-slate-900/40 border-white/5" : "bg-white/80 border-slate-200"
+              }`}>
+                <span className="text-4xl font-black text-slate-500/20 tabular-nums">2</span>
               </div>
             </div>
-            {/* 1st */}
-            <div
-              onClick={() => handleUserClick(sorted[0])}
-              style={{ textAlign:"center", flex:1, cursor: sorted[0]?.id === user?.uid ? "default" : "pointer" }}
+
+            {/* 1st Place */}
+            <div 
+              onClick={() => handleUserClick(sorted[0])} 
+              className="flex-[1.2] text-center cursor-pointer group transform -translate-y-8"
             >
-              <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
-                <Avatar user={sorted[0]} size={68}/>
-                <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:22 }}>🥇</span>
+              <div className="relative inline-block mb-8 transition-transform duration-500 group-hover:scale-110">
+                <div className="p-2 rounded-[2.5rem] bg-linear-to-br from-amber-400 to-orange-600 shadow-2xl shadow-amber-500/30 animate-pulse">
+                  <Avatar user={sorted[0]} size={110} className="rounded-[2.2rem]" />
+                </div>
+                <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-xl border-2 border-amber-500 text-amber-500">
+                  <LuCrown size={28} />
+                </div>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:14, color: sorted[0]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:90, ...getNameStyleByKey(sorted[0].nameColor) }}>
-                {sorted[0].displayName || sorted[0].email?.split("@")[0]}
+              <p 
+                className={`text-lg font-black mb-1 truncate max-w-[150px] mx-auto ${darkMode ? "text-white" : "text-slate-900"}`}
+                style={getNameStyleByKey(sorted[0].nameColor)}
+              >
+                {sorted[0].displayName}
               </p>
-              <p style={{ margin:0, fontSize:12, color:"#f59e0b", fontWeight:700 }}>{valueLabel(sorted[0])}</p>
-              <div style={{ height:100, background:"linear-gradient(135deg,#f59e0b,#d97706)", borderRadius:"8px 8px 0 0", marginTop:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ color:"#fff", fontWeight:800, fontSize:22 }}>1</span>
+              <p className="text-sm font-black text-amber-500 uppercase tracking-widest mb-8">
+                {valueLabel(sorted[0])}
+              </p>
+              <div className={`h-40 md:h-48 rounded-t-[3rem] border-x border-t flex items-center justify-center backdrop-blur-xl relative overflow-hidden ${
+                darkMode ? "bg-slate-900/60 border-amber-500/20" : "bg-white border-amber-200 shadow-2xl shadow-amber-500/10"
+              }`}>
+                <div className="absolute inset-0 bg-linear-to-t from-amber-500/10 to-transparent" />
+                <span className="text-7xl font-black text-amber-500/30 tabular-nums relative z-10">1</span>
               </div>
             </div>
-            {/* 3rd */}
-            <div
-              onClick={() => handleUserClick(sorted[2])}
-              style={{ textAlign:"center", flex:1, cursor: sorted[2]?.id === user?.uid ? "default" : "pointer" }}
+
+            {/* 3rd Place */}
+            <div 
+              onClick={() => handleUserClick(sorted[2])} 
+              className="flex-1 text-center cursor-pointer group"
             >
-              <div style={{ position:"relative", display:"inline-block", marginBottom:8 }}>
-                <Avatar user={sorted[2]} size={52}/>
-                <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:16 }}>🥉</span>
+              <div className="relative inline-block mb-6 transition-transform duration-500 group-hover:scale-110">
+                <div className="p-1.5 rounded-4xl bg-linear-to-br from-amber-700 to-amber-900 shadow-2xl shadow-amber-900/20">
+                  <Avatar user={sorted[2]} size={75} className="rounded-3xl" />
+                </div>
+                <div className="absolute -bottom-3 -right-3 w-9 h-9 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-xl border-2 border-amber-700 text-amber-700">
+                  <LuMedal size={20} />
+                </div>
               </div>
-              <p style={{ margin:"4px auto 2px", fontWeight:700, fontSize:12, color: sorted[2]?.id !== user?.uid ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:75, ...getNameStyleByKey(sorted[2].nameColor) }}>
-                {sorted[2].displayName || sorted[2].email?.split("@")[0]}
+              <p 
+                className={`text-sm font-black mb-1 truncate max-w-[110px] mx-auto ${darkMode ? "text-white" : "text-slate-900"}`}
+                style={getNameStyleByKey(sorted[2].nameColor)}
+              >
+                {sorted[2].displayName}
               </p>
-              <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{valueLabel(sorted[2])}</p>
-              <div style={{ height:55, background:"#cd7f32", borderRadius:"8px 8px 0 0", marginTop:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ color:"#fff", fontWeight:800, fontSize:16 }}>3</span>
+              <p className="text-xs font-black text-blue-500 uppercase tracking-widest mb-6">
+                {valueLabel(sorted[2])}
+              </p>
+              <div className={`h-20 md:h-24 rounded-t-4xl border-x border-t flex items-center justify-center backdrop-blur-xl ${
+                darkMode ? "bg-slate-900/40 border-white/5" : "bg-white/80 border-slate-200"
+              }`}>
+                <span className="text-3xl font-black text-amber-800/20 tabular-nums">3</span>
               </div>
             </div>
           </div>
         )}
       </ScrollReveal>
 
-      {/* Tabs */}
+      {/* Main Content */}
       <ScrollReveal direction="up" delay={100}>
-        <div style={{ display:"flex", gap:6, marginBottom:20, flexWrap:"wrap" }}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 p-1.5 rounded-2xl bg-slate-900/10 dark:bg-slate-900/40 border dark:border-white/5 backdrop-blur-md mb-12">
           {TABS.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{ padding:"8px 16px", borderRadius:20, border:"none", cursor:"pointer", background:activeTab===tab.id?"#3b82f6":(darkMode?"#1e293b":"#f1f5f9"), color:activeTab===tab.id?"#fff":(darkMode?"#94a3b8":"#374151"), fontSize:12, fontWeight:600, transition:"all 0.2s" }}>
-              {tab.label}
+            <button 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-black transition-all duration-500 ${
+                activeTab === tab.id 
+                  ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 active:scale-95" 
+                  : "text-slate-500 hover:text-slate-400"
+              }`}
+            >
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Mening o'rnim */}
-        {myData && (
-          <div style={{ marginBottom:16, padding:"12px 16px", borderRadius:12, background:darkMode?"#1e3a5f":"#eff6ff", border:"2px solid #3b82f6", display:"flex", alignItems:"center", gap:12 }}>
-            <span style={{ fontWeight:700, fontSize:14, color:"#3b82f6", minWidth:28 }}>#{myRank + 1}</span>
-            <Avatar user={myData} size={36}/>
-            <div style={{ flex:1 }}>
-              <p style={{ margin:0, fontWeight:700, fontSize:13, color:darkMode?"#f1f5f9":"#111" }}>Siz</p>
+        {/* Leaderboard List */}
+        <div className="space-y-4">
+          {/* User's own rank if available */}
+          {myData && (
+            <div className={`p-6 rounded-4xl border-2 border-blue-500 bg-blue-500/10 backdrop-blur-xl flex items-center gap-6 mb-12 transition-transform hover:scale-[1.01] ${
+              darkMode ? "shadow-2xl shadow-blue-500/10" : "shadow-xl shadow-blue-100"
+            }`}>
+              <div className="w-12 text-center text-2xl font-black text-blue-500 tabular-nums">#{myRank + 1}</div>
+              <Avatar user={myData} size={56} className="rounded-2xl ring-4 ring-blue-500/20" />
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <p className={`text-lg font-black ${darkMode ? "text-white" : "text-slate-900"}`}>{t.lbYou}</p>
+                  <span className="px-2 py-0.5 rounded-lg bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest">{t.lbSubtitle}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 text-blue-500/60 font-bold text-xs">
+                  <LuTrendingUp size={14} /> <span>{t.overviewTab}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-blue-500 tabular-nums">{valueLabel(myData)}</div>
+              </div>
             </div>
-            <span style={{ fontWeight:700, fontSize:14, color:"#3b82f6" }}>{valueLabel(myData)}</span>
-          </div>
-        )}
+          )}
 
-        {/* List */}
-        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-          {loading ? (
-            <div style={{ textAlign:"center", padding:"40px 0" }}>
-              <div style={{ width:36, height:36, borderRadius:"50%", border:"3px solid #3b82f6", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }}/>
-              <p style={{ color:"#6b7280", fontSize:14 }}>Yuklanmoqda...</p>
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-          ) : sorted.length === 0 ? (
-            <div style={{ textAlign:"center", padding:"40px 0", color:"#6b7280" }}>
-              <div style={{ fontSize:40, marginBottom:10, opacity:0.3 }}>🏆</div>
-              <p>Hali natijalar yo'q. Birinchi bo'ling!</p>
+          {/* List entries */}
+          {!loading && sorted.length === 0 ? (
+            <div className={`text-center py-32 rounded-[3rem] border border-dashed ${
+              darkMode ? "bg-slate-900/20 border-white/10" : "bg-slate-50 border-slate-200"
+            }`}>
+              <LuTrophy size={64} className="mx-auto mb-6 text-slate-300 dark:text-slate-700 opacity-50" />
+              <p className="text-slate-400 text-lg font-black uppercase tracking-widest">{t.lbNoResults}</p>
             </div>
           ) : (
-            sorted.map((u, i) => {
-              const isMe = u.id === user?.uid;
-              return (
-                <div
-                  key={u.id}
-                  onClick={() => handleUserClick(u)}
-                  style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:12, background:isMe?(darkMode?"#1e3a5f":"#eff6ff"):(darkMode?"#1e293b":"#fff"), border:`1px solid ${isMe?"#3b82f6":(darkMode?"#334155":"#e5e7eb")}`, transition:"all 0.2s", cursor: isMe ? "default" : "pointer" }}
-                >
-                  <span style={{ fontWeight:700, fontSize:15, minWidth:30, color:i<3?"#f59e0b":(darkMode?"#94a3b8":"#6b7280") }}>
-                    {MEDAL[i] || `#${i + 1}`}
-                  </span>
-                  <Avatar user={u} size={38}/>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ margin:0, fontWeight:600, fontSize:13, color: !isMe ? "#3b82f6" : (darkMode?"#f1f5f9":"#111"), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...getNameStyleByKey(u.nameColor)}}>
-                      {u.displayName || u.email?.split("@")[0]}
-                      {isMe && <span style={{ marginLeft:6, fontSize:10, background:"#3b82f6", color:"#fff", padding:"1px 6px", borderRadius:4 }}>Siz</span>}
-                    </p>
-                    <p style={{ margin:0, fontSize:11, color:"#6b7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.email}</p>
-                  </div>
-                  <div style={{ width:80, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
-                    <span style={{ fontWeight:700, fontSize:13, color:i===0?"#f59e0b":i===1?"#94a3b8":i===2?"#cd7f32":"#3b82f6" }}>
-                      {valueLabel(u)}
-                    </span>
-                    <div style={{ width:"100%", height:4, borderRadius:2, background:darkMode?"#334155":"#e5e7eb" }}>
-                      <div style={{ height:"100%", borderRadius:2, background:i===0?"#f59e0b":i===1?"#94a3b8":i===2?"#cd7f32":"#3b82f6", width:`${Math.round(((u[activeTab]||0) / (sorted[0][activeTab]||1)) * 100)}%` }}/>
+            <div className="grid gap-4">
+              {sorted.map((u, i) => {
+                const isMe = u.id === user?.uid;
+                const progress = Math.round(((u[activeTab] || 0) / (sorted[0][activeTab] || 1)) * 100);
+                
+                return (
+                  <div 
+                    key={u.id} 
+                    onClick={() => handleUserClick(u)}
+                    className={`group p-5 rounded-4xl border transition-all duration-500 flex items-center gap-6 relative overflow-hidden ${
+                      isMe 
+                        ? "bg-blue-500/5 border-blue-500/30" 
+                        : darkMode ? "bg-slate-900/40 border-white/5 hover:bg-slate-800/60" : "bg-white border-slate-100 hover:shadow-xl hover:shadow-slate-200/50"
+                    } hover:scale-[1.01] cursor-pointer`}
+                  >
+                    {/* Rank Indicator */}
+                    <div className="w-10 flex items-center justify-center shrink-0">
+                      {getMedalIcon(i)}
                     </div>
+
+                    <Avatar user={u} size={48} className="rounded-2xl" />
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <p 
+                          className={`text-sm font-black truncate ${darkMode ? "text-white" : "text-slate-900"}`}
+                          style={getNameStyleByKey(u.nameColor)}
+                        >
+                          {u.displayName || u.email?.split("@")[0]}
+                        </p>
+                        {isMe && <span className="px-2 py-0.5 rounded-lg bg-blue-500 text-white text-[8px] font-black uppercase tracking-widest leading-none">{t.lbYou}</span>}
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{u.email}</p>
+                    </div>
+
+                    {/* Stats & Progress */}
+                    <div className="w-32 md:w-48 text-right shrink-0">
+                      <div className={`text-lg font-black tabular-nums transition-colors ${
+                        i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-700" : "text-blue-500"
+                      }`}>
+                        {valueLabel(u)}
+                      </div>
+                      <div className="mt-2 h-1.5 w-full bg-slate-800/10 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-1000 ease-out shadow-sm ${
+                            i === 0 ? "bg-linear-to-r from-amber-400 to-orange-500" : i === 1 ? "bg-slate-400" : i === 2 ? "bg-amber-700" : "bg-blue-500"
+                          }`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {!isMe && (
+                      <LuChevronRight size={20} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                    )}
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       </ScrollReveal>

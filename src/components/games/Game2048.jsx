@@ -3,7 +3,7 @@ import { useLang } from "../../context/useLang";
 import { useAuth } from "../../context/useAuth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { FaRedo, FaTrophy } from "react-icons/fa";
+import { FaRedo, FaTrophy, FaBullseye } from "react-icons/fa";
 
 const SIZE = 4;
 
@@ -170,7 +170,9 @@ const move = useCallback((dir) => {
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-4 py-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      <h2 className={`text-2xl font-extrabold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>🎯 2048</h2>
+      <h2 className={`text-2xl font-extrabold mb-4 flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <FaBullseye className="text-red-500" /> 2048
+      </h2>
 
       <div className="flex gap-3 mb-4">
         {[{ label: t.score, value: score }, { label: t.bestScore, value: best }].map((s) => (
@@ -209,8 +211,10 @@ const move = useCallback((dir) => {
 
         {won && !wonDismissed && (
           <div className="absolute inset-0 bg-yellow-500/80 rounded-2xl flex flex-col items-center justify-center gap-3">
-            <p className="text-white text-2xl font-extrabold">🏆 2048!</p>
-            <p className="text-white text-sm">{t.continueGame}</p>
+            <p className="text-white text-2xl font-extrabold flex items-center gap-2" style={{ textShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}>
+              <FaTrophy /> 2048!
+            </p>
+            <p className="text-white text-sm" style={{ textShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}>{t.continueGame}</p>
             <div className="flex gap-2">
               <button onClick={() => { setWonDismissed(true); setWon(false); }} className="px-4 py-2 bg-white text-yellow-600 font-semibold rounded-xl text-sm flex items-center gap-1">
                 <FaTrophy /> {t.continueBtn}

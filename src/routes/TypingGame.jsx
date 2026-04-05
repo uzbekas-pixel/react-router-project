@@ -5,6 +5,7 @@ import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp 
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import { LuTrophy, LuRefreshCw, LuKeyboard } from "react-icons/lu";
+import { completeRealTask } from "../utils/taskManager";
 
 const WORDS_UZ = [
  "salom", "uka", "opa", "aka", "ota", "ona", "bobo", "buvi", "dost", "yigit",
@@ -112,7 +113,7 @@ const TypingGame = ({ darkMode }) => {
     ? Math.round((correctCount / typedWords.length) * 100)
     : 100;
 
-  // Natija saqlash
+ // Natija saqlash
   useEffect(() => {
     if (finished && user && wpm > 0) {
       addDoc(collection(db, "leaderboard"), {
@@ -122,6 +123,9 @@ const TypingGame = ({ darkMode }) => {
         wpm, accuracy, lang, time,
         createdAt: serverTimestamp(),
       }).catch(() => {});
+
+      // SHU YERGA QO'SHILDI:
+      completeRealTask(user.uid, "typing");
     }
   }, [finished, accuracy, lang, time, user, wpm]);
 

@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
+import { useLang } from "../../context/useLang";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/useAuth";
-import { FaTrophy } from "react-icons/fa";
+import { FaTrophy, FaMedal } from "react-icons/fa";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDALS = [
+  <FaMedal className="text-yellow-400 text-xl mx-auto" />, 
+  <FaMedal className="text-gray-400 text-xl mx-auto" />, 
+  <FaMedal className="text-amber-600 text-xl mx-auto" />
+];
 
 const Leaderboard = ({ darkMode, game }) => {
+  const { t } = useLang();
   const { user } = useAuth();
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +49,7 @@ const Leaderboard = ({ darkMode, game }) => {
   <div className="flex flex-col items-center py-4 gap-2">
   <FaTrophy className="text-3xl text-gray-400" />
   <p className={`text-center text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-    Hali natijalar yo'q!
+    {t.noScoresFound || "Hali natijalar yo'q!"}
   </p>
 </div>
   );
@@ -66,12 +72,12 @@ const Leaderboard = ({ darkMode, game }) => {
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-gray-900"}`}>
               {s.name}
-              {s.uid === user?.uid && <span className="ml-1 text-xs text-blue-400">(Siz)</span>}
+              {s.uid === user?.uid && <span className="ml-1 text-xs text-blue-400">({t.you || "Siz"})</span>}
             </p>
           </div>
           <div className="text-right">
             <p className="text-lg font-extrabold text-blue-400">{s.score}</p>
-            <p className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>ball</p>
+            <p className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>{t.points || "ball"}</p>
           </div>
         </div>
       ))}

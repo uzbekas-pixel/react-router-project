@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { useLang } from "../context/useLang";
+import { useLang } from "../context/translations";
 import {
   LuGraduationCap,
   LuMessageSquare,
@@ -33,23 +33,27 @@ const BottomNav = ({ darkMode }) => {
   ];
 
   return (
-    <div className={`fixed bottom-0 left-0 w-full z-50 md:hidden border-t ${
-      darkMode ? "bg-slate-900 border-slate-700" : "bg-white border-gray-200"
-    }`}>
-      <div className="flex items-center justify-around px-2 py-1">
+    <div className={`fixed bottom-0 left-0 w-full z-50 md:hidden border-t transition-all duration-300 ${
+      darkMode 
+        ? "bg-slate-900/80 border-white/5 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]" 
+        : "bg-white/80 border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]"
+    }`} style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+      <div className="flex items-center justify-around px-2 py-2">
         {tabs.map((tab) => (
           <NavLink key={tab.path} to={tab.path} end={tab.path === "/"}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition ${
-                isActive ? "text-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"
+              `flex flex-col items-center gap-1 px-3 py-1 rounded-2xl transition-all duration-300 ${
+                isActive 
+                  ? "text-blue-500 bg-blue-500/10" 
+                  : darkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"
               }`
             }>
             {({ isActive }) => (
               <>
-                <span className={`text-2xl transition-transform duration-200 ${isActive ? "scale-110" : "scale-100"}`}>
+                <span className={`text-xl transition-transform duration-300 ${isActive ? "scale-110 -translate-y-0.5" : "scale-100"}`}>
                   {tab.icon}
                 </span>
-                <span className={`text-[10px] font-medium ${isActive ? "text-blue-500" : darkMode ? "text-gray-500" : "text-gray-400"}`}>
+                <span className={`text-[10px] font-bold tracking-tight transition-colors duration-300 ${isActive ? "text-blue-500" : darkMode ? "text-slate-500" : "text-slate-400"}`}>
                   {tab.label}
                 </span>
               </>

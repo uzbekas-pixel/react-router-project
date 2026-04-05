@@ -3,59 +3,62 @@ import {
   LuBookOpen, LuBot, LuTarget, LuLayoutDashboard,
   LuRocket, LuArrowLeft, LuArrowRight, LuX
 } from "react-icons/lu";
-
-const STEPS = [
-  {
-    id: 1,
-    icon: <LuRocket className="text-5xl" style={{ color: "#3b82f6" }} />,
-    title: "Uzbekas Pixel ga xush kelibsiz!",
-    desc: "Bu yerda dasturlash va til o'rganishni boshlaysiz. Keling, platformani birga tanishib chiqaylik!",
-    color: "#3b82f6",
-    action: null,
-  },
-  {
-    id: 2,
-    icon: <LuBookOpen className="text-5xl" style={{ color: "#10b981" }} />,
-    title: "Kurslar katalogi",
-    desc: "HTML, CSS, JavaScript, React va tillar bo'yicha kurslarni ko'ring. Har bir kursda video darslar, sharhlar va sertifikat bor.",
-    color: "#10b981",
-    action: { label: "Kurslarni ko'rish →", path: "/" },
-  },
-  {
-    id: 21,
-    icon: <LuBot className="text-5xl" style={{ color: "#8b5cf6" }} />,
-    title: "AI O'qituvchi",
-    desc: "Savolingiz bormi? AI o'qituvchi 24/7 javob beradi. HTML dan IELTS gacha — hamma narsani so'rang!",
-    color: "#8b5cf6",
-    action: { label: "AI Tutor →", path: "/ai-tutor" },
-  },
-  {
-    id: 4,
-    icon: <LuTarget className="text-5xl" style={{ color: "#f59e0b" }} />,
-    title: "Quiz va Testlar",
-    desc: "Bilimingizni sinab ko'ring! HTML, CSS, JavaScript, React bo'yicha testlar va timer bilan musobaqa.",
-    color: "#f59e0b",
-    action: { label: "Quiz boshlash →", path: "/quiz" },
-  },
-  {
-    id: 5,
-    icon: <LuLayoutDashboard className="text-5xl" style={{ color: "#ef4444" }} />,
-    title: "Shaxsiy Dashboard",
-    desc: "O'quv progressingizni kuzating, yutuqlarni oching va haftalik statistikangizni ko'ring.",
-    color: "#ef4444",
-    action: { label: "Dashboard →", path: "/dashboard" },
-  },
-  {
-    id: 6,
-    icon: <LuRocket className="text-5xl" style={{ color: "#f59e0b" }} />,
-    title: "Tayyor! O'qishni boshlang",
-    desc: "Hamma narsa tayyor! Birinchi kursni tanlang va o'rganishni boshlang. Muvaffaqiyat tilaymiz! 🚀",
-    color: "#f59e0b",
-    action: { label: "Boshlash 🚀", path: "/" },
-  },
-];
+import { useLang } from "../context/useLang";
 
 const Onboarding = ({ darkMode, onComplete, navigate }) => {
+  const { t } = useLang();
+
+  const STEPS = [
+    {
+      id: 1,
+      icon: <LuRocket className="text-5xl" style={{ color: "#3b82f6" }} />,
+      title: t.onboardingTitle1,
+      desc: t.onboardingDesc1,
+      color: "#3b82f6",
+      action: null,
+    },
+    {
+      id: 2,
+      icon: <LuBookOpen className="text-5xl" style={{ color: "#10b981" }} />,
+      title: t.onboardingTitle2,
+      desc: t.onboardingDesc2,
+      color: "#10b981",
+      action: { label: t.onboardingBtn2, path: "/" },
+    },
+    {
+      id: 21,
+      icon: <LuBot className="text-5xl" style={{ color: "#8b5cf6" }} />,
+      title: t.onboardingTitle3,
+      desc: t.onboardingDesc3,
+      color: "#8b5cf6",
+      action: { label: t.onboardingBtn3, path: "/ai-tutor" },
+    },
+    {
+      id: 4,
+      icon: <LuTarget className="text-5xl" style={{ color: "#f59e0b" }} />,
+      title: t.onboardingTitle4,
+      desc: t.onboardingDesc4,
+      color: "#f59e0b",
+      action: { label: t.onboardingBtn4, path: "/quiz" },
+    },
+    {
+      id: 5,
+      icon: <LuLayoutDashboard className="text-5xl" style={{ color: "#ef4444" }} />,
+      title: t.onboardingTitle5,
+      desc: t.onboardingDesc5,
+      color: "#ef4444",
+      action: { label: t.onboardingBtn5, path: "/dashboard" },
+    },
+    {
+      id: 6,
+      icon: <LuRocket className="text-5xl" style={{ color: "#f59e0b" }} />,
+      title: t.onboardingTitle6,
+      desc: <span className="flex items-center justify-center gap-1">{t.onboardingDesc6} <LuRocket /></span>,
+      color: "#f59e0b",
+      action: { label: <span className="flex items-center gap-1">{t.onboardingBtn6} <LuRocket /></span>, path: "/" },
+    },
+  ];
+
   const [step, setStep]           = useState(0);
   const [animating, setAnimating] = useState(false);
 
@@ -118,7 +121,7 @@ const Onboarding = ({ darkMode, onComplete, navigate }) => {
             display: "flex", alignItems: "center", gap: 4,
           }}>
             <LuX size={14} />
-            O'tkazib yuborish
+            {t.onboardingSkip}
           </button>
         )}
 
@@ -187,7 +190,7 @@ const Onboarding = ({ darkMode, onComplete, navigate }) => {
               fontSize: 14, fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             }}>
-              <LuArrowLeft size={16} /> Orqaga
+              <LuArrowLeft size={16} /> {t.onboardingBack}
             </button>
           )}
           <button onClick={goNext} style={{
@@ -199,9 +202,9 @@ const Onboarding = ({ darkMode, onComplete, navigate }) => {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
           }}>
             {isLast ? (
-              <><LuRocket size={16} /> Boshlash!</>
+              <>{t.onboardingBtn6} <LuRocket size={16} /></>
             ) : (
-              <>Keyingisi <LuArrowRight size={16} /></>
+              <>{t.onboardingNext} <LuArrowRight size={16} /></>
             )}
           </button>
         </div>

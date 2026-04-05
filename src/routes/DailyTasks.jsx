@@ -1,195 +1,132 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import {
-  doc, getDoc, setDoc, serverTimestamp, increment,
+  doc, getDoc, setDoc, serverTimestamp, increment, onSnapshot
 } from "firebase/firestore";
 import {
   LuFlame, LuStar, LuZap, LuTrophy, LuCheck,
-  LuLock, LuTarget, LuBookOpen, LuKeyboard,
-  LuGamepad2, LuMessageSquare, LuRefreshCw,
+  LuTarget, LuBookOpen, LuKeyboard,
+  LuGamepad2, LuMessageSquare, LuSprout, LuBrain, LuSearch, LuGem, LuCrown, LuLock, LuPartyPopper, LuCircleCheck, LuCoins,
 } from "react-icons/lu";
+import { useLang } from "../context/useLang";
 
-const LEVELS = [
-  { level: 1,  name: "Yangi boshlovchi", minXP: 0,     maxXP: 100,   color: "#6b7280", badge: "🌱" },
-  { level: 2,  name: "O'quvchi",         minXP: 100,   maxXP: 300,   color: "#10b981", badge: "📚" },
-  { level: 3,  name: "Izlanuvchi",       minXP: 300,   maxXP: 600,   color: "#3b82f6", badge: "🔍" },
-  { level: 4,  name: "Bilimdon",         minXP: 600,   maxXP: 1000,  color: "#8b5cf6", badge: "🧠" },
-  { level: 5,  name: "Mahir",            minXP: 1000,  maxXP: 1500,  color: "#f59e0b", badge: "⚡" },
-  { level: 6,  name: "Ekspert",          minXP: 1500,  maxXP: 2500,  color: "#ef4444", badge: "🎯" },
-  { level: 7,  name: "Usta",             minXP: 2500,  maxXP: 4000,  color: "#06b6d4", badge: "🏆" },
-  { level: 8,  name: "Professional",     minXP: 4000,  maxXP: 6000,  color: "#f97316", badge: "💎" },
-  { level: 9,  name: "Champion",         minXP: 6000,  maxXP: 10000, color: "#ec4899", badge: "👑" },
-  { level: 10, name: "Legenda",          minXP: 10000, maxXP: 99999, color: "#d97706", badge: "🌟" },
+const getLevels = (t) => [
+  { level: 1,  name: t.level1Name, minXP: 0,     maxXP: 100,   color: "#6b7280", badge: <LuSprout /> },
+  { level: 2,  name: t.level2Name, minXP: 100,   maxXP: 300,   color: "#10b981", badge: <LuBookOpen /> },
+  { level: 3,  name: t.level3Name, minXP: 300,   maxXP: 600,   color: "#3b82f6", badge: <LuSearch /> },
+  { level: 4,  name: t.level4Name, minXP: 600,   maxXP: 1000,  color: "#8b5cf6", badge: <LuBrain /> },
+  { level: 5,  name: t.level5Name, minXP: 1000,  maxXP: 1500,  color: "#f59e0b", badge: <LuZap /> },
+  { level: 6,  name: t.level6Name, minXP: 1500,  maxXP: 2500,  color: "#ef4444", badge: <LuTarget /> },
+  { level: 7,  name: t.level7Name, minXP: 2500,  maxXP: 4000,  color: "#06b6d4", badge: <LuTrophy /> },
+  { level: 8,  name: t.level8Name, minXP: 4000,  maxXP: 6000,  color: "#f97316", badge: <LuGem /> },
+  { level: 9,  name: t.level9Name, minXP: 6000,  maxXP: 10000, color: "#ec4899", badge: <LuCrown /> },
+  { level: 10, name: t.level10Name, minXP: 10000, maxXP: 99999, color: "#d97706", badge: <LuStar /> },
 ];
 
-const DAILY_TASKS = [
-  { id: "watch_lesson",   icon: <LuBookOpen />,     color: "#3b82f6", title: "Dars ko'rish",       desc: "1 ta dars ko'ring",            xp: 20, max: 1 },
-  { id: "quiz",           icon: <LuTarget />,        color: "#10b981", title: "Quiz ishlash",       desc: "1 ta quiz yechib ko'ring",     xp: 30, max: 1 },
-  { id: "typing",         icon: <LuKeyboard />,      color: "#8b5cf6", title: "Typing test",        desc: "Typing testini bajaring",      xp: 15, max: 1 },
-  { id: "game",           icon: <LuGamepad2 />,      color: "#f59e0b", title: "O'yin o'ynash",      desc: "Istalgan o'yinni o'ynang",     xp: 10, max: 1 },
-  { id: "chat",           icon: <LuMessageSquare />, color: "#06b6d4", title: "Chat yozish",        desc: "Chatda xabar yuboring",        xp: 5,  max: 1 },
-  { id: "login",          icon: <LuFlame />,         color: "#ef4444", title: "Kunlik kirish",      desc: "Har kuni kiring — streak!",    xp: 10, max: 1 },
-  { id: "watch_3lessons", icon: <LuBookOpen />,      color: "#0ea5e9", title: "3 ta dars ko'rish",  desc: "Bugun 3 ta dars ko'ring",      xp: 50, max: 3 },
+const getDailyTasks = (t) => [
+  { id: "watch_lesson",   icon: <LuBookOpen />,     color: "#3b82f6", title: t.taskTitleWatch,       desc: t.taskDescWatch,            xp: 20, max: 1 },
+  { id: "quiz",           icon: <LuTarget />,        color: "#10b981", title: t.taskTitleQuiz,       desc: t.taskDescQuiz,     xp: 30, max: 1 },
+  { id: "typing",         icon: <LuKeyboard />,      color: "#8b5cf6", title: t.taskTitleTyping,        desc: t.taskDescTyping,      xp: 15, max: 1 },
+  { id: "game",           icon: <LuGamepad2 />,      color: "#f59e0b", title: t.taskTitleGame,      desc: t.taskDescGame,     xp: 10, max: 1 },
+  { id: "chat",           icon: <LuMessageSquare />, color: "#06b6d4", title: t.taskTitleChat,        desc: t.taskDescChat,        xp: 5,  max: 1 },
+  { id: "login",          icon: <LuFlame />,         color: "#ef4444", title: t.taskTitleLogin,      desc: t.taskDescLogin,    xp: 10, max: 1 },
+  { id: "watch_3lessons", icon: <LuBookOpen />,      color: "#0ea5e9", title: t.taskTitleWatch3,  desc: t.taskDescWatch3,      xp: 50, max: 3 },
 ];
 
-const getLevel    = (xp) => LEVELS.slice().reverse().find((l) => xp >= l.minXP) || LEVELS[0];
+const getLevel    = (xp, levels) => [...levels].reverse().find((l) => xp >= l.minXP) || levels[0];
 const getTodayKey = ()   => new Date().toISOString().split("T")[0];
 
 const DailyTasks = ({ darkMode, showToast }) => {
   const { user } = useAuth();
+  const { t } = useLang();
+
+  const levels = useMemo(() => getLevels(t), [t]);
+  const dailyTasks = useMemo(() => getDailyTasks(t), [t]);
 
   const [xp,           setXp]           = useState(0);
   const [streak,       setStreak]       = useState(0);
   const [tasks,        setTasks]        = useState({});
   const [loading,      setLoading]      = useState(true);
-  const [claiming,     setClaiming]     = useState(null);
   const [levelUpAnim,  setLevelUpAnim]  = useState(false);
+  const [, setPrevLevel] = useState(null);
 
-  // ─── Bir marta yuklash (infinite loop yo'q) ──────────────────────────────
+  // ─── Real-time ma'lumotlarni o'qish (Jonli yangilanish) ──────────────────
   useEffect(() => {
     if (!user) return;
+    
+    const today = getTodayKey();
+    
+    // 1. XP va Streak ni jonli kuzatish
+    const unsubStats = onSnapshot(doc(db, "users", user.uid, "data", "stats"), (docSnap) => {
+       if (docSnap.exists()) {
+         const data = docSnap.data();
+         const newXp = data.xp || 0;
+         setXp(newXp);
+         setStreak(data.streak || 0);
+         
+         // Yangi darajaga o'tganini tekshirish
+         const currLvl = getLevel(newXp, levels);
+         setPrevLevel((p) => {
+           if (p !== null && currLvl.level > p.level) {
+             setLevelUpAnim(true);
+             showToast?.(`${currLvl.name} ${t.levelReachedSuffix || "darajasiga ko'tarildingiz!"}`, "success");
+             setTimeout(() => setLevelUpAnim(false), 3000);
+           }
+           return currLvl;
+         });
+       }
+    });
 
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      try {
-        const today = getTodayKey();
-
-        // XP va streak
-        const statsSnap = await getDoc(doc(db, "users", user.uid, "data", "stats"));
-        const statsData = statsSnap.exists() ? statsSnap.data() : {};
-        const currentXP     = statsData.xp     || 0;
-        const currentStreak = statsData.streak  || 0;
-
-        if (!cancelled) {
-          setXp(currentXP);
-          setStreak(currentStreak);
+    // 2. Kunlik vazifalarni jonli kuzatish
+    const taskRef = doc(db, "users", user.uid, "dailyTasks", today);
+    const unsubTasks = onSnapshot(taskRef, async (taskSnap) => {
+      if (taskSnap.exists()) {
+        setTasks(taskSnap.data().completed || {});
+        setLoading(false);
+      } else {
+        // Yangi kun boshlandi — Avtomatik login vazifasi bajariladi
+        const newTasks = { login: 1 };
+        await setDoc(taskRef, {
+          completed: newTasks,
+          date: today,
+          createdAt: serverTimestamp(),
+        });
+        
+        await setDoc(
+          doc(db, "users", user.uid, "data", "stats"),
+          { xp: increment(10), streak: increment(1) },
+          { merge: true }
+        );
+        
+        // Leaderboard uchun asosiy user doc ga yozish
+        const refreshed = await getDoc(doc(db, "users", user.uid, "data", "stats"));
+        if(refreshed.exists()) {
+           const freshData = refreshed.data();
+           await setDoc(doc(db, "users", user.uid), { xp: freshData.xp, streak: freshData.streak }, { merge: true });
         }
-
-        // Kunlik vazifalar
-        const taskRef  = doc(db, "users", user.uid, "dailyTasks", today);
-        const taskSnap = await getDoc(taskRef);
-
-        if (taskSnap.exists()) {
-          if (!cancelled) setTasks(taskSnap.data().completed || {});
-        } else {
-          // Yangi kun — login vazifasini avtomatik bajarish
-          const newTasks  = { login: 1 };
-          const newXP     = currentXP + 10;
-          const newStreak = currentStreak + 1;
-
-          await setDoc(taskRef, {
-            completed:  newTasks,
-            date:       today,
-            createdAt:  serverTimestamp(),
-          });
-
-          // BUG #9 FIX — use increment() to avoid streak/XP race on two tabs
-          await setDoc(
-            doc(db, "users", user.uid, "data", "stats"),
-            { xp: increment(10), streak: increment(1) },
-            { merge: true }
-          );
-          // Read back for local state accuracy
-          const refreshed = await getDoc(doc(db, "users", user.uid, "data", "stats"));
-          const freshData = refreshed.exists() ? refreshed.data() : {};
-          const freshXP     = freshData.xp     || newXP;
-          const freshStreak = freshData.streak || newStreak;
-          // DENORM — mirror xp + streak onto users/{uid} for zero-read Leaderboard
-          await setDoc(doc(db, "users", user.uid), { xp: freshXP, streak: freshStreak }, { merge: true });
-          if (!cancelled) {
-            setTasks(newTasks);
-            setXp(freshXP);
-            setStreak(freshStreak);
-          }
-        }
-      } catch (err) {
-        console.error("DailyTasks load error:", err);
-      } finally {
-        if (!cancelled) setLoading(false);
+        
+        setTasks(newTasks);
+        setLoading(false);
       }
+    });
+
+    return () => {
+      unsubStats();
+      unsubTasks();
     };
+  }, [user, showToast, levels, t.levelReachedSuffix]);
 
-    load();
-    return () => { cancelled = true; };
-  }, [user]); // faqat user o'zgarganda ishlaydi
-
-  // ─── XP qo'shish ─────────────────────────────────────────────────────────
-  const addXP = useCallback(async (amount) => {
-  if (!user) return;
-
-  const oldLevel = getLevel(xp);
-
-  // BUG #3 FIX — use server-side increment() to avoid stale xp closure value overwriting real DB data
-  try {
-    const statsRef = doc(db, "users", user.uid, "data", "stats");
-    await setDoc(statsRef, { xp: increment(amount), streak }, { merge: true });
-
-    // Read back real value to check level-up correctly
-    const snap = await getDoc(statsRef);
-    const newXP = snap.exists() ? (snap.data().xp ?? xp + amount) : xp + amount;
-    setXp(newXP);
-
-    // DENORM — mirror xp onto users/{uid} for zero-read Leaderboard
-    await setDoc(doc(db, "users", user.uid), { xp: newXP, streak }, { merge: true });
-
-    const newLevel = getLevel(newXP);
-    if (newLevel.level > oldLevel.level) {
-      setLevelUpAnim(true);
-      showToast?.(`🎉 ${newLevel.badge} ${newLevel.name} darajasiga ko'tarildingiz!`, "success");
-      setTimeout(() => setLevelUpAnim(false), 3000);
-    }
-  } catch (err) {
-    console.error("addXP error:", err);
-  }
-}, [user, xp, streak, showToast]);
-
-  // ─── Vazifani bajarish ────────────────────────────────────────────────────
-const completeTask = useCallback(async (taskId) => {
-  if (!user || claiming) return;
-  const task    = DAILY_TASKS.find((t) => t.id === taskId);
-  const current = tasks[taskId] || 0;
-  if (current >= task.max) return;
-
-  setClaiming(taskId);
-  try {
-    const today    = getTodayKey();
-    const newCount = current + 1;
-    const newTasks = { ...tasks, [taskId]: newCount };
-
-    // Avval tasks ni Firestore ga yozamiz
-    await setDoc(
-      doc(db, "users", user.uid, "dailyTasks", today),
-      { completed: newTasks, date: today },
-      { merge: true }
-    );
-
-    // State yangilaymiz
-    setTasks(newTasks);
-
-    // XP qo'shamiz (endi to'g'ri ishlaydi)
-    await addXP(task.xp);
-    showToast?.(`+${task.xp} XP qo'shildi! ✅`, "success");
-  } catch (err) {
-    console.error("completeTask error:", err);
-    showToast?.("Xatolik yuz berdi!", "error");
-  } finally {
-    setClaiming(null);
-  }
-}, [user, claiming, tasks, addXP, showToast]);
-
-  // ─── Computed ─────────────────────────────────────────────────────────────
-  const level     = getLevel(xp);
-  const nextLevel = LEVELS.find((l) => l.level === level.level + 1);
+  // ─── Hisob-kitoblar (Computed) ───────────────────────────────────────────
+  const level     = getLevel(xp, levels);
+  const nextLevel = levels.find((l) => l.level === level.level + 1);
   const progress  = nextLevel
     ? Math.round(((xp - level.minXP) / (nextLevel.minXP - level.minXP)) * 100)
     : 100;
 
-  const completedCount = DAILY_TASKS.filter((t) => (tasks[t.id] || 0) >= t.max).length;
-  const totalXPToday   = DAILY_TASKS.reduce((a, t) => (tasks[t.id] || 0) >= t.max ? a + t.xp : a, 0);
+  const completedCount = dailyTasks.filter((t_task) => (tasks[t_task.id] || 0) >= t_task.max).length;
+  const totalXPToday   = dailyTasks.reduce((a, t_task) => (tasks[t_task.id] || 0) >= t_task.max ? a + t_task.xp : a, 0);
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
@@ -205,8 +142,8 @@ const completeTask = useCallback(async (taskId) => {
       {levelUpAnim && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", animation: "bounceIn 0.5s ease" }}>
-            <div style={{ fontSize: 80, marginBottom: 16 }}>{level.badge}</div>
-            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 8px" }}>LEVEL UP! 🎉</h2>
+            <div style={{ fontSize: 80, marginBottom: 16, color: level.color, display: "flex", justifyContent: "center" }}>{level.badge}</div>
+            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 8px" }}>LEVEL UP! <LuPartyPopper className="inline-block" /></h2>
             <p style={{ color: level.color, fontSize: 20, fontWeight: 700 }}>{level.name}</p>
           </div>
           <style>{`@keyframes bounceIn { 0%{transform:scale(0)} 60%{transform:scale(1.1)} 100%{transform:scale(1)} }`}</style>
@@ -216,28 +153,28 @@ const completeTask = useCallback(async (taskId) => {
       <ScrollReveal direction="up">
         <div style={{ marginBottom: 24 }}>
           <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
-            ⚡ Kunlik Vazifalar
+            <LuZap className="inline-block mr-1" /> {t.dailyTasksTitle}
           </span>
           <h2 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>
-            Bugungi Vazifalar
+            {t.dailyTasksToday}
           </h2>
         </div>
 
         {/* Daraja kartasi */}
         <div style={{ marginBottom: 20, padding: "20px 24px", borderRadius: 18, background: `linear-gradient(135deg, ${level.color}22, ${level.color}11)`, border: `2px solid ${level.color}44` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
-            <div style={{ fontSize: 48 }}>{level.badge}</div>
+            <div style={{ fontSize: 48, color: level.color }}>{level.badge}</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: level.color, background: level.color + "22", padding: "2px 8px", borderRadius: 10 }}>
-                  {level.level}-daraja
+                  {level.level}-{t.levelLabel}
                 </span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111" }}>{level.name}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <LuStar style={{ color: "#f59e0b", flexShrink: 0 }} />
-                <span style={{ fontSize: 20, fontWeight: 800, color: level.color }}>{xp.toLocaleString()} XP</span>
-                {nextLevel && <span style={{ fontSize: 12, color: "#6b7280" }}>/ {nextLevel.minXP.toLocaleString()} XP</span>}
+                <span style={{ fontSize: 20, fontWeight: 800, color: level.color }}>{xp.toLocaleString()} {t.xpLabel}</span>
+                {nextLevel && <span style={{ fontSize: 12, color: "#6b7280" }}>/ {nextLevel.minXP.toLocaleString()} {t.xpLabel}</span>}
               </div>
             </div>
             <div style={{ textAlign: "center" }}>
@@ -245,21 +182,21 @@ const completeTask = useCallback(async (taskId) => {
                 <LuFlame style={{ color: "#ef4444", fontSize: 20 }} />
                 <span style={{ fontSize: 22, fontWeight: 800, color: "#ef4444" }}>{streak}</span>
               </div>
-              <span style={{ fontSize: 10, color: "#6b7280" }}>kun streak</span>
+              <span style={{ fontSize: 10, color: "#6b7280" }}>{t.streakLabel}</span>
             </div>
           </div>
 
           {nextLevel && (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11, color: "#6b7280" }}>
-                <span>Keyingi: {nextLevel.badge} {nextLevel.name}</span>
+                <span>{t.nextLevelLabel} <span style={{ color: nextLevel.color }} className="flex items-center gap-1 ml-1">{nextLevel.badge} {nextLevel.name}</span></span>
                 <span>{progress}%</span>
               </div>
               <div style={{ height: 8, borderRadius: 4, background: darkMode ? "#334155" : "#e5e7eb" }}>
                 <div style={{ height: "100%", borderRadius: 4, background: level.color, width: `${progress}%`, transition: "width 0.5s ease" }} />
               </div>
               <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6b7280" }}>
-                {(nextLevel.minXP - xp).toLocaleString()} XP qoldi
+                {(nextLevel.minXP - xp).toLocaleString()} {t.xpRemainingLabel}
               </p>
             </div>
           )}
@@ -268,9 +205,9 @@ const completeTask = useCallback(async (taskId) => {
         {/* Bugungi progress */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { icon: <LuCheck />,  color: "#10b981", value: `${completedCount}/${DAILY_TASKS.length}`, label: "Bajarildi"  },
-            { icon: <LuZap />,    color: "#f59e0b", value: `+${totalXPToday}`,                        label: "Bugungi XP" },
-            { icon: <LuTrophy />, color: "#8b5cf6", value: `${level.level}`,                          label: "Daraja"     },
+            { icon: <LuCircleCheck />, color: "#10b981", value: `${completedCount}/${dailyTasks.length}`, label: t.taskCompleted  },
+            { icon: <LuCoins />,       color: "#f59e0b", value: `+${totalXPToday}`,                        label: t.todayXP },
+            { icon: <LuTrophy />,      color: "#8b5cf6", value: `${level.level}`,                          label: t.levelLabel.charAt(0).toUpperCase() + t.levelLabel.slice(1) },
           ].map((s, i) => (
             <div key={i} style={{ padding: "14px 16px", borderRadius: 14, background: darkMode ? "#1e293b" : "#fff", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, textAlign: "center" }}>
               <div style={{ fontSize: 22, color: s.color, display: "flex", justifyContent: "center", marginBottom: 6 }}>{s.icon}</div>
@@ -284,10 +221,10 @@ const completeTask = useCallback(async (taskId) => {
       {/* Vazifalar */}
       <ScrollReveal direction="up" delay={100}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {DAILY_TASKS.map((task) => {
-            const done       = (tasks[task.id] || 0) >= task.max;
-            const current    = tasks[task.id] || 0;
-            const isClaiming = claiming === task.id;
+          {dailyTasks.map((task) => {
+            const done        = (tasks[task.id] || 0) >= task.max;
+            const current     = tasks[task.id] || 0;
+            const isLoginTask = task.id === "login";
 
             return (
               <div key={task.id} style={{
@@ -309,18 +246,16 @@ const completeTask = useCallback(async (taskId) => {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: task.color }}>+{task.xp} XP</span>
+                  
+                  {/* Status ko'rsatkichi (Tugma olib tashlandi) */}
                   {done ? (
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                      <LuCheck size={18} />
+                    <div style={{ padding: "5px 12px", borderRadius: 8, background: "#10b981", color: "#fff", fontSize: 11, fontWeight: "bold" }}>
+                      <LuCheck className="inline-block mr-1" /> {t.taskCompleted}
                     </div>
                   ) : (
-                    <button onClick={() => completeTask(task.id)} disabled={!!claiming}
-                      style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: isClaiming ? "#94a3b8" : task.color, color: "#fff", cursor: claiming ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                      {isClaiming
-                        ? <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid #fff", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-                        : <LuCheck size={18} />
-                      }
-                    </button>
+                    <div style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${darkMode ? "#475569" : "#cbd5e1"}`, color: darkMode ? "#94a3b8" : "#64748b", fontSize: 11, fontWeight: "bold" }}>
+                      {isLoginTask ? t.statusPending : t.statusInProgress}
+                    </div>
                   )}
                 </div>
               </div>
@@ -333,10 +268,10 @@ const completeTask = useCallback(async (taskId) => {
       <ScrollReveal direction="up" delay={200}>
         <div style={{ marginTop: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 16px", color: darkMode ? "#f1f5f9" : "#111" }}>
-            🏆 Barcha Darajalar
+            {t.allLevelsTitle}
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
-            {LEVELS.map((l) => {
+            {levels.map((l) => {
               const isActive  = l.level === level.level;
               const isReached = xp >= l.minXP;
               return (
@@ -346,12 +281,14 @@ const completeTask = useCallback(async (taskId) => {
                   border: `${isActive ? 2 : 1}px solid ${isActive ? l.color : (darkMode ? "#334155" : "#e5e7eb")}`,
                   opacity: isReached ? 1 : 0.5,
                 }}>
-                  <div style={{ fontSize: 28, marginBottom: 6 }}>{isReached ? l.badge : "🔒"}</div>
+                  <div style={{ fontSize: 28, marginBottom: 6, color: isReached ? l.color : "#9ca3af", display: "flex", justifyContent: "center" }}>
+                    {isReached ? l.badge : <LuLock />}
+                  </div>
                   <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 700, color: isActive ? l.color : (darkMode ? "#94a3b8" : "#6b7280") }}>
-                    {l.level}-daraja
+                    {l.level}-{t.levelLabel}
                   </p>
                   <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: darkMode ? "#f1f5f9" : "#111" }}>{l.name}</p>
-                  <p style={{ margin: 0, fontSize: 10, color: "#9ca3af" }}>{l.minXP.toLocaleString()} XP</p>
+                  <p style={{ margin: 0, fontSize: 10, color: "#9ca3af" }}>{l.minXP.toLocaleString()} {t.xpLabel}</p>
                 </div>
               );
             })}

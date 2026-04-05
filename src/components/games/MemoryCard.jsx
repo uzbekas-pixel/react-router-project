@@ -3,7 +3,8 @@ import { useLang } from "../../context/useLang";
 import { useAuth } from "../../context/useAuth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { FaRedo, FaTrophy } from "react-icons/fa";
+import { FaRedo, FaTrophy, FaPaw, FaAppleAlt, FaFutbol, FaQuestion } from "react-icons/fa";
+import { LuBrainCircuit } from "react-icons/lu";
 
 const EMOJI_SETS = {
   animals: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮"],
@@ -151,8 +152,8 @@ useEffect(() => {
 
   return (
     <div className={`flex flex-col items-center min-h-[calc(100vh-130px)] px-4 py-4 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      <h2 className={`text-2xl font-extrabold mb-3 mx-auto mt-8 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        🧠 Memory Card
+      <h2 className={`text-2xl font-extrabold mb-3 mx-auto mt-8 flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <LuBrainCircuit className="text-purple-500" /> {t.memoryCardTitle || "Memory Card"}
       </h2>
 
       <div className="flex gap-2 mb-3">
@@ -171,22 +172,22 @@ useEffect(() => {
       <div className="flex gap-2 mb-4">
         {Object.keys(EMOJI_SETS).map(th => (
           <button key={th} onClick={() => changeTheme(th)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${
               theme === th
                 ? "bg-purple-500 text-white"
                 : darkMode ? "bg-slate-700 text-gray-400 hover:bg-slate-600" : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
             }`}>
-            {th === "animals" ? "🐾 Hayvonlar" : th === "food" ? "🍎 Ovqat" : "⚽ Sport"}
+            {th === "animals" ? <><FaPaw className="text-orange-400" /> {t.animalsTab || "Hayvonlar"}</> : th === "food" ? <><FaAppleAlt className="text-red-500" /> {t.foodTab || "Ovqat"}</> : <><FaFutbol className="text-blue-500" /> {t.sportsTab || "Sport"}</>}
           </button>
         ))}
       </div>
 
       <div className="flex gap-3 mb-4">
         {[
-          { label: "Harakat", value: moves },
-          { label: "Vaqt",    value: formatTime(time) },
-          { label: "Juft",    value: `${matched}/${level.pairs}` },
-          { label: "Rekord",  value: bestMoves[bestKey] ? `${bestMoves[bestKey]}h` : "—" },
+          { label: t.memoryMoves || "Harakat", value: moves },
+          { label: t.memoryTime || "Vaqt",    value: formatTime(time) },
+          { label: t.memoryPairs || "Juft",    value: `${matched}/${level.pairs}` },
+          { label: t.memoryRecord || "Rekord",  value: bestMoves[bestKey] ? `${bestMoves[bestKey]}h` : "—" },
         ].map(s => (
           <div key={s.label} className={`px-3 py-2 rounded-xl text-center min-w-[60px] ${darkMode ? "bg-slate-800" : "bg-white shadow"}`}>
             <p className={`text-[10px] font-semibold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{s.label}</p>
@@ -210,8 +211,8 @@ useEffect(() => {
             style={{ width: level.id === "hard" ? 64 : 72, height: level.id === "hard" ? 64 : 72 }}>
             <div className={`absolute inset-0 rounded-2xl flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
               card.flipped || card.matched ? "opacity-0 scale-90" : "opacity-100 scale-100"
-            } ${darkMode ? "bg-slate-700 border-2 border-slate-600" : "bg-blue-100 border-2 border-blue-200"}`}>
-              ❓
+            } ${darkMode ? "bg-slate-700 border-2 border-slate-600 text-gray-500" : "bg-blue-100 border-2 border-blue-200 text-blue-400"}`}>
+              <FaQuestion />
             </div>
             <div className={`absolute inset-0 rounded-2xl flex items-center justify-center text-3xl transition-all duration-300 ${
               card.flipped || card.matched ? "opacity-100 scale-100" : "opacity-0 scale-90"
@@ -229,17 +230,19 @@ useEffect(() => {
       {won && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className={`w-full max-w-sm rounded-2xl p-8 text-center shadow-2xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-            <div className="text-6xl mb-4">🏆</div>
+            <div className="flex justify-center mb-4">
+              <FaTrophy className="text-6xl text-yellow-500" />
+            </div>
             <h3 className={`text-2xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              Barakalla!
+              {t.wellDone || "Barakalla!"}
             </h3>
             <div className="flex justify-center gap-4 mb-6">
               <div className={`px-4 py-2 rounded-xl ${darkMode ? "bg-slate-700" : "bg-gray-100"}`}>
-                <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Harakat</p>
+                <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.memoryMoves || "Harakat"}</p>
                 <p className="text-xl font-extrabold text-blue-400">{moves}</p>
               </div>
               <div className={`px-4 py-2 rounded-xl ${darkMode ? "bg-slate-700" : "bg-gray-100"}`}>
-                <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Vaqt</p>
+                <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.memoryTime || "Vaqt"}</p>
                 <p className="text-xl font-extrabold text-green-400">{formatTime(time)}</p>
               </div>
             </div>

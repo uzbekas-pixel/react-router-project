@@ -41,9 +41,9 @@ const Notifications = ({ darkMode, showToast }) => {
     promo:       t.notifFilterPromo,
     achievement: t.notifFilterAchievement,
     system:      t.notifFilterSystem,
-    info:        "Ma'lumot",
-    success:     "Muvaffaqiyat",
-    warning:     "Ogohlantirish",
+    info:        t.typeInfo,
+    success:     t.typeSuccess,
+    warning:     t.typeWarning,
   };
 
   // ── Real-time Firestore dan o'qish ─────────────────────────────────────────
@@ -65,7 +65,7 @@ const Notifications = ({ darkMode, showToast }) => {
           icon:  meta.icon,
           color: meta.color,
           // Vaqtni formatlash
-          time:  data.createdAt?.toDate?.()?.toLocaleString("uz", {
+          time:  data.createdAt?.toDate?.()?.toLocaleString(t.lang === "uz" ? "uz" : "en", {
             day: "2-digit", month: "2-digit",
             hour: "2-digit", minute: "2-digit",
           }) || "Hozirgina",
@@ -76,19 +76,22 @@ const Notifications = ({ darkMode, showToast }) => {
     });
 
     return () => unsub();
-  }, [user]);
+  }, [user, t.lang]);
 
   // ── Hammasini o'qilgan deb belgilash ───────────────────────────────────────
   const markAllRead = async () => {
     if (!user) return;
+    const unreadList = notifs.filter((n) => !n.read);
+    if (unreadList.length === 0) return;
+    
     try {
       const batch = writeBatch(db);
-      notifs.filter((n) => !n.read).forEach((n) => {
+      unreadList.forEach((n) => {
         const ref = doc(db, "users", user.uid, "notifications", n.id);
         batch.update(ref, { read: true });
       });
       await batch.commit();
-      showToast && showToast(t.allMarkedRead, "success");
+      showToast?.(t.allMarkedRead, "success");
     } catch (err) {
       console.error(err);
     }
@@ -117,143 +120,151 @@ const Notifications = ({ darkMode, showToast }) => {
   const unread   = notifs.filter((n) => !n.read).length;
   const filtered = notifs.filter((n) => filter === "Barchasi" || n.type === filter);
 
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-slate-500 text-sm font-black tracking-widest animate-pulse uppercase">{t.loadingData}</p>
+    </div>
+  );
+
   return (
-    <div style={{ width: "100%", maxWidth: 700, margin: "0 auto", padding: "40px 20px 80px" }}>
+    <div className="w-full max-w-4xl mx-auto px-6 py-12 md:py-20 lg:py-28">
+      {/* Header Section */}
       <ScrollReveal direction="up">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+        <div className="flex flex-wrap items-center justify-between gap-8 mb-12">
           <div>
-            <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
+            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
               {t.notifBadge}
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>
+            <div className="flex items-center gap-6">
+              <h2 className={`text-4xl md:text-5xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
                 {t.notifTitle}
               </h2>
               {unread > 0 && (
-                <span style={{ background: "#ef4444", color: "#fff", fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>
+                <span className="px-4 py-1.5 rounded-2xl bg-red-500 text-white text-xs font-black shadow-lg shadow-red-500/30 animate-pulse">
                   {unread}
                 </span>
               )}
             </div>
           </div>
+          
           {unread > 0 && (
-            <button onClick={markAllRead} style={{
-              padding: "8px 16px", background: "transparent",
-              border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`,
-              borderRadius: 10, fontSize: 13, fontWeight: 600,
-              color: "#3b82f6", cursor: "pointer",
-            }}>
-              {t.markAllRead}
+            <button 
+              onClick={markAllRead} 
+              className={`px-6 py-3 rounded-xl text-xs font-black transition-all border flex items-center gap-3 ${
+                darkMode ? "bg-slate-900/40 border-white/5 text-blue-400 hover:bg-slate-900/60" : "bg-white border-slate-200 text-blue-600 hover:shadow-xl shadow-slate-100"
+              }`}
+            >
+              <LuCheck size={16} /> {t.markAllRead}
             </button>
           )}
         </div>
 
-        {/* Filter pills */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+        {/* Filter Pills */}
+        <div className="flex flex-wrap gap-2 mb-12">
           {types.map((type) => (
-            <button key={type} onClick={() => setFilter(type)} style={{
-              padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: filter === type ? "#3b82f6" : darkMode ? "#1e293b" : "#f1f5f9",
-              color: filter === type ? "#fff" : darkMode ? "#94a3b8" : "#374151",
-              fontSize: 12, fontWeight: 600, transition: "all 0.2s",
-            }}>
+            <button 
+              key={type} 
+              onClick={() => setFilter(type)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all duration-300 border uppercase tracking-wider ${
+                filter === type 
+                  ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-600/30" 
+                  : darkMode ? "bg-slate-900/40 border-white/5 text-slate-500 hover:text-blue-400" : "bg-white border-slate-100 text-slate-500 hover:border-blue-500"
+              }`}
+            >
               {typeLabels[type] || type}
             </button>
           ))}
         </div>
       </ScrollReveal>
 
-      {/* Loading */}
-      {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #3b82f6", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <div style={{ fontSize: 48, display: "flex", justifyContent: "center", color: darkMode ? "#475569" : "#cbd5e1", marginBottom: 12 }}>
-            <LuBellOff />
+      {/* Notifications List */}
+      <ScrollReveal direction="up" delay={200}>
+        {filtered.length === 0 ? (
+          <div className={`py-40 text-center rounded-[3rem] border border-dashed transition-all ${
+            darkMode ? "bg-slate-900/20 border-white/10" : "bg-slate-50 border-slate-200 shadow-inner"
+          }`}>
+            <LuBellOff size={64} className="mx-auto mb-8 opacity-20 text-slate-500" />
+            <p className="text-slate-400 text-lg font-black uppercase tracking-widest">
+              {notifs.length === 0 ? t.noNotifications : t.noResults}
+            </p>
           </div>
-          <p style={{ color: darkMode ? "#94a3b8" : "#6b7280" }}>
-            {notifs.length === 0 ? "Hali bildirishnoma yo'q" : t.noNotifications}
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {filtered.map((n, i) => (
-            <ScrollReveal key={n.id} direction="up" delay={i * 40}>
-              <div style={{
-                display: "flex", alignItems: "flex-start", gap: 12,
-                padding: "14px 16px", borderRadius: 14,
-                background: n.read
-                  ? (darkMode ? "#1e293b" : "#fff")
-                  : (darkMode ? "#1e3a5f" : "#eff6ff"),
-                border: `1px solid ${n.read
-                  ? (darkMode ? "#334155" : "#e5e7eb")
-                  : "#bfdbfe"}`,
-                transition: "all 0.2s",
-                position: "relative",
-              }}>
-                {/* O'qilmagan dot */}
+        ) : (
+          <div className="space-y-4">
+            {filtered.map((n) => (
+              <div 
+                key={n.id}
+                className={`group p-6 rounded-4xl border transition-all duration-500 flex items-start gap-6 relative overflow-hidden ${
+                  !n.read 
+                    ? (darkMode ? "bg-blue-600/10 border-blue-500/30" : "bg-blue-50/50 border-blue-200")
+                    : (darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-sm")
+                } hover:scale-[1.01]`}
+              >
+                {/* Unread Indicator Dot */}
                 {!n.read && (
-                  <div style={{
-                    position: "absolute", top: 14, right: 14,
-                    width: 8, height: 8, borderRadius: "50%", background: "#3b82f6",
-                  }} />
+                  <div className="absolute top-6 right-6 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 animate-pulse" />
                 )}
 
-                {/* Icon */}
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                  background: (n.color || "#3b82f6") + "22",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18, color: n.color || "#3b82f6",
-                }}>
+                {/* Icon Container */}
+                <div 
+                  className="w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center text-2xl shadow-lg transition-transform duration-500 group-hover:scale-110"
+                  style={{ backgroundColor: `${n.color || "#3b82f6"}15`, color: n.color || "#3b82f6" }}
+                >
                   {n.icon}
                 </div>
 
-                {/* Matn */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 13, color: darkMode ? "#f1f5f9" : "#111" }}>
-                    {n.title}
-                  </p>
-                  <p style={{ margin: "0 0 6px", fontSize: 13, color: darkMode ? "#94a3b8" : "#4b5563", lineHeight: 1.5 }}>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className={`text-base font-black truncate ${darkMode ? "text-white" : "text-slate-900"}`}>
+                      {n.title}
+                    </h4>
+                    {!n.read && <span className="px-2 py-0.5 rounded-lg bg-blue-500 text-white text-[8px] font-black uppercase tracking-widest grow-0 shrink-0">{t.notifNewBadge}</span>}
+                  </div>
+                  <p className={`text-sm font-medium leading-relaxed mb-4 ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
                     {n.message || n.body}
                   </p>
+                  
                   {n.link && (
-                    <a href={n.link} style={{ fontSize: 11, color: "#3b82f6", textDecoration: "none" }}>
-                      🔗 {n.link}
+                    <a 
+                      href={n.link} 
+                      className="inline-flex items-center gap-2 text-xs font-black text-blue-500 hover:text-blue-400 transition-colors uppercase tracking-widest mb-4"
+                    >
+                      <LuBook size={14} /> {t.viewDetails}
                     </a>
                   )}
-                  <p style={{ margin: "4px 0 0", fontSize: 11, color: "#9ca3af" }}>{n.time}</p>
+                  
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500/60">{n.time}</p>
                 </div>
 
-                {/* Tugmalar */}
-                <div style={{ display: "flex", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
                   {!n.read && (
-                    <button onClick={() => markRead(n.id)} title="O'qilgan" style={{
-                      width: 28, height: 28, borderRadius: 6, border: "none",
-                      background: darkMode ? "#334155" : "#f3f4f6",
-                      cursor: "pointer", display: "flex", alignItems: "center",
-                      justifyContent: "center", fontSize: 14, color: "#10b981",
-                    }}>
-                      <LuCheck />
+                    <button 
+                      onClick={() => markRead(n.id)}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-emerald-500 shadow-lg transition-all active:scale-90 ${
+                        darkMode ? "bg-slate-800 hover:bg-slate-700" : "bg-white hover:bg-slate-50 border border-slate-100"
+                      }`}
+                      title={t.markRead}
+                    >
+                      <LuCheck size={18} />
                     </button>
                   )}
-                  <button onClick={() => deleteNotif(n.id)} title="O'chirish" style={{
-                    width: 28, height: 28, borderRadius: 6, border: "none",
-                    background: darkMode ? "#334155" : "#f3f4f6",
-                    cursor: "pointer", display: "flex", alignItems: "center",
-                    justifyContent: "center", fontSize: 14, color: "#ef4444",
-                  }}>
-                    <LuX />
+                  <button 
+                    onClick={() => deleteNotif(n.id)}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-red-500 shadow-lg transition-all active:scale-90 ${
+                      darkMode ? "bg-slate-800 hover:bg-slate-700" : "bg-white hover:bg-slate-50 border border-slate-100"
+                    }`}
+                    title={t.deleteNotif}
+                  >
+                    <LuX size={18} />
                   </button>
                 </div>
               </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </ScrollReveal>
     </div>
   );
 };

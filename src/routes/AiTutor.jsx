@@ -2,112 +2,66 @@ import React, { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
-import { LuMic, LuMicOff, LuPaperclip, LuRefreshCw, LuSend, LuX } from "react-icons/lu";
+import { LuMic, LuMicOff, LuPaperclip, LuRefreshCw, LuSend, LuX, LuGlobe, LuPalette, LuZap, LuFlame, LuLanguages, LuBot, LuUser, LuInbox, LuMessageSquare, LuAtom } from "react-icons/lu";
 
-const getQuickTopics = (lang) => {
+const getQuickTopics = (t, lang) => {
   const isUz = lang === "uz";
   const isRu = lang === "ru";
   const isFr = lang === "fr";
 
   const label = {
-    html: isUz ? "HTML" : "HTML",
-    css: isUz ? "CSS" : "CSS",
-    js: isUz ? "JavaScript" : "JavaScript",
-    react: isUz ? "React" : "React",
-    en: isUz ? "Ingliz tili" : isRu ? "Английский" : isFr ? "Anglais" : "English",
-    ru: isUz ? "Rus tili" : isRu ? "Русский" : isFr ? "Russe" : "Russian",
-    fr: isUz ? "Fransuz tili" : isRu ? "Французский" : isFr ? "Français" : "French",
-    fb: "Firebase",
+    html: t.aiTutorTopicHtml || "HTML",
+    css:  t.aiTutorTopicCss  || "CSS",
+    js:   t.aiTutorTopicJs   || "JavaScript",
+    react: t.aiTutorTopicReact || "React",
+    en:   t.aiTutorTopicEn  || "English",
+    ru:   t.aiTutorTopicRu  || "Russian",
+    fr:   t.aiTutorTopicFr  || "French",
+    fb:   t.aiTutorTopicFb  || "Firebase",
   };
 
   const topics = [
     {
-      icon: "🌐",
+      icon: <LuGlobe className="text-blue-400" />,
       label: label.html,
       prompt: isUz
         ? "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?"
-        : isRu
-          ? "Какие самые часто используемые HTML-теги и для чего нужен каждый из них?"
-          : isFr
-            ? "Quelles sont les balises HTML les plus utilisées et à quoi sert chacune d'elles ?"
-            : "Which are the most commonly used HTML tags and what is each tag used for?",
+        : isRu ? "Какие самые часто используемые HTML-теги?" : isFr ? "Quelles sont les balises HTML ?" : "Which are the most commonly used HTML tags?",
     },
     {
-      icon: "🎨",
+      icon: <LuPalette className="text-purple-400" />,
       label: label.css,
       prompt: isUz
         ? "CSS Flexbox va Grid farqi nima? Qachon qaysinisini ishlataman?"
-        : isRu
-          ? "Чем отличается Flexbox и Grid в CSS? Когда использовать каждый из них?"
-          : isFr
-            ? "Quelle est la différence entre Flexbox et Grid en CSS ? Quand utiliser chacun ?"
-            : "What is the difference between CSS Flexbox and Grid? When should I use each?",
+        : "What is the difference between CSS Flexbox and Grid?",
     },
     {
-      icon: "⚡",
+      icon: <LuZap className="text-yellow-400" />,
       label: label.js,
       prompt: isUz
         ? "JavaScript da async/await qanday ishlaydi? Misol bilan tushuntir."
-        : isRu
-          ? "Как работает async/await в JavaScript? Объясни на примере."
-          : isFr
-            ? "Comment fonctionne async/await en JavaScript ? Explique avec un exemple."
-            : "How does async/await work in JavaScript? Explain with an example.",
+        : "How does async/await work in JavaScript?",
     },
     {
-      icon: "⚛️",
+      icon: <LuAtom className="text-cyan-400" />,
       label: label.react,
       prompt: isUz
         ? "React hooks nima? useState va useEffect ni tushuntir."
-        : isRu
-          ? "Что такое хуки React? Объясни useState и useEffect."
-          : isFr
-            ? "Qu'est-ce que les hooks React ? Expliquez useState et useEffect."
-            : "What are React hooks? Explain useState and useEffect.",
+        : "What are React hooks? Explain useState and useEffect.",
     },
     {
-      icon: "🇬🇧",
+      icon: <LuLanguages className="text-green-400" />,
       label: label.en,
       prompt: isUz
         ? "Ingliz tilida Present Perfect va Simple Past farqini misol bilan tushuntir."
-        : isRu
-          ? "Объясни разницу между Present Perfect и Simple Past на примерах."
-          : isFr
-            ? "Expliquez la différence entre le Present Perfect et le Simple Past avec des exemples."
-            : "Explain the difference between Present Perfect and Simple Past with examples.",
+        : "Explain the difference between Present Perfect and Simple Past.",
     },
     {
-      icon: "🇷🇺",
-      label: label.ru,
-      prompt: isUz
-        ? "Rus tilida падежlar qanday ishlaydi? Misollar bilan tushuntir."
-        : isRu
-          ? "Как работают падежи в русском языке? Объясни на примерах."
-          : isFr
-            ? "Comment fonctionnent les cas en russe ? Expliquez avec des exemples."
-            : "How do cases work in Russian? Explain with examples.",
-    },
-    {
-      icon: "🇫🇷",
-      label: label.fr,
-      prompt: isUz
-        ? "Fransuz tilida être va avoir fe'llarini qachon ishlatiladi?"
-        : isRu
-          ? "Во французском: когда используются глаголы être и avoir? Объясни."
-          : isFr
-            ? "En français, quand utilise-t-on les verbes être et avoir ? Expliquez."
-            : "In French, when do we use the verbs être and avoir? Explain.",
-    },
-    {
-      icon: "🔥",
+      icon: <LuFlame className="text-orange-400" />,
       label: label.fb,
       prompt: isUz
         ? "Firebase Firestore da ma'lumot qo'shish, o'qish va o'chirish qanday amalga oshiriladi?"
-        : isRu
-          ? "В Firebase Firestore: как добавить, прочитать и удалить данные?"
-          : isFr
-            ? "Dans Firebase Firestore, comment ajouter, lire et supprimer des données ?"
-            : "In Firebase Firestore, how do I add, read, and delete data?",
+        : "How do I add, read, and delete data in Firebase Firestore?",
     },
   ];
 
@@ -159,7 +113,7 @@ const MessageBubble = ({ msg, darkMode }) => {
   return (
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 12, gap: 8, alignItems: "flex-end" }}>
       {!isUser && (
-        <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>🤖</div>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "white" }}><LuBot /></div>
       )}
       <div style={{
         maxWidth: "72%", padding: "10px 14px",
@@ -194,7 +148,7 @@ const MessageBubble = ({ msg, darkMode }) => {
         )}
       </div>
       {isUser && (
-        <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#f1f5f9", fontWeight: 700 }}>👤</div>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#f1f5f9", fontWeight: 700 }}><LuUser /></div>
       )}
     </div>
   );
@@ -205,7 +159,7 @@ const AiTutor = ({ darkMode, showToast }) => {
   const { lang, t } = useLang();
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering! 🤖",
+    content: t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering!",
   }]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
@@ -215,7 +169,7 @@ const AiTutor = ({ darkMode, showToast }) => {
   const [imageUploading, setImageUploading] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
 
-  const quickTopics = getQuickTopics(lang);
+  const quickTopics = getQuickTopics(t, lang);
   const suggestedQuestions = getSuggestedQuestions(lang);
 
   const messagesAreaRef = useRef(null);
@@ -343,7 +297,7 @@ const AiTutor = ({ darkMode, showToast }) => {
               ...history,
               { role: "user", parts: currentUserParts },
             ],
-            generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+            generationConfig: { maxOutputTokens: 4096, temperature: 0.7 },
           }),
         }
       );
@@ -355,7 +309,7 @@ const AiTutor = ({ darkMode, showToast }) => {
 
       const data = await res.json();
       const reply =
-        data.candidates?.[0]?.content?.parts?.[0]?.text || "Javob olishda xatolik yuz berdi.";
+        data.candidates?.[0]?.content?.parts?.[0]?.text || t.aiTutorError || "Javob olishda xatolik yuz berdi.";
 
       setMessages((prev) => [...prev.slice(0, -1), { role: "assistant", content: reply }]);
     } catch (err) {
@@ -538,7 +492,7 @@ const AiTutor = ({ darkMode, showToast }) => {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🤖</div>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: "white" }}><LuBot /></div>
           <div>
             <h2 style={{ margin: 0, fontWeight: 800, fontSize: 18, color: darkMode ? "#f1f5f9" : "#111" }}>{t.aiTutorTitle}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -564,7 +518,7 @@ const AiTutor = ({ darkMode, showToast }) => {
             style={{ padding: "4px 11px", borderRadius: 20, background: darkMode ? "#1e293b" : "#f8fafc", border: `1px solid ${borderColor}`, color: darkMode ? "#94a3b8" : "#374151", fontSize: 11, fontWeight: 600, cursor: "pointer", opacity: loading ? 0.5 : 1, transition: "all 0.15s" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#3b82f6"; e.currentTarget.style.color = "#3b82f6"; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.color = darkMode ? "#94a3b8" : "#374151"; }}>
-            {t.icon} {t.label}
+            <span className="flex items-center gap-1.5">{t.icon} {t.label}</span>
           </button>
         ))}
       </div>

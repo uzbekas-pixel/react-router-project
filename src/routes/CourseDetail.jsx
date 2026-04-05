@@ -1,114 +1,106 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
 import {
   doc, setDoc, getDoc, serverTimestamp,
   collection, addDoc, onSnapshot, orderBy, query,
-  increment, getDocs, where,
+  increment, getDocs, where
 } from "firebase/firestore";
 import { db } from "../firebase/config";
-
+import { generateLessonContent } from "./CourseDetailContent";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COURSES DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const coursesData = {
   1: {
-    id: 1, category: "HTML", title: "HTML Asoslar", instructor: "Jasur Toshmatov",
-    color: "#e44d26", thumbnail: "https://placehold.co/800x400/e44d26/ffffff?text=HTML",
+    id: 1, category: "HTML", title: "HTML Asoslar", color: "#e44d26", thumbnail: "https://placehold.co/800x400/e44d26/ffffff?text=HTML",
     description: "Bu kursda HTML ning barcha asoslarini o'rganasiz. Teglar, atributlar, formalar va HTML5 ning zamonaviy imkoniyatlarini o'rganasiz.",
-    duration: 12, rating: 4.8, students: 3240, price: 0,
+    rating: 4.8, students: 3240, price: 0,
     sections: [
-      { title: "Kirish", lessons: [{ id: 1, title: "HTML nima?", duration: "8 min", free: true, videoId: "qz0aGYrrlhU" }, { id: 2, title: "Birinchi HTML sahifa", duration: "12 min", free: true, videoId: "UB1O30fR-EE" }, { id: 3, title: "Asosiy teglar", duration: "15 min", free: false, videoId: "kUMe1FH4CHE" }] },
-      { title: "Teglar va Atributlar", lessons: [{ id: 4, title: "Matn teglari", duration: "10 min", free: false, videoId: "PlxWf493en4" }, { id: 5, title: "Havola va rasmlar", duration: "14 min", free: false, videoId: "pQN-pnXPaVg" }, { id: 6, title: "Jadvallar", duration: "18 min", free: false, videoId: "hu-q2zYwEYs" }] },
-      { title: "Formalar", lessons: [{ id: 7, title: "Form elementlari", duration: "20 min", free: false, videoId: "G3e-cpL7ofc" }, { id: 8, title: "Validatsiya", duration: "16 min", free: false, videoId: "ysEN5RaKOlA" }] },
-      { title: "HTML5", lessons: [{ id: 9, title: "Semantik teglar", duration: "12 min", free: false, videoId: "kX3TfdUqpuU" }, { id: 10, title: "Audio va Video", duration: "15 min", free: false, videoId: "OOy764mDfu0" }, { id: 11, title: "Canvas", duration: "22 min", free: false, videoId: "gm1tiWcsMbI" }, { id: 12, title: "Loyiha", duration: "30 min", free: false, videoId: "r_hYR53r61M" }] },
+      { title: "Kirish", lessons: [{ id: 1, title: "HTML nima?", free: true }, { id: 2, title: "Birinchi HTML sahifa", free: true }, { id: 3, title: "Asosiy teglar", free: false }] },
+      { title: "Teglar va Atributlar", lessons: [{ id: 4, title: "Matn teglari", free: false }, { id: 5, title: "Havola va rasmlar", free: false }, { id: 6, title: "Jadvallar", free: false }] },
+      { title: "Formalar", lessons: [{ id: 7, title: "Form elementlari", free: false }, { id: 8, title: "Validatsiya", free: false }] },
+      { title: "HTML5", lessons: [{ id: 9, title: "Semantik teglar", free: false }, { id: 10, title: "Audio va Video", free: false }, { id: 11, title: "Canvas", free: false }, { id: 12, title: "Loyiha", free: false }] },
     ],
   },
   2: {
-    id: 2, category: "CSS", title: "CSS & Flexbox To'liq", instructor: "Nilufar Karimova",
-    color: "#264de4", thumbnail: "https://placehold.co/800x400/264de4/ffffff?text=CSS",
+    id: 2, category: "CSS", title: "CSS & Flexbox To'liq", color: "#264de4", thumbnail: "https://placehold.co/800x400/264de4/ffffff?text=CSS",
     description: "CSS ning chuqur qatlamlarini o'rganing. Flexbox, Grid, animatsiyalar va zamonaviy layout usullarini o'zlashtiring.",
-    duration: 18, rating: 4.7, students: 2890, price: 49000,
+    rating: 4.7, students: 2890, price: 49000,
     sections: [
-      { title: "CSS Asoslari", lessons: [{ id: 1, title: "CSS nima?", duration: "10 min", free: true, videoId: "1Rs2ND1ryYc" }, { id: 2, title: "Selektorlar", duration: "14 min", free: true, videoId: "l1mER1bV0N0" }, { id: 3, title: "Box Model", duration: "18 min", free: false, videoId: "rIO5326FgPE" }] },
-      { title: "Flexbox", lessons: [{ id: 4, title: "Flex container", duration: "16 min", free: false, videoId: "phWxA89Dy94" }, { id: 5, title: "Flex items", duration: "14 min", free: false, videoId: "3elGSZSWTbM" }, { id: 6, title: "Amaliy misol", duration: "20 min", free: false, videoId: "u044iM9xsjs" }] },
-      { title: "Grid", lessons: [{ id: 7, title: "Grid asoslari", duration: "18 min", free: false, videoId: "9zBsdzdE4sM" }, { id: 8, title: "Grid areas", duration: "15 min", free: false, videoId: "jV8B24rSN5o" }, { id: 9, title: "Responsive", duration: "22 min", free: false, videoId: "Tae96ze3xwY" }] },
-      { title: "Animatsiyalar", lessons: [{ id: 10, title: "Transition", duration: "12 min", free: false, videoId: "YszOss4Xdpo" }, { id: 11, title: "@keyframes", duration: "16 min", free: false, videoId: "f1WMjDx4snI" }, { id: 12, title: "Transform", duration: "14 min", free: false, videoId: "rzD-crmF57o" }, { id: 13, title: "Loyiha", duration: "35 min", free: false, videoId: "p0bGHP-PXD4" }] },
+      { title: "CSS Asoslari", lessons: [{ id: 1, title: "CSS nima?", free: true }, { id: 2, title: "Selektorlar", free: true }, { id: 3, title: "Box Model", free: false }] },
+      { title: "Flexbox", lessons: [{ id: 4, title: "Flex container", free: false }, { id: 5, title: "Flex items", free: false }, { id: 6, title: "Amaliy misol", free: false }] },
+      { title: "Grid", lessons: [{ id: 7, title: "Grid asoslari", free: false }, { id: 8, title: "Grid areas", free: false }, { id: 9, title: "Responsive", free: false }] },
+      { title: "Animatsiyalar", lessons: [{ id: 10, title: "Transition", free: false }, { id: 11, title: "@keyframes", free: false }, { id: 12, title: "Transform", free: false }, { id: 13, title: "Loyiha", free: false }] },
     ],
   },
   3: {
-    id: 3, category: "JavaScript", title: "JavaScript To'liq Kurs", instructor: "Bobur Yusupov",
-    color: "#d4a017", thumbnail: "https://placehold.co/800x400/d4a017/ffffff?text=JavaScript",
+    id: 3, category: "JavaScript", title: "JavaScript To'liq Kurs", color: "#d4a017", thumbnail: "https://placehold.co/800x400/d4a017/ffffff?text=JavaScript",
     description: "JavaScript ni noldan boshlab o'rganing. O'zgaruvchilar, funksiyalar, DOM, ES6+ va asinxron dasturlashni o'zlashtiring.",
-    duration: 36, rating: 4.9, students: 5100, price: 89000,
+    rating: 4.9, students: 5100, price: 89000,
     sections: [
-      { title: "Asoslar", lessons: [{ id: 1, title: "JavaScript nima?", duration: "10 min", free: true, videoId: "PkZNo7MFNFg" }, { id: 2, title: "O'zgaruvchilar", duration: "15 min", free: true, videoId: "W6NZfCO5SIk" }, { id: 3, title: "Ma'lumot turlari", duration: "18 min", free: false, videoId: "hdI2bqOjy3c" }, { id: 4, title: "Operatorlar", duration: "14 min", free: false, videoId: "FZzyMA6Ca_4" }] },
-      { title: "Funksiyalar", lessons: [{ id: 5, title: "Funksiyalar", duration: "20 min", free: false, videoId: "N8ap4k_1QEQ" }, { id: 6, title: "Arrow functions", duration: "16 min", free: false, videoId: "h33Srr5J9nY" }, { id: 7, title: "Callback", duration: "22 min", free: false, videoId: "pTbSfCT42_M" }] },
-      { title: "DOM", lessons: [{ id: 8, title: "DOM nima?", duration: "18 min", free: false, videoId: "y17RuWkWdn8" }, { id: 9, title: "Element tanlash", duration: "15 min", free: false, videoId: "i37KVt_IcXw" }, { id: 10, title: "Events", duration: "20 min", free: false, videoId: "XF1_MlZ5l6M" }, { id: 11, title: "DOM o'zgartirish", duration: "18 min", free: false, videoId: "NS1ofs3Zrec" }] },
-      { title: "ES6+", lessons: [{ id: 12, title: "Destructuring", duration: "16 min", free: false, videoId: "NIq3qLaHCIs" }, { id: 13, title: "Spread & Rest", duration: "14 min", free: false, videoId: "iLx4ma8i0i8" }, { id: 14, title: "Promise/async", duration: "25 min", free: false, videoId: "V_Kr9OSfDeU" }, { id: 15, title: "Fetch API", duration: "22 min", free: false, videoId: "cuEtnrL9-H0" }] },
-      { title: "Loyihalar", lessons: [{ id: 16, title: "Todo App", duration: "30 min", free: false, videoId: "G0jO8kUrg-I" }, { id: 17, title: "Weather App", duration: "35 min", free: false, videoId: "WZNG8UomjAg" }, { id: 18, title: "Quiz App", duration: "28 min", free: false, videoId: "riDzcEQbX6k" }] },
+      { title: "Asoslar", lessons: [{ id: 1, title: "JavaScript nima?", free: true }, { id: 2, title: "O'zgaruvchilar", free: true }, { id: 3, title: "Ma'lumot turlari", free: false }, { id: 4, title: "Operatorlar", free: false }] },
+      { title: "Funksiyalar", lessons: [{ id: 5, title: "Funksiyalar", free: false }, { id: 6, title: "Arrow functions", free: false }, { id: 7, title: "Callback", free: false }] },
+      { title: "DOM", lessons: [{ id: 8, title: "DOM nima?", free: false }, { id: 9, title: "Element tanlash", free: false }, { id: 10, title: "Events", free: false }, { id: 11, title: "DOM o'zgartirish", free: false }] },
+      { title: "ES6+", lessons: [{ id: 12, title: "Destructuring", free: false }, { id: 13, title: "Spread & Rest", free: false }, { id: 14, title: "Promise/async", free: false }, { id: 15, title: "Fetch API", free: false }] },
+      { title: "Loyihalar", lessons: [{ id: 16, title: "Todo App", free: false }, { id: 17, title: "Weather App", free: false }, { id: 18, title: "Quiz App", free: false }] },
     ],
   },
   4: {
-    id: 4, category: "React", title: "React.js Zamonaviy", instructor: "Sardor Nazarov",
-    color: "#0ea5e9", thumbnail: "https://placehold.co/800x400/0ea5e9/ffffff?text=React",
+    id: 4, category: "React", title: "React.js Zamonaviy", color: "#0ea5e9", thumbnail: "https://placehold.co/800x400/0ea5e9/ffffff?text=React",
     description: "React.js ni chuqur o'rganing. Komponentlar, Hooks, Router, State management va zamonaviy React patterns.",
-    duration: 30, rating: 4.9, students: 4200, price: 120000,
+    rating: 4.9, students: 4200, price: 120000,
     sections: [
-      { title: "React Asoslari", lessons: [{ id: 1, title: "React nima?", duration: "12 min", free: true, videoId: "bMknfKXIFA8" }, { id: 2, title: "Vite setup", duration: "15 min", free: true, videoId: "SqcY0GlETPk" }, { id: 3, title: "JSX", duration: "18 min", free: false, videoId: "7fPXI_MnBOY" }, { id: 4, title: "Komponentlar", duration: "20 min", free: false, videoId: "Y2hgEGPzTZY" }] },
-      { title: "Props va State", lessons: [{ id: 5, title: "Props", duration: "16 min", free: false, videoId: "m7OWwFZGs_E" }, { id: 6, title: "useState", duration: "20 min", free: false, videoId: "O6P86uwfdR0" }, { id: 7, title: "State o'zgartirish", duration: "18 min", free: false, videoId: "4pO-HcG2igk" }] },
-      { title: "Hooks", lessons: [{ id: 8, title: "useEffect", duration: "22 min", free: false, videoId: "0ZJgIjIuY7U" }, { id: 9, title: "useRef/useMemo", duration: "18 min", free: false, videoId: "t2ypzz6gqm0" }, { id: 10, title: "Custom hooks", duration: "20 min", free: false, videoId: "6ThXsUwLWvc" }] },
-      { title: "Router", lessons: [{ id: 11, title: "Routing", duration: "18 min", free: false, videoId: "aZGzwEjZrXc" }, { id: 12, title: "Dynamic routes", duration: "16 min", free: false, videoId: "Law7wfdg_ls" }, { id: 13, title: "Protected routes", duration: "20 min", free: false, videoId: "X8eAbu1RWZ4" }] },
-      { title: "Loyihalar", lessons: [{ id: 14, title: "Todo App", duration: "25 min", free: false, videoId: "pCA4qpQDZD8" }, { id: 15, title: "E-commerce", duration: "40 min", free: false, videoId: "y66RgYMAgSo" }, { id: 16, title: "Dashboard", duration: "35 min", free: false, videoId: "XtMThy8QKqU" }] },
+      { title: "React Asoslari", lessons: [{ id: 1, title: "React nima?", free: true }, { id: 2, title: "Vite setup", free: true }, { id: 3, title: "JSX", free: false }, { id: 4, title: "Komponentlar", free: false }] },
+      { title: "Props va State", lessons: [{ id: 5, title: "Props", free: false }, { id: 6, title: "useState", free: false }, { id: 7, title: "State o'zgartirish", free: false }] },
+      { title: "Hooks", lessons: [{ id: 8, title: "useEffect", free: false }, { id: 9, title: "useRef/useMemo", free: false }, { id: 10, title: "Custom hooks", free: false }] },
+      { title: "Router", lessons: [{ id: 11, title: "Routing", free: false }, { id: 12, title: "Dynamic routes", free: false }, { id: 13, title: "Protected routes", free: false }] },
+      { title: "Loyihalar", lessons: [{ id: 14, title: "Todo App", free: false }, { id: 15, title: "E-commerce", free: false }, { id: 16, title: "Dashboard", free: false }] },
     ],
   },
   5: {
-    id: 5, category: "English", title: "Ingliz Tili A1→B2", instructor: "Malika Ergasheva",
-    color: "#003580", thumbnail: "https://placehold.co/800x400/003580/ffffff?text=English",
+    id: 5, category: "English", title: "Ingliz Tili A1→B2", color: "#003580", thumbnail: "https://placehold.co/800x400/003580/ffffff?text=English",
     description: "Ingliz tilini noldan boshlang. A1 dan B2 gacha barcha darajalarni o'zlashtiring.",
-    duration: 60, rating: 4.6, students: 8900, price: 75000,
+    rating: 4.6, students: 8900, price: 75000,
     sections: [
-      { title: "A1", lessons: [{ id: 1, title: "Salomlashish", duration: "15 min", free: true, videoId: "3IqtmUscE_U" }, { id: 2, title: "Sonlar", duration: "12 min", free: true, videoId: "vnt2mBqBnAc" }, { id: 3, title: "To be", duration: "18 min", free: false, videoId: "b1qsWGCPTJA" }, { id: 4, title: "Oila", duration: "20 min", free: false, videoId: "WqFbE0P8iBU" }] },
-      { title: "A2", lessons: [{ id: 5, title: "Simple Present", duration: "22 min", free: false, videoId: "UgK6S3iy_K0" }, { id: 6, title: "Simple Past", duration: "20 min", free: false, videoId: "S7bPiXjlj60" }, { id: 7, title: "Suhbat", duration: "18 min", free: false, videoId: "J5-JEnvfgMQ" }, { id: 8, title: "Xarid", duration: "16 min", free: false, videoId: "cg62_KPID3s" }] },
-      { title: "B1", lessons: [{ id: 9, title: "Present Perfect", duration: "24 min", free: false, videoId: "hMoAYFIYPGQ" }, { id: 10, title: "Modal verbs", duration: "20 min", free: false, videoId: "DFIuZYODZqs" }, { id: 11, title: "Conditional", duration: "22 min", free: false, videoId: "if3vYAgaGOo" }, { id: 12, title: "Ish suhbati", duration: "25 min", free: false, videoId: "HG68Ymazo18" }] },
-      { title: "B2", lessons: [{ id: 13, title: "Passive voice", duration: "20 min", free: false, videoId: "fftVGPPxqHg" }, { id: 14, title: "Advanced vocab", duration: "22 min", free: false, videoId: "5MgBikgcWnY" }, { id: 15, title: "IELTS Writing", duration: "30 min", free: false, videoId: "jShKfPwDMDk" }, { id: 16, title: "IELTS Speaking", duration: "28 min", free: false, videoId: "KywMN-EtNiI" }] },
+      { title: "A1", lessons: [{ id: 1, title: "Salomlashish", free: true }, { id: 2, title: "Sonlar", free: true }, { id: 3, title: "To be", free: false }, { id: 4, title: "Oila", free: false }] },
+      { title: "A2", lessons: [{ id: 5, title: "Simple Present", free: false }, { id: 6, title: "Simple Past", free: false }, { id: 7, title: "Suhbat", free: false }, { id: 8, title: "Xarid", free: false }] },
+      { title: "B1", lessons: [{ id: 9, title: "Present Perfect", free: false }, { id: 10, title: "Modal verbs", free: false }, { id: 11, title: "Conditional", free: false }, { id: 12, title: "Ish suhbati", free: false }] },
+      { title: "B2", lessons: [{ id: 13, title: "Passive voice", free: false }, { id: 14, title: "Advanced vocab", free: false }, { id: 15, title: "IELTS Writing", free: false }, { id: 16, title: "IELTS Speaking", free: false }] },
     ],
   },
   6: {
-    id: 6, category: "Russian", title: "Rus Tili Asosiy Kurs", instructor: "Alisher Hamidov",
-    color: "#c0392b", thumbnail: "https://placehold.co/800x400/c0392b/ffffff?text=Русский",
+    id: 6, category: "Russian", title: "Rus Tili Asosiy Kurs", color: "#c0392b", thumbnail: "https://placehold.co/800x400/c0392b/ffffff?text=Русский",
     description: "Rus tilini noldan o'rganing. Alifbo, grammatika, suhbat va biznes ruscha.",
-    duration: 45, rating: 4.5, students: 4500, price: 65000,
+    rating: 4.5, students: 4500, price: 65000,
     sections: [
-      { title: "Kirish", lessons: [{ id: 1, title: "Rus alifbosi", duration: "20 min", free: true, videoId: "ex7XbNaEdAk" }, { id: 2, title: "Talaffuz", duration: "18 min", free: true, videoId: "PyKFfNLTbMM" }, { id: 3, title: "Salomlashish", duration: "15 min", free: false, videoId: "9PzHiDrJIiw" }] },
-      { title: "Grammatika", lessons: [{ id: 4, title: "Ot va sifat", duration: "22 min", free: false, videoId: "rXUgFXL0-No" }, { id: 5, title: "Падежlar", duration: "30 min", free: false, videoId: "Cv5Vu2GPKZE" }, { id: 6, title: "Fe'llar", duration: "25 min", free: false, videoId: "w2X7-a10B4c" }, { id: 7, title: "Sonlar", duration: "18 min", free: false, videoId: "0xvjN0BNTVE" }] },
-      { title: "Suhbat", lessons: [{ id: 8, title: "Tanishish", duration: "20 min", free: false, videoId: "KPwCsNIUAKM" }, { id: 9, title: "Yo'l so'rash", duration: "18 min", free: false, videoId: "FbTs7ckVEYE" }, { id: 10, title: "Do'konda", duration: "16 min", free: false, videoId: "9nGCb8JQKNE" }, { id: 11, title: "Mehmonxona", duration: "20 min", free: false, videoId: "pXIuiPDgH4A" }] },
-      { title: "Biznes", lessons: [{ id: 12, title: "Ish muloqoti", duration: "25 min", free: false, videoId: "SZ2lFa4EFxE" }, { id: 13, title: "Hujjatlar", duration: "22 min", free: false, videoId: "UGPGAn4qyrU" }, { id: 14, title: "TORFL", duration: "30 min", free: false, videoId: "3Vp3BsIE3sA" }] },
+      { title: "Kirish", lessons: [{ id: 1, title: "Rus alifbosi", free: true }, { id: 2, title: "Talaffuz", free: true }, { id: 3, title: "Salomlashish", free: false }] },
+      { title: "Grammatika", lessons: [{ id: 4, title: "Ot va sifat", free: false }, { id: 5, title: "Падежlar", free: false }, { id: 6, title: "Fe'llar", free: false }, { id: 7, title: "Sonlar", free: false }] },
+      { title: "Suhbat", lessons: [{ id: 8, title: "Tanishish", free: false }, { id: 9, title: "Yo'l so'rash", free: false }, { id: 10, title: "Do'konda", free: false }, { id: 11, title: "Mehmonxona", free: false }] },
+      { title: "Biznes", lessons: [{ id: 12, title: "Ish muloqoti", free: false }, { id: 13, title: "Hujjatlar", free: false }, { id: 14, title: "TORFL", free: false }] },
     ],
   },
   7: {
-    id: 7, category: "French", title: "Fransuz Tili Kursi", instructor: "Dilorom Saidova",
-    color: "#002395", thumbnail: "https://placehold.co/800x400/002395/ffffff?text=Français",
+    id: 7, category: "French", title: "Fransuz Tili Kursi", color: "#002395", thumbnail: "https://placehold.co/800x400/002395/ffffff?text=Français",
     description: "Fransuz tilini asosdan o'rganing. Alifbo, grammatika, suhbat va madaniyat.",
-    duration: 40, rating: 4.4, students: 2100, price: 70000,
+    rating: 4.4, students: 2100, price: 70000,
     sections: [
-      { title: "Asoslar", lessons: [{ id: 1, title: "Alifbo", duration: "18 min", free: true, videoId: "KN_2RMkVGXA" }, { id: 2, title: "Bonjour!", duration: "14 min", free: true, videoId: "x8pEAfKJp8M" }, { id: 3, title: "Sonlar", duration: "16 min", free: false, videoId: "l7M_Jzh9mME" }, { id: 4, title: "Ranglar", duration: "14 min", free: false, videoId: "bBdH0GNqW3o" }] },
-      { title: "Grammatika", lessons: [{ id: 5, title: "Artikl", duration: "20 min", free: false, videoId: "VVcibWkGnks" }, { id: 6, title: "Être/Avoir", duration: "22 min", free: false, videoId: "dxpMc1H06Rw" }, { id: 7, title: "Présent", duration: "20 min", free: false, videoId: "bFjFwlxTMPo" }, { id: 8, title: "Sifatlar", duration: "18 min", free: false, videoId: "MYVR2xzLVlw" }] },
-      { title: "Suhbat", lessons: [{ id: 9, title: "Tanishish", duration: "18 min", free: false, videoId: "Lxs6PpBo6QA" }, { id: 10, title: "Yo'l so'rash", duration: "16 min", free: false, videoId: "5gQF6IfRBgM" }, { id: 11, title: "Restoran", duration: "18 min", free: false, videoId: "RLvKC9RMGFU" }] },
-      { title: "Madaniyat", lessons: [{ id: 12, title: "Fransiya tarixi", duration: "20 min", free: false, videoId: "I_4NokttBYo" }, { id: 13, title: "Oshxona", duration: "16 min", free: false, videoId: "kVRczHpoa2A" }, { id: 14, title: "Imtihon", duration: "30 min", free: false, videoId: "G0-EvQWVb1Y" }] },
+      { title: "Asoslar", lessons: [{ id: 1, title: "Alifbo", free: true }, { id: 2, title: "Bonjour!", free: true }, { id: 3, title: "Sonlar", free: false }, { id: 4, title: "Ranglar", free: false }] },
+      { title: "Grammatika", lessons: [{ id: 5, title: "Artikl", free: false }, { id: 6, title: "Être/Avoir", free: false }, { id: 7, title: "Présent", free: false }, { id: 8, title: "Sifatlar", free: false }] },
+      { title: "Suhbat", lessons: [{ id: 9, title: "Tanishish", free: false }, { id: 10, title: "Yo'l so'rash", free: false }, { id: 11, title: "Restoran", free: false }] },
+      { title: "Madaniyat", lessons: [{ id: 12, title: "Fransiya tarixi", free: false }, { id: 13, title: "Oshxona", free: false }, { id: 14, title: "Imtihon", free: false }] },
     ],
   },
   8: {
-    id: 8, category: "HTML", title: "HTML5 & Semantik Teglar", instructor: "Kamol Rashidov",
-    color: "#e44d26", thumbnail: "https://placehold.co/800x400/e44d26/ffffff?text=HTML5",
+    id: 8, category: "HTML", title: "HTML5 & Semantik Teglar", color: "#e44d26", thumbnail: "https://placehold.co/800x400/e44d26/ffffff?text=HTML5",
     description: "HTML5 ning yangi imkoniyatlari. Semantik teglar, multimedia va Canvas.",
-    duration: 8, rating: 4.3, students: 1800, price: 35000,
+    rating: 4.3, students: 1800, price: 35000,
     sections: [
-      { title: "HTML5", lessons: [{ id: 1, title: "HTML5 yangiliklari", duration: "12 min", free: true, videoId: "UB1O30fR-EE" }, { id: 2, title: "Doctype/meta", duration: "10 min", free: true, videoId: "D-h8L5hgW-w" }, { id: 3, title: "Semantik teglar", duration: "15 min", free: false, videoId: "kX3TfdUqpuU" }] },
-      { title: "Semantika", lessons: [{ id: 4, title: "nav/article/section", duration: "18 min", free: false, videoId: "OOy764mDfu0" }, { id: 5, title: "figure/figcaption", duration: "12 min", free: false, videoId: "gm1tiWcsMbI" }, { id: 6, title: "SEO semantika", duration: "16 min", free: false, videoId: "r_hYR53r61M" }] },
-      { title: "Multimedia", lessons: [{ id: 7, title: "Video tegi", duration: "14 min", free: false, videoId: "PlxWf493en4" }, { id: 8, title: "Audio tegi", duration: "12 min", free: false, videoId: "pQN-pnXPaVg" }, { id: 9, title: "Canvas", duration: "20 min", free: false, videoId: "hu-q2zYwEYs" }, { id: 10, title: "SVG", duration: "18 min", free: false, videoId: "G3e-cpL7ofc" }] },
+      { title: "HTML5", lessons: [{ id: 1, title: "HTML5 yangiliklari", free: true }, { id: 2, title: "Doctype/meta", free: true }, { id: 3, title: "Semantik teglar", free: false }] },
+      { title: "Semantika", lessons: [{ id: 4, title: "nav/article/section", free: false }, { id: 5, title: "figure/figcaption", free: false }, { id: 6, title: "SEO semantika", free: false }] },
+      { title: "Multimedia", lessons: [{ id: 7, title: "Video tegi", free: false }, { id: 8, title: "Audio tegi", free: false }, { id: 9, title: "Canvas", free: false }, { id: 10, title: "SVG", free: false }] },
     ],
   },
 };
@@ -272,54 +264,536 @@ const RatingModal = ({ courseId, onClose, darkMode }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VIDEO LESSON MODAL
-// ─────────────────────────────────────────────────────────────────────────────
-const VideoLessonModal = ({ lesson, courseColor, onClose, onComplete, darkMode }) => {
-  const [watched,  setWatched]  = useState(false);
-  const [progress, setProgress] = useState(0);
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI LESSON MODAL — Comprehensive AI-Tutor Engine (v2)
+// • NO iframe / videoId references
+// • Firebase onComplete / onClose contract is FULLY PRESERVED
+// • z-index: 10000 — above sidebar, below nothing
+// ═══════════════════════════════════════════════════════════════════════════════
 
+/* ─── CSS injected once ─── */
+const AI_MODAL_CSS = `
+  @keyframes ai-breathe   { 0%,100%{transform:scale(1)}    50%{transform:scale(1.06)} }
+  @keyframes ai-pulse     { 0%,100%{opacity:1}              50%{opacity:.45} }
+  @keyframes ai-glow-ring { 0%,100%{box-shadow:0 0 0 0 var(--ac)33} 60%{box-shadow:0 0 0 9px transparent} }
+  @keyframes ai-slide-fwd { from{opacity:0;transform:translateX(52px)} to{opacity:1;transform:none} }
+  @keyframes ai-slide-bwd { from{opacity:0;transform:translateX(-52px)} to{opacity:1;transform:none} }
+  @keyframes ai-fade-up   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+  @keyframes ai-shimmer   { 0%{background-position:200% center} 100%{background-position:-200% center} }
+  @keyframes ai-cursor    { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes ai-pop-in    { 0%{opacity:0;transform:scale(.88)} 100%{opacity:1;transform:scale(1)} }
+
+  .ai-tw-cursor { display:inline-block; animation:ai-cursor 0.75s step-end infinite; }
+  .ai-slide-fwd { animation:ai-slide-fwd 0.38s cubic-bezier(.22,.68,0,1.2) both; }
+  .ai-slide-bwd { animation:ai-slide-bwd 0.38s cubic-bezier(.22,.68,0,1.2) both; }
+  .ai-fade-up   { animation:ai-fade-up 0.32s ease both; }
+  .ai-pop-in    { animation:ai-pop-in  0.28s cubic-bezier(.22,.68,0,1.3) both; }
+
+  .ai-code-block { font-family:'Fira Code','Cascadia Code','JetBrains Mono',monospace; }
+  .ai-scroll::-webkit-scrollbar { width:4px; }
+  .ai-scroll::-webkit-scrollbar-track { background:transparent; }
+  .ai-scroll::-webkit-scrollbar-thumb { background:var(--ac)55; border-radius:4px; }
+
+  .ai-quiz-opt:hover { border-color:var(--ac) !important; background:var(--ac)18 !important; }
+  .ai-nav-btn:hover:not(:disabled) { filter:brightness(1.12); transform:translateY(-1px); }
+  .ai-nav-btn { transition:all .18s ease; }
+`;
+
+/* ─── Typewriter hook ─── */
+const useTypewriter = (text, speed = 30) => {
+  const [out, setOut] = useState("");
+  const [done, setDone] = useState(false);
   useEffect(() => {
-    const fn = (e) => e.key === "Escape" && onClose(false);
+    setOut(""); setDone(false);
+    let i = 0;
+    const tid = setInterval(() => {
+      i++;
+      setOut(text.slice(0, i));
+      if (i >= text.length) { clearInterval(tid); setDone(true); }
+    }, speed);
+    return () => clearInterval(tid);
+  }, [text, speed]);
+  return { out, done };
+};
+
+/* ─── Syntax-highlight tokens (no external lib) ─── */
+const syntaxColor = (line) => {
+  const keywords = /\b(const|let|var|function|return|import|export|default|from|if|else|for|while|class|extends|new|this|async|await|try|catch|null|undefined|true|false|typeof|of|in)\b/g;
+  const strings  = /(["'`])(?:(?!\1)[^\\]|\\.)*\1/g;
+  const comments = /(\/\/.*|\/\*[\s\S]*?\*\/)/g;
+  const numbers  = /\b(\d+)\b/g;
+  const tags     = /(&lt;\/?[\w-]+(?:\s[^&]*)?\/?&gt;)/g;
+  const attrs    = /\b(class|id|href|src|alt|type|placeholder|style|onClick|onChange|key)=/g;
+
+  let h = line
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  h = h.replace(comments, m => `<span style="color:#6a9955">${m}</span>`);
+  h = h.replace(strings,  m => `<span style="color:#ce9178">${m}</span>`);
+  h = h.replace(keywords, m => `<span style="color:#569cd6;font-weight:600">${m}</span>`);
+  h = h.replace(numbers,  m => `<span style="color:#b5cea8">${m}</span>`);
+  h = h.replace(tags,     m => `<span style="color:#4ec9b0">${m}</span>`);
+  h = h.replace(attrs,    m => `<span style="color:#9cdcfe">${m}</span>`);
+  return h;
+};
+
+/* ─── Code Block ─── */
+const CodeBlock = ({ code, lang = "js", accent }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1800); };
+  const ext = { js: "script.js", jsx: "App.jsx", html: "index.html", css: "styles.css", ts: "main.ts" }[lang] || "code.txt";
+  return (
+    <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${accent}44`, marginTop: 4 }}>
+      {/* titlebar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#161b22" }}>
+        {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c }} />)}
+        <span style={{ marginLeft: 8, fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{ext}</span>
+        <button onClick={copy} style={{ marginLeft: "auto", padding: "3px 10px", borderRadius: 6, border: `1px solid ${accent}55`, background: "transparent", color: copied ? "#4ade80" : accent, fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "all .2s" }}>
+          {copied ? "✓ Nusxalandi" : "Nusxalash"}
+        </button>
+      </div>
+      {/* lines */}
+      <pre className="ai-code-block ai-scroll" style={{ margin: 0, padding: "18px 20px", background: "#0d1117", color: "#d4d4d4", fontSize: 12.5, lineHeight: 1.8, overflowX: "auto", maxHeight: 280 }}>
+        {code.split("\n").map((ln, i) => (
+          <div key={i} style={{ display: "flex", gap: 12 }}>
+            <span style={{ color: "#3d4148", userSelect: "none", minWidth: 20, textAlign: "right", fontSize: 11 }}>{i + 1}</span>
+            <span dangerouslySetInnerHTML={{ __html: syntaxColor(ln) }} />
+          </div>
+        ))}
+      </pre>
+    </div>
+  );
+};
+
+/* ─── Mini Quiz ─── */
+const MiniQuiz = ({ quiz, accent, darkMode }) => {
+  const [sel, setSel]   = useState(null);
+  const [show, setShow] = useState(false);
+  const text  = darkMode ? "#f1f5f9" : "#111827";
+  const cardBg = darkMode ? "rgba(30,41,59,.6)" : "rgba(248,250,252,.9)";
+
+  return (
+    <div style={{ marginTop: 4 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ padding: "3px 10px", borderRadius: 20, background: `${accent}22`, color: accent, fontSize: 11 }}>SAVOL</span>
+        {quiz.q}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {quiz.opts.map((opt, i) => {
+          const isCorrect = i === quiz.correct;
+          const isSelected = sel === i;
+          let bg = cardBg, border = darkMode ? "#334155" : "#e2e8f0", color = text;
+          if (show) {
+            if (isCorrect)  { bg = "#052e16"; border = "#4ade80"; color = "#4ade80"; }
+            if (isSelected && !isCorrect) { bg = "#450a0a"; border = "#f87171"; color = "#f87171"; }
+          } else if (isSelected) { bg = `${accent}22`; border = accent; color = accent; }
+          return (
+            <button key={i} className="ai-quiz-opt" disabled={show} onClick={() => setSel(i)}
+              style={{ "--ac": accent, padding: "11px 16px", borderRadius: 11, border: `1.5px solid ${border}`, background: bg, color, fontSize: 13, fontWeight: 500, cursor: show ? "default" : "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all .2s" }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", background: `${border}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
+                {show && isCorrect ? "✓" : show && isSelected && !isCorrect ? "✗" : String.fromCharCode(65 + i)}
+              </span>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {sel !== null && !show && (
+        <button onClick={() => setShow(true)} style={{ marginTop: 12, padding: "9px 22px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+          Javobni ko'rish
+        </button>
+      )}
+      {show && (
+        <div className="ai-fade-up" style={{ marginTop: 12, padding: "12px 16px", borderRadius: 11, background: darkMode ? "rgba(16,185,129,.12)" : "#f0fdf4", border: "1px solid #4ade8055", fontSize: 13, color: darkMode ? "#86efac" : "#166534", lineHeight: 1.7 }}>
+          💡 <strong>Izoh:</strong> {quiz.explanation}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── AI Chat Panel ─── */
+const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => {
+  const [q, setQ]         = useState("");
+  const [msgs, setMsgs]   = useState([]);
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+  const text  = darkMode ? "#f1f5f9" : "#111827";
+  const panelBg = darkMode ? "rgba(9,13,22,.97)" : "rgba(248,250,252,.97)";
+
+  const ask = async () => {
+    const question = q.trim();
+    if (!question || loading) return;
+    setQ("");
+    const newMsgs = [...msgs, { role: "user", content: question }];
+    setMsgs(newMsgs);
+    setLoading(true);
+    try {
+      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      const systemPrompt = `Sen "Uzbekas AI" nomli mutaxassis o'qituvchisan. Hozir "${lessonTitle}" kursining "${slideTitle}" slaydini o'rgatmoqdasan. Barcha javoblarni O'zbek tilida ber. Qisqa (3-5 gap), aniq va amaliy javob ber. Kerak bo'lsa kod misoli keltir.`;
+
+      // Gemini history formatiga o'tkazish (system promptni birinchi user xabar sifatida qo'shamiz)
+      const geminiHistory = newMsgs.slice(0, -1).map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [
+              ...geminiHistory,
+              { role: "user", parts: [{ text: question }] },
+            ],
+            generationConfig: {
+              maxOutputTokens: 1000,
+              temperature: 0.7,
+            },
+          }),
+        }
+      );
+      const data = await res.json();
+      const reply =
+        data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") ||
+        "Kechirasiz, javob ololmadim.";
+      setMsgs([...newMsgs, { role: "assistant", content: reply }]);
+    } catch {
+      setMsgs([...newMsgs, { role: "assistant", content: "❌ Tarmoq xatosi. Iltimos qayta urinib ko'ring." }]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, loading]);
+
+  return (
+    <div className="ai-pop-in" style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: panelBg, borderTop: `1.5px solid ${accent}55`, borderRadius: "18px 18px 0 0", display: "flex", flexDirection: "column", height: 340, zIndex: 20, backdropFilter: "blur(20px)" }}>
+      {/* header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderBottom: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, flexShrink: 0 }}>
+        <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${accent},${accent}88)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, animation: "ai-breathe 2.5s ease-in-out infinite" }}>🤖</div>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: accent }}>Uzbekas AI</div>
+          <div style={{ fontSize: 10, color: "#6b7280" }}>Mavzu: {slideTitle}</div>
+        </div>
+        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 18, color: "#94a3b8", cursor: "pointer" }}>✕</button>
+      </div>
+      {/* messages */}
+      <div className="ai-scroll" style={{ flex: 1, overflowY: "auto", padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
+        {msgs.length === 0 && (
+          <div style={{ textAlign: "center", color: "#6b7280", fontSize: 13, paddingTop: 20 }}>
+            💬 Bu slayd haqida savol bering...
+          </div>
+        )}
+        {msgs.map((m, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+            <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? accent : (darkMode ? "#1e293b" : "#fff"), color: m.role === "user" ? "#fff" : text, fontSize: 13, lineHeight: 1.65, border: m.role === "assistant" ? `1px solid ${darkMode ? "#334155" : "#e2e8f0"}` : "none", whiteSpace: "pre-wrap" }}>
+              {m.content}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: "flex", gap: 5, padding: "10px 14px" }}>
+            {[0,1,2].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: accent, animation: `ai-pulse 1s ${i*0.22}s ease-in-out infinite` }} />)}
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      {/* input */}
+      <div style={{ padding: "10px 14px", borderTop: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, display: "flex", gap: 8, flexShrink: 0 }}>
+        <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && ask()}
+          placeholder="Savolingizni yozing... (Enter = yuborish)"
+          style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: `1.5px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#0f172a" : "#f8fafc", color: text, fontSize: 13, outline: "none" }} />
+        <button onClick={ask} disabled={!q.trim() || loading}
+          style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: q.trim() && !loading ? accent : "#94a3b8", color: "#fff", fontSize: 13, fontWeight: 700, cursor: q.trim() && !loading ? "pointer" : "default", transition: "background .2s" }}>
+          →
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Slide Content Renderer ─── */
+const SlideContent = ({ content, accent, darkMode }) => {
+  const text = darkMode ? "#e2e8f0" : "#1e293b";
+  const sub  = darkMode ? "#94a3b8" : "#64748b";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {content.map((block, i) => {
+        if (block.kind === "paragraph") return (
+          <div key={i} style={{ fontSize: 14.5, color: sub, lineHeight: 1.85 }} dangerouslySetInnerHTML={{ __html: block.html }} />
+        );
+        if (block.kind === "highlight") return (
+          <div key={i} style={{ display: "flex", gap: 12, padding: "14px 18px", borderRadius: 14, background: darkMode ? `${accent}14` : `${accent}0e`, border: `1px solid ${accent}33` }}>
+            <span style={{ fontSize: 20, flexShrink: 0, marginTop: 2 }}>{block.icon}</span>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>{block.label}</div>
+              <div style={{ fontSize: 13.5, color: text, lineHeight: 1.75 }}>{block.text}</div>
+            </div>
+          </div>
+        );
+        if (block.kind === "points") return (
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {block.items.map((pt, j) => (
+              <div key={j} style={{ display: "flex", gap: 12, padding: "11px 16px", borderRadius: 12, background: darkMode ? "rgba(30,41,59,.6)" : "rgba(248,250,252,.9)", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}` }}>
+                <div style={{ width: 22, height: 22, borderRadius: 8, background: `linear-gradient(135deg,${accent},${accent}99)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: "#fff", flexShrink: 0, marginTop: 1 }}>{j + 1}</div>
+                <span style={{ fontSize: 13.5, color: text, lineHeight: 1.6 }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+        );
+        if (block.kind === "practices") return (
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {block.items.map((pt, j) => (
+              <div key={j} style={{ display: "flex", gap: 12, padding: "11px 16px", borderRadius: 12, background: darkMode ? "rgba(16,185,129,.07)" : "rgba(16,185,129,.05)", border: "1px solid rgba(16,185,129,.25)" }}>
+                <span style={{ color: "#10b981", fontSize: 16, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 13.5, color: text, lineHeight: 1.6 }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+        );
+        if (block.kind === "code") return <CodeBlock key={i} code={block.code} lang={block.lang} accent={accent} />;
+        if (block.kind === "quiz")  return <MiniQuiz  key={i} quiz={block} accent={accent} darkMode={darkMode} />;
+        if (block.kind === "tip") return (
+          <div key={i} style={{ padding: "10px 16px", borderRadius: 10, background: darkMode ? "rgba(245,158,11,.1)" : "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.3)", fontSize: 13, color: darkMode ? "#fcd34d" : "#92400e", lineHeight: 1.7 }}>
+            {block.text}
+          </div>
+        );
+        return null;
+      })}
+    </div>
+  );
+};
+
+/* ─── Top Progress Bar ─── */
+const TopProgressBar = ({ pct, accent }) => (
+  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,.06)", zIndex: 5 }}>
+    <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${accent},${accent}cc)`, transition: "width 0.5s cubic-bezier(.22,.68,0,1.2)", boxShadow: `0 0 10px ${accent}99` }} />
+  </div>
+);
+
+/* ─── AI Avatar (speaks slide intro via typewriter) ─── */
+const AIAvatar = ({ text, accent, darkMode, done }) => {
+  const textColor = darkMode ? "#e2e8f0" : "#1e293b";
+  const { out } = useTypewriter(text, 22);
+  return (
+    <div style={{ display: "flex", gap: 14, padding: "14px 20px", borderBottom: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, flexShrink: 0, background: darkMode ? `${accent}0a` : `${accent}07` }}>
+      <div style={{ position: "relative", flexShrink: 0 }}>
+        <div style={{ width: 46, height: 46, borderRadius: "50%", background: `linear-gradient(135deg,${accent}ee,${accent}66)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, animation: "ai-breathe 3s ease-in-out infinite", boxShadow: `0 0 0 3px ${accent}33` }}>🤖</div>
+        <div style={{ position: "absolute", bottom: 1, right: 1, width: 12, height: 12, borderRadius: "50%", background: "#4ade80", border: "2px solid " + (darkMode ? "#0d1117" : "#fff"), animation: "ai-pulse 2s infinite" }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>Uzbekas AI</span>
+          <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: `${accent}22`, color: accent }}>JONLI</span>
+        </div>
+        <div style={{ fontSize: 13.5, color: textColor, lineHeight: 1.65, minHeight: 22 }}>
+          {out}{!done && <span className="ai-tw-cursor" style={{ color: accent }}>|</span>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   AILessonModal  ←  MAIN EXPORT (replaces VideoLessonModal)
+   Props interface is IDENTICAL — no changes needed in CourseDetail's JSX.
+───────────────────────────────────────────────────────────────────────────── */
+const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, onClose, onComplete, darkMode, courseId, courseCategory }) => {
+  const slides   = generateLessonContent(lesson, courseId, courseCategory);
+  const accent   = courseColor || "#3b82f6";
+
+  const [cur,         setCur]         = useState(0);
+  const [dir,         setDir]         = useState(1);
+  const [animKey,     setAnimKey]     = useState(0);
+  const [viewed,      setViewed]      = useState(new Set([0]));
+  const [showChat,    setShowChat]    = useState(false);
+  const [avatarDone,  setAvatarDone]  = useState(false);
+
+  const pct      = Math.round((viewed.size / slides.length) * 100);
+  const isLast   = cur === slides.length - 1;
+  const allDone  = viewed.size === slides.length;
+  const slide    = slides[cur];
+
+  const textMain = darkMode ? "#f1f5f9" : "#0f172a";
+  const textSub  = darkMode ? "#94a3b8"  : "#64748b";
+  const modalBg  = darkMode ? "#0a0f1e"  : "#f8fafc";
+  const headerBg = darkMode ? "#060b18"  : "#ffffff";
+  const borderC  = darkMode ? "#1e2d45"  : "#e2e8f0";
+
+  /* avatar text per slide type */
+  const avatarLines = {
+    intro:     `Salom! Men Uzbekas AI — sizning shaxsiy o'qituvchingizman. Bugun "${lesson.title}" mavzusidan boshlaymiz. Tayyor bo'lsangiz, keling!`,
+    theory:    `Ajoyib! Endi nazariyani o'rganamiz. Bu qism muhim — diqqat bilan o'qing. Har bir tushunchani tushunish keyingi bosqich uchun poydevor.`,
+    code:      `Kodni ko'rishga tayyor bo'ling! Har bir satrni o'qing, kommentariyalarga e'tibor bering. Keyin o'zingiz ham yozib ko'ring — bu eng yaxshi usul.`,
+    challenge: `Bilimingizni sinash vaqti! Bu savol o'rganganlaringizni mustahkamlaydi. Xavotir olmang — xato ham o'rganish. Javobni tanlang.`,
+    practices: `Ajoyib ish! Endi professional standartlarni o'rganamiz. Bular katta kompaniyalarda qo'llaniladigan qoidalar. Yodda saqlang.`,
+    summary:   `Darsni muvaffaqiyatli yakunladingiz! 🎉 Siz bugun juda ko'p narsa o'rgandingiz. "Tugatdim" tugmasini bosib, XP yutib oling!`,
+  };
+
+  /* ESC key handler */
+  useEffect(() => {
+    const fn = (e) => { if (e.key === "Escape") onClose(false); };
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
   }, [onClose]);
 
+  /* mark viewed */
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setViewed(prev => new Set([...prev, cur])); setAvatarDone(false); }, [cur]);
+
+  const goTo = (idx) => {
+    if (idx < 0 || idx >= slides.length) return;
+    setDir(idx > cur ? 1 : -1);
+    setAnimKey(k => k + 1);
+    setCur(idx);
+    setShowChat(false);
+  };
+
+  /* inject CSS once */
   useEffect(() => {
-    let elapsed = 0;
-    const timer = setInterval(() => {
-      elapsed++;
-      const pct = Math.min(Math.round((elapsed / 8) * 100), 100);
-      setProgress(pct);
-      if (elapsed >= 8) { clearInterval(timer); setWatched(true); }
-    }, 1000);
-    return () => clearInterval(timer);
+    const id = "__uzbekas-ai-css__";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = AI_MODAL_CSS;
+      document.head.appendChild(style);
+    }
   }, []);
 
+  const slideClass = dir > 0 ? "ai-slide-fwd" : "ai-slide-bwd";
+
+  /* ── Slide type label badge ── */
+  const typeColors = { intro:"#7c3aed", theory:"#1d4ed8", code:"#0f766e", challenge:"#b45309", practices:"#166534", summary:"#10b981" };
+  const typeBg = typeColors[slide.type] || accent;
+
   return (
-    <div onClick={() => onClose(false)} style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 900, borderRadius: 20, overflow: "hidden", background: darkMode ? "#1e293b" : "#fff" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-          <span style={{ fontWeight: 700, color: darkMode ? "#fff" : "#111" }}>{lesson.title}</span>
-          <button onClick={() => onClose(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#94a3b8" }}>✕</button>
-        </div>
-        <div style={{ position: "relative", paddingTop: "56.25%", background: "#000" }}>
-          <iframe src={`https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&rel=0`}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen />
-        </div>
-        <div style={{ padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12, color: "#94a3b8" }}>
-            <span>{watched ? "✅ Ko'rib bo'lindi" : "⏳ Ko'rilmoqda..."}</span>
-            <span>{progress}%</span>
+    <div
+      onClick={() => onClose(false)}
+      style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: "12px", backdropFilter: "blur(8px)", cursor: "default !important" }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 900, maxHeight: "94vh", borderRadius: 24, overflow: "hidden", background: modalBg, display: "flex", flexDirection: "column", boxShadow: `0 0 0 1px ${accent}55, 0 40px 100px rgba(0,0,0,.7)`, position: "relative", cursor: "default !important" }}
+      >
+        {/* ── Top reading progress bar ── */}
+        <TopProgressBar pct={pct} accent={accent} />
+
+        {/* ── Modal Header ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 24px", background: headerBg, borderBottom: `1px solid ${borderC}`, flexShrink: 0, paddingTop: 18 }}>
+          {/* dot nav */}
+          <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1 }}>
+            {slides.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                title={s.label}
+                style={{ height: 6, width: i === cur ? 28 : viewed.has(i) ? 16 : 6, borderRadius: 3, border: "none", cursor: "pointer", padding: 0, background: i === cur ? accent : viewed.has(i) ? `${accent}70` : (darkMode ? "#253352" : "#cbd5e1"), transition: "width 0.5s cubic-bezier(.22,.68,0,1.2)", boxShadow: `0 0 10px ${accent}99` }}
+              />
+            ))}
           </div>
-          <div style={{ height: 6, background: darkMode ? "#334155" : "#e5e7eb", borderRadius: 3, overflow: "hidden", marginBottom: 16 }}>
-            <div style={{ width: `${progress}%`, height: "100%", background: watched ? "#10b981" : courseColor, transition: "width 0.4s ease" }} />
+
+          {/* lesson title */}
+          <div style={{ textAlign: "center", flex: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: textMain, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lesson.title}</div>
+            <div style={{ fontSize: 10.5, color: textSub, marginTop: 2 }}>{viewed.size}/{slides.length} slayd ko'rildi • {pct}% bajarildi</div>
           </div>
-          <button disabled={!watched} onClick={() => { onComplete(lesson.id); onClose(true); }}
-            style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", fontWeight: 700, background: watched ? (courseColor || "#3b82f6") : "#94a3b8", color: "#fff", cursor: watched ? "pointer" : "not-allowed" }}>
-            {watched ? "Tugatdim va davom etaman" : `Darsni ko'ring (${progress}%)`}
-          </button>
+
+          <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
+            <button onClick={() => setShowChat(v => !v)}
+              style={{ padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${accent}`, background: showChat ? accent : "transparent", color: showChat ? "#fff" : accent, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, transition: "all .2s" }}>
+              🤖 AI Chat
+            </button>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280", padding: "0 2px", lineHeight: 1 }}>✕</button>
+          </div>
         </div>
+
+        {/* ── AI Avatar ── */}
+        <AIAvatar
+          key={`av-${cur}`}
+          text={avatarLines[slide.type] || avatarLines.intro}
+          accent={accent}
+          darkMode={darkMode}
+          done={avatarDone}
+        />
+
+        {/* ── Scrollable Slide Area ── */}
+        <div className="ai-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 24px", position: "relative" }}>
+          <div key={`slide-${animKey}`} className={slideClass}>
+
+            {/* Slide card (glassmorphism) */}
+            <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, position: "relative" }}>
+              <img src={lesson.thumbnail || "https://placehold.co/800x400/3b82f6/ffffff?text=Lesson"} alt={lesson.title} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
+                <span style={{ background: accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{lesson.category || "AI Dars"}</span>
+                <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{lesson.title}</h1>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}>⭐ {courseRating || 0} · 👥 {(courseStudents || 0).toLocaleString()} talaba</p>
+              </div>
+            </div>
+
+            {/* Slide header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${typeBg}44,${typeBg}18)`, border: `1.5px solid ${typeBg}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                {slide.icon}
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 20, background: `${typeBg}22`, color: typeBg, letterSpacing: "0.1em" }}>{slide.label}</span>
+                  <span style={{ fontSize: 10, color: textSub }}>{cur + 1} / {slides.length}</span>
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: textMain, lineHeight: 1.3 }}>{slide.title}</div>
+              </div>
+            </div>
+
+            {/* Slide content */}
+            <SlideContent content={slide.content} accent={accent} darkMode={darkMode} />
+          </div>
+
+          {/* AI Chat panel — sticky bottom */}
+          {showChat && (
+            <div style={{ position: "sticky", bottom: 0, left: 0, right: 0, zIndex: 20 }}>
+              <AIChatPanel
+                lessonTitle={lesson.title}
+                slideTitle={slide.title}
+                accent={accent}
+                darkMode={darkMode}
+                onClose={() => setShowChat(false)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer Navigation ── */}
+        <div style={{ padding: "14px 24px 18px", borderTop: `1px solid ${borderC}`, background: headerBg, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              className="ai-nav-btn"
+              disabled={cur === 0}
+              onClick={() => goTo(cur - 1)}
+              style={{ padding: "12px 22px", borderRadius: 13, border: `1.5px solid ${borderC}`, background: "transparent", color: cur === 0 ? "#475569" : textMain, fontSize: 13, fontWeight: 600, cursor: cur === 0 ? "not-allowed" : "pointer", opacity: cur === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 6 }}>
+              ← Oldingi
+            </button>
+
+            {!isLast ? (
+              <button
+                className="ai-nav-btn"
+                onClick={() => goTo(cur + 1)}
+                style={{ flex: 1, padding: "12px 22px", borderRadius: 13, border: "none", background: accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: `0 4px 18px ${accent}60` }}>
+                Keyingi slayd →
+              </button>
+            ) : (
+              <button
+                className="ai-nav-btn"
+                disabled={!allDone}
+                onClick={() => { onComplete(lesson.id); onClose(true); }}
+                style={{ flex: 1, padding: "12px 22px", borderRadius: 13, border: "none", background: allDone ? "#10b981" : "#334155", color: "#fff", fontSize: 13, fontWeight: 700, cursor: allDone ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: allDone ? "0 4px 18px rgba(16,185,129,.45)" : "none", transition: "all .3s" }}>
+                {allDone ? "🎉 Tugatdim va XP yutib olaman!" : `Barcha slaydlarni ko'ring (${viewed.size}/${slides.length})`}
+              </button>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -435,6 +909,38 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   const { user } = useAuth();
   const course   = coursesData[courseId] || coursesData[1];
 
+  const [realRating,       setRealRating]       = useState(0);
+  const [realStudents,     setRealStudents]     = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadRealStats = async () => {
+      try {
+        let rRating = 0;
+        let rStudents = 0;
+        const reviewsSnap = await getDocs(collection(db, "courses", String(courseId), "reviews"));
+        if (!reviewsSnap.empty) {
+          let sum = 0;
+          reviewsSnap.forEach(d => { sum += Number(d.data().rating || 0); });
+          rRating = Number((sum / reviewsSnap.size).toFixed(1));
+        }
+        const courseSnap = await getDoc(doc(db, "courses", String(courseId)));
+        if (courseSnap.exists()) {
+          rStudents = courseSnap.data().students || 0;
+          if (reviewsSnap.empty && courseSnap.data().rating) {
+            rRating = courseSnap.data().rating;
+          }
+        }
+        if (!cancelled) {
+          setRealRating(rRating);
+          setRealStudents(rStudents);
+        }
+      } catch(e) { console.error(e); }
+    };
+    loadRealStats();
+    return () => { cancelled = true; };
+  }, [courseId]);
+
   const [activeTab,        setActiveTab]        = useState("lessons");
   const [openSections,     setOpenSections]     = useState([0]);
   const [purchased,        setPurchased]        = useState(false);
@@ -446,8 +952,6 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
 
   const totalLessons = course.sections.reduce((a, s) => a + s.lessons.length, 0);
   const progress     = Math.round((completedLessons.length / totalLessons) * 100);
-
- 
 
   const faqs = [
     { q: "Kursga qancha vaqt kirish mumkin?",    a: "Sotib olgandan so'ng umrbod kirish imkoniyatiga ega bo'lasiz." },
@@ -548,7 +1052,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
             <span style={{ background: course.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{course.category}</span>
             <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{course.title}</h1>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}>⭐ {course.rating} · 👥 {course.students.toLocaleString()} talaba · ⏱ {course.duration} soat</p>
+            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}>⭐ {realRating || 0} · 👥 {(realStudents || 0).toLocaleString()} talaba</p>
           </div>
         </div>
       </ScrollReveal>
@@ -623,7 +1127,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
                               {lesson.free && !purchased && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}>{t.freeLesson}</span>}
                               {done && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}>✓ {t.completedLabel}</span>}
                             </div>
-                            <span style={{ fontSize: 12, color: "#9ca3af" }}>{lesson.duration}</span>
+                            <span style={{ fontSize: 12, color: "#9ca3af" }}></span>
                           </div>
                         );
                       })}
@@ -658,7 +1162,6 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
-                { icon: "⏱", text: `${course.duration} ${t.videoHours}` },
                 { icon: "📱", text: t.mobileAccess },
                 { icon: "♾️", text: t.lifeTimeAccess },
                 { icon: "🏆", text: t.certificate },
@@ -676,6 +1179,8 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
 
       {playingLesson && (
         <VideoLessonModal lesson={playingLesson} courseColor={course.color}
+          courseRating={realRating} courseStudents={realStudents}
+          courseId={courseId} courseCategory={course.category}
           onClose={(wasCompleted) => { setPlayingLesson(null); if (wasCompleted === true) setTimeout(() => setShowRatingModal(true), 600); }}
           onComplete={markComplete} darkMode={darkMode} />
       )}

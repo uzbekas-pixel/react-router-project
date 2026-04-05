@@ -6,7 +6,7 @@ import { useLang } from "../context/useLang";
 import { useNavigate } from "react-router-dom";
 import {
   LuSend, LuPaperclip, LuMic, LuKeyboard,
-  LuArrowLeft, LuTrash2, LuMessageSquare, LuUser
+  LuArrowLeft, LuTrash2, LuMessageSquare, LuUser, LuSearch, LuCheck, LuCheckCheck
 } from "react-icons/lu";
 import { getNameStyleByKey } from "../constants/shopConstants";
 
@@ -239,20 +239,23 @@ const DM = ({ darkMode, showToast }) => {
   const usersListJSX = (
     <div className={`flex flex-col h-full ${darkMode ? "bg-slate-800" : "bg-white"} rounded-2xl shadow overflow-hidden`}>
       <div className={`p-3 border-b shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-        <input
-          type="text"
-          placeholder="🔍 Qidirish..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className={`w-full px-3 py-2 rounded-xl text-sm outline-none ${
-            darkMode ? "bg-slate-700 text-white placeholder-gray-500" : "bg-gray-100 text-gray-900 placeholder-gray-400"
-          }`}
-        />
+        <div className="relative">
+          <LuSearch className={`absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? "text-gray-500" : "text-gray-400"}`} size={14} />
+          <input
+            type="text"
+            placeholder={t.searchPlaceholderChat}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`w-full pl-9 pr-3 py-2 rounded-xl text-sm outline-none ${
+              darkMode ? "bg-slate-700 text-white placeholder-gray-500" : "bg-gray-100 text-gray-900 placeholder-gray-400"
+            }`}
+          />
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         {filteredUsers.length === 0 ? (
           <p className={`text-center text-sm py-8 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-            Foydalanuvchilar yo'q
+            {t.noUsersFound}
           </p>
         ) : (
           filteredUsers.map((u) => {
@@ -354,7 +357,7 @@ const DM = ({ darkMode, showToast }) => {
               <p
                 onClick={() => navigate(`/profile/${selectedUser.id}`)}
                 className={`text-sm font-semibold truncate cursor-pointer hover:text-blue-400 transition ${darkMode ? "text-white" : "text-gray-900"}`}
-                title="Profilni ko'rish" {...getNameStyleByKey(selectedUser.nameColor)}
+                title={t.viewProfile} {...getNameStyleByKey(selectedUser.nameColor)}
               >
                 {selectedUser.displayName || selectedUser.email}
               </p>
@@ -364,14 +367,14 @@ const DM = ({ darkMode, showToast }) => {
             <button
               onClick={() => navigate(`/profile/${selectedUser.id}`)}
               className={`w-8 h-8 rounded-xl flex items-center justify-center transition shrink-0 ${darkMode ? "bg-slate-700 text-blue-400 hover:bg-slate-600" : "bg-blue-50 text-blue-500 hover:bg-blue-100"}`}
-              title="Profilni ko'rish"
+              title={t.viewProfile}
             >
               <LuUser size={15} />
             </button>
             {selectedUser.isOnline && (
               <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:"#10b981" }}/>
-                <span style={{ fontSize:11, color:"#10b981", fontWeight:600 }}>Online</span>
+                <span style={{ fontSize:11, color:"#10b981", fontWeight:600 }}>{t.statusOnline}</span>
               </div>
             )}
           </div>
@@ -380,7 +383,8 @@ const DM = ({ darkMode, showToast }) => {
           <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 chat-scroll">
             {messages.length === 0 && (
               <p className={`text-center text-sm my-auto ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-                Hali xabar yo'q. Birinchi xabar yuboring! 👋
+                <LuMessageSquare size={48} className="mx-auto mb-3 opacity-20" />
+                {t.noMessages}
               </p>
             )}
             {messages.map((msg) => {
@@ -407,7 +411,7 @@ const DM = ({ darkMode, showToast }) => {
                       }`}>{msg.text}</div>
                     )}
                     {msg.type === "image" && (
-                      <img src={msg.imageUrl} alt="rasm"
+                      <img src={msg.imageUrl} alt={t.imageRef}
                         className="max-w-[200px] max-h-[200px] object-cover rounded-2xl cursor-pointer hover:opacity-90 transition" />
                     )}
                     {msg.type === "audio" && (
@@ -427,7 +431,7 @@ const DM = ({ darkMode, showToast }) => {
                       </span>
                       {isMe && (
                         <span style={{ fontSize:10, color: msg.read ? "#3b82f6" : "#6b7280" }}>
-                          {msg.read ? "✓✓" : "✓"}
+                          {msg.read ? <LuCheckCheck className="inline" /> : <LuCheck className="inline" />}
                         </span>
                       )}
                     </div>
@@ -491,9 +495,9 @@ const DM = ({ darkMode, showToast }) => {
         </>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <div className="text-5xl">💬</div>
+          <LuMessageSquare size={64} className="text-blue-500 opacity-20" />
           <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-            Chap tomonda foydalanuvchi tanlang
+            {t.selectUserPrompt}
           </p>
         </div>
       )}
@@ -505,7 +509,7 @@ const DM = ({ darkMode, showToast }) => {
       style={{ height: "calc(100vh - 130px)" }}>
       <div className="flex items-center gap-3 mb-4">
         <h1 className={`text-2xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-          <LuMessageSquare className="text-blue-500" /> Direct Messages
+          <LuMessageSquare className="text-blue-500" /> {t.dmTitle}
         </h1>
         {totalUnread > 0 && (
           <span style={{
@@ -516,7 +520,7 @@ const DM = ({ darkMode, showToast }) => {
             padding: "2px 8px",
             borderRadius: 12,
           }}>
-            {totalUnread} yangi
+            {totalUnread} {t.newSuffix}
           </span>
         )}
       </div>

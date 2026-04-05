@@ -135,3 +135,33 @@ iframe::-webkit-scrollbar-thumb {
 .code-editor iframe::-webkit-scrollbar {
   display: none;
 }
+@keyframes glow-breathe {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px #6366f199) drop-shadow(0 0 20px #3b82f644);
+  }
+  50% {
+    filter: drop-shadow(0 0 18px #a78bfacc) drop-shadow(0 0 40px #6366f166);
+  }
+}
+@keyframes orbit-1 {
+  from { transform: rotate(0deg) translateX(22px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(22px) rotate(-360deg); }
+}
+@keyframes orbit-2 {
+  from { transform: rotate(180deg) translateX(17px) rotate(-180deg); }
+  to   { transform: rotate(540deg) translateX(17px) rotate(-540deg); }
+}
+@keyframes orbit-3 {
+  from { transform: rotate(90deg) translateX(28px) rotate(-90deg); }
+  to   { transform: rotate(450deg) translateX(28px) rotate(-450deg); }
+}
+@keyframes badge-glow {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+.logo-svg-group { animation: glow-breathe 3s ease-in-out infinite; }
+.orbit-dot-1 { animation: orbit-1 4s linear infinite; transform-origin: 36px 36px; }
+.orbit-dot-2 { animation: orbit-2 6s linear infinite; transform-origin: 36px 36px; }
+.orbit-dot-3 { animation: orbit-3 8s linear infinite; transform-origin: 36px 36px; }
+.logo-badge   { animation: badge-glow 3s ease-in-out infinite; }

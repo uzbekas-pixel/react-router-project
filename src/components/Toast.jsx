@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { LuInfo, LuX, LuCheck, LuBan} from "react-icons/lu";
 
 const Toast = ({ message, type = "success", onClose }) => {
   useEffect(() => {
@@ -13,9 +14,9 @@ const Toast = ({ message, type = "success", onClose }) => {
   };
 
   const icons = {
-    success: "✅",
-    error: "❌",
-    info: "ℹ️",
+    success: <LuCheck />,
+    error: <LuBan />,
+    info: <LuInfo />,
   };
 
   return (
@@ -24,9 +25,9 @@ const Toast = ({ message, type = "success", onClose }) => {
       <span>{message}</span>
       <button
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="ml-2 opacity-70 hover:opacity-100 text-lg leading-none cursor-pointer"
+        className="ml-2 opacity-70 hover:opacity-100 cursor-pointer"
       >
-        ✕
+        <LuX className="text-lg" />
       </button>
     </div>
   );

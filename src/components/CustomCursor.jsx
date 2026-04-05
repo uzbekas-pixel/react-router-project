@@ -32,7 +32,7 @@ const CustomCursor = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 z-10000 pointer-events-none rounded-full backdrop-blur-md transition-transform duration-75"
+      className="fixed top-0 left-0 z-100000 pointer-events-none rounded-full backdrop-blur-md transition-transform duration-75"
       style={{
         width: clicking ? "10px" : "14px",
         height: clicking ? "10px" : "14px",

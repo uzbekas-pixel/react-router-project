@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../../context/useLang";
-import { FaPlay, FaRedo, FaPause } from "react-icons/fa";
+import { FaPlay, FaRedo, FaPause, FaGamepad, FaArrowUp, FaArrowDown, FaArrowsAltH, FaHandPointer } from "react-icons/fa";
 
 const COLS = 10, ROWS = 20, CELL = 28;
 
@@ -136,7 +136,9 @@ const Tetris = ({ darkMode }) => {
 
   return (
     <div className={`flex flex-col items-center px-2 py-4 pb-10 ${darkMode?"bg-gray-900":"bg-gray-50"}`}>
-      <h2 className={`text-xl font-extrabold mb-4 ${darkMode?"text-white":"text-gray-900"}`}>🎮 Tetris</h2>
+      <h2 className={`text-xl font-extrabold mb-4 flex items-center justify-center gap-2 ${darkMode?"text-white":"text-gray-900"}`}>
+        <FaGamepad className="text-blue-500" /> Tetris
+      </h2>
 
       <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
         {/* Canvas — touch faqat shu div da */}
@@ -147,7 +149,9 @@ const Tetris = ({ darkMode }) => {
 
           {!running&&!gameOver&&(
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-              <p className="text-white text-xl font-extrabold">🎮 Tetris</p>
+              <p className="text-white text-xl font-extrabold flex items-center gap-2">
+                <FaGamepad /> Tetris
+              </p>
               <p className="text-gray-400 text-xs text-center px-4">{t.pcTetris}</p>
               <p className="text-gray-400 text-xs text-center px-4">{t.mobileTetris}</p>
              <button onClick={reset} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
@@ -157,7 +161,7 @@ const Tetris = ({ darkMode }) => {
           )}
           {paused&&running&&(
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
-              <p className="text-white text-2xl font-extrabold">⏸ {t.gamePaused}</p>
+              <p className="text-white text-2xl font-extrabold flex items-center gap-2"><FaPause /> {t.gamePaused}</p>
              <button onClick={() => setPaused(false)} className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition flex items-center gap-2">
   <FaPlay /> {t.resume}
 </button>
@@ -192,7 +196,7 @@ const Tetris = ({ darkMode }) => {
            {running && (
   <button onClick={() => setPaused(p => !p)}
     className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
-    {paused ? <><FaPlay /> Davom</> : <><FaPause /> Pauza</>}
+    {paused ? <><FaPlay /> {t.resume || "Davom"}</> : <><FaPause /> {t.pause || "Pauza"}</>}
   </button>
 )}
             <button onClick={reset}
@@ -201,9 +205,10 @@ const Tetris = ({ darkMode }) => {
 </button>
           </div>
           <div className={`md:hidden rounded-xl p-3 ${darkMode?"bg-slate-800":"bg-white"} shadow text-center`}>
-            <p className={`text-[10px] ${darkMode?"text-gray-400":"text-gray-500"}`}>
-              👆 Tap → burish • 👈👉 Swipe → harakat<br/>👇 Swipe → tushirish • 👆 Yuqori → pauza
-            </p>
+            <div className={`text-[10px] flex flex-col gap-1 items-center justify-center ${darkMode?"text-gray-400":"text-gray-500"}`}>
+              <span className="flex items-center gap-1"><FaHandPointer /> Tap → burish • <FaArrowsAltH /> Swipe → harakat</span>
+              <span className="flex items-center gap-1"><FaArrowDown /> Swipe → tushirish • <FaArrowUp /> Yuqori → pauza</span>
+            </div>
           </div>
         </div>
       </div>

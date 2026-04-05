@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "../../context/useLang";
-import { FaRedo } from "react-icons/fa";
+import { FaRedo, FaFont } from "react-icons/fa";
 
 const WORDS_EN = [
   "apple", "brave", "chord", "drain", "eagle", "flame", "grace", "heart", "ideal", "juice",
@@ -69,7 +69,7 @@ const Wordle = ({ darkMode }) => {
     if (current.length !== WORD_LENGTH) {
       setShake(true);
       setTimeout(() => setShake(false), 500);
-      showMsg(lang === "uz" ? "5 ta harf kiriting!" : "Enter 5 letters!");
+      showMsg(t.wordleLengthError || (lang === "uz" ? "5 ta harf kiriting!" : "Enter 5 letters!"));
       return;
     }
     const newGuesses = [...guesses, current];
@@ -78,14 +78,14 @@ const Wordle = ({ darkMode }) => {
 
     if (current === answer) {
       setGameOver(true);
-      showMsg(lang === "uz" ? "Ajoyib! 🎉" : "Brilliant! 🎉", 3000);
+      showMsg(t.wordleWin || (lang === "uz" ? "Ajoyib! 🎉" : "Brilliant! 🎉"), 3000);
       return;
     }
     if (newGuesses.length >= MAX_GUESSES) {
       setGameOver(true);
       showMsg(answer, 5000);
     }
-  }, [current, guesses, answer, lang]);
+  }, [current, guesses, answer, lang, t.wordleLengthError, t.wordleWin]);
 
   const pressKey = useCallback((key) => {
     if (gameOver) return;
@@ -167,19 +167,19 @@ const Wordle = ({ darkMode }) => {
 
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm mb-4 mt-10">
-        <h2 className={`text-2xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
-          🔤 Wordle
+        <h2 className={`text-2xl font-extrabold flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+          <FaFont className="text-blue-500" /> Wordle
         </h2>
         <div className="flex items-center gap-2">
           {/* Til */}
           <div className={`flex rounded-xl overflow-hidden border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
             {["en", "uz"].map((l) => (
               <button key={l} onClick={() => { setLang(l); reset(l); }}
-                className={`px-3 py-1.5 text-xs font-semibold transition ${
+                className={`px-3 py-1.5 text-xs font-semibold transition flex items-center gap-1 ${
                   lang === l ? "bg-blue-500 text-white"
                   : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"
                 }`}>
-                {l === "en" ? "🇬🇧 EN" : "🇺🇿 UZ"}
+                {l === "en" ? "EN" : "UZ"}
               </button>
             ))}
           </div>

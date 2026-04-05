@@ -8,12 +8,41 @@ import {
 import { useAuth } from "../context/useAuth";
 
 const GIFTS = [
-  { id:"g1", title:"Bepul HTML kurs",    icon:"🎁", desc:"HTML Asoslar kursini bepul oling",        xpRequired:500  },
-  { id:"g2", title:"Quiz bonus",          icon:"⭐", desc:"Keyingi quiz da +20% bonus ball",          xpRequired:1000 },
-  { id:"g3", title:"CSS chegirma 30%",    icon:"🎨", desc:"CSS & Flexbox kursiga 30% chegirma",       xpRequired:1500 },
-  { id:"g4", title:"Mentor sessiya",      icon:"👨‍🏫", desc:"O'qituvchi bilan 30 daqiqa bepul suhbat", xpRequired:2000 },
-  { id:"g5", title:"Premium 1 oy",        icon:"💎", desc:"1 oylik Premium a'zolik bepul",            xpRequired:3000 },
-  { id:"g6", title:"Barcha kurslar",      icon:"🚀", desc:"Barcha kurslarga 1 yillik kirish",          xpRequired:5000 },
+  { 
+    id: "g1", 
+    title: "Quiz yordamchisi (10 ta)", 
+    icon: "💡", 
+    desc: "Quiz ishlash jarayonida to'g'ri javobni avtomatik topib beruvchi 10 ta bepul yordam imkoniyati.", 
+    xpRequired: 1000 
+  },
+  { 
+    id: "g2", 
+    title: "1 Oylik Pro", 
+    icon: "⭐", 
+    desc: "Platformaning barcha 'Pro' imkoniyatlaridan 1 oy davomida bepul foydalanish huquqi.", 
+    xpRequired: 2000 
+  },
+  { 
+    id: "g3", 
+    title: "1 Oylik Premium", 
+    icon: "💎", 
+    desc: "Platformaning barcha 'Premium' imkoniyatlaridan 1 oy davomida bepul foydalanish huquqi.", 
+    xpRequired: 3000 
+  },
+  { 
+    id: "g4", 
+    title: "1 Yillik Pro", 
+    icon: "🚀", 
+    desc: "Platformaning barcha 'Pro' imkoniyatlaridan 1 yil davomida bepul foydalanish huquqi.", 
+    xpRequired: 5000 
+  },
+  { 
+    id: "g5", 
+    title: "1 Yillik Premium", 
+    icon: "👑", 
+    desc: "Eng yuqori daraja! Platformaning barcha 'Premium' imkoniyatlaridan to'liq 1 yil bepul foydalaning.", 
+    xpRequired: 8000 
+  }
 ];
 
 const PromoCode = ({ darkMode, showToast }) => {
@@ -148,7 +177,7 @@ const PromoCode = ({ darkMode, showToast }) => {
     setLoading(false);
   };
 
-  const claimGift = async (gift) => {
+ const claimGift = async (gift) => {
     if (!user) return;
     if (myXP < gift.xpRequired) {
       showToast?.(`Yetarli XP yo'q! Kerak: ${gift.xpRequired} XP`, "error");
@@ -161,7 +190,15 @@ const PromoCode = ({ darkMode, showToast }) => {
       const achRef  = doc(db, "users", user.uid, "data", "achievements");
       const achSnap = await getDoc(achRef);
       const existing = achSnap.exists() ? achSnap.data() : {};
+      
       await setDoc(achRef, { ...existing, [key]: true });
+      
+      // BU QISM YANGI QO'SHILDI: Agar "Quiz yordamchisi" olingan bo'lsa, stats ga 10 ta yordam beramiz
+      if (gift.id === "g1") {
+        const statsRef = doc(db, "users", user.uid, "data", "stats");
+        await updateDoc(statsRef, { quizHints: increment(10) });
+      }
+
       setClaimedGifts((prev) => [...prev, key]);
       showToast?.(`🎁 "${gift.title}" sovg'asi qabul qilindi!`, "success");
     } catch (err) {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../context/useLang";
-import { LuPlay, LuTrash2, LuSave, LuRotateCcw } from "react-icons/lu";
-import { VscCode } from "react-icons/vsc";
+import { LuPlay, LuTrash2, LuSave, LuRotateCcw,LuTerminal  } from "react-icons/lu";
 import Editor from "@monaco-editor/react";
 
 // ── Til konfiguratsiyalari ──────────────────────────────────────────────────
@@ -517,15 +516,14 @@ ${noScrollStyle}
         {/* 1-qator: sarlavha + tugmalar */}
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-bold text-blue-400 flex items-center gap-2 tracking-wide">
-            <VscCode className="text-blue-400" size={18} />
+            <LuTerminal size={18} className="text-blue-400" />
             {t.codeTitle}
-            {/* Saqlash indikatori */}
             <span
               className={`text-xs font-normal transition-opacity duration-300 ${
                 saved ? "opacity-100 text-green-400" : "opacity-0"
               }`}
             >
-              ✓ Saqlandi
+              ✓ {t.savedIndicator}
             </span>
           </span>
 
@@ -533,7 +531,7 @@ ${noScrollStyle}
             {/* Reset tugmasi */}
             <button
               onClick={handleReset}
-              title="Kodni boshlang'ich holatga qaytarish"
+              title={t.resetTooltip}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
                 darkMode
                   ? "border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-400"
@@ -541,7 +539,7 @@ ${noScrollStyle}
               }`}
             >
               <LuRotateCcw size={12} />
-              Reset
+              {t.resetCode}
             </button>
 
             {/* Run tugmasi */}
@@ -553,12 +551,12 @@ ${noScrollStyle}
               {isRunning ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {t.running ?? "Yuklanmoqda..."}
+                  {t.running}
                 </>
               ) : (
                 <>
                   <LuPlay size={13} />
-                  {t.runCode ?? "Ishga tushirish"}
+                  {t.runCode}
                 </>
               )}
             </button>
@@ -604,7 +602,7 @@ ${noScrollStyle}
               darkMode ? "text-slate-600" : "text-gray-400"
             }`}
           >
-            {t.shortcut ?? "Ctrl+Enter — ishga tushirish"}
+            {t.shortcut}
           </span>
         </div>
       </div>
@@ -628,8 +626,8 @@ ${noScrollStyle}
             }`}
           >
             {tab === "editor"
-              ? (t.codeTitle ?? "Kod")
-              : (t.output ?? "Natija")}
+              ? t.codeTitle
+              : t.output}
           </button>
         ))}
       </div>
@@ -685,7 +683,7 @@ ${noScrollStyle}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    Editor yuklanmoqda...
+                    {t.editorLoading}
                   </div>
                 </div>
               }
@@ -716,7 +714,7 @@ ${noScrollStyle}
                 className="ml-auto flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition"
               >
                 <LuTrash2 size={12} />
-                {t.clearOutput ?? "Tozalash"}
+                {t.clearOutput}
               </button>
             )}
           </div>
@@ -744,14 +742,14 @@ ${noScrollStyle}
                 <LuPlay size={22} className="text-emerald-400 ml-0.5" />
               </div>
               <p className="text-sm font-medium">
-                {t.writeCode ?? "Kodni yozing va ishga tushiring"}
+                {t.writeCode}
               </p>
               <p
                 className={`text-xs ${
                   darkMode ? "text-slate-699" : "text-gray-300"
                 }`}
               >
-                {t.shortcut ?? "Ctrl + Enter"}
+                {t.shortcut}
               </p>
             </div>
           )}

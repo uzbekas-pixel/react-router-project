@@ -10,9 +10,9 @@ import { useChatSound } from "../hooks/useChatSound";
 import {
   LuPhone, LuPhoneOff, LuMic, LuMicOff, LuVideo, LuVideoOff,
   LuSend, LuPaperclip, LuReply, LuTrash2, LuBell, LuBellOff,
-  LuMail, LuKeyboard, LuX
+  LuMail, LuKeyboard, LuX, LuMessageSquare, LuSmile, LuCircleDot, LuUser, LuCamera
 } from "react-icons/lu";
-
+import { completeRealTask } from "../utils/taskManager";
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
@@ -23,7 +23,7 @@ const Chat = ({ darkMode }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   // Chat komponenti ichida, useEffect dan teparoqda:
-const displayUserName = user?.displayName || "Foydalanuvchi";
+const displayUserName = user?.displayName || t.user;
   const { t } = useLang();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -122,6 +122,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
       replyTo: replyData || null,
       createdAt: serverTimestamp(),
     });
+    completeRealTask(user.uid, "chat");
   };
 
   const handleKeyDown = (e) => {
@@ -241,7 +242,9 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
 
       {/* Header */}
       <div className={`rounded-2xl px-6 py-4 mb-4 flex items-center gap-3 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl">💬</div>
+        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl">
+          <LuMessageSquare />
+        </div>
         <div>
           <h2 className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>{t.chatTitle}</h2>
           <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.chatSub}</p>
@@ -256,7 +259,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition text-lg ${
               darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-100 hover:bg-gray-200"
             }`}
-            title={soundOn ? "Ovozni o'chirish" : "Ovozni yoqish"}>
+            title={soundOn ? t.muteSound : t.unmuteSound}>
             {soundOn ? <LuBell className="text-yellow-300" /> : <LuBellOff className="text-gray-400" />}
           </button>
         {!inCall ? (
@@ -272,7 +275,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
             className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition ${
               darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}>
-            <LuMail size={15} /> DM
+            <LuMail size={15} /> {t.dm}
           </button>
         </div>
       </div>
@@ -284,14 +287,22 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
             <div className="relative">
               <div className="w-40 h-28 rounded-xl overflow-hidden bg-black"
                 ref={(el) => { if (el && localTracks?.cam) localTracks.cam.play(el); }} />
-              <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full">👤 {t.you}</span>
-              {!camOn && <div className="absolute inset-0 rounded-xl bg-slate-800 flex items-center justify-center"><span className="text-2xl">📷</span></div>}
+              <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <LuUser size={10} /> {t.you}
+              </span>
+              {!camOn && (
+                <div className="absolute inset-0 rounded-xl bg-slate-800 flex items-center justify-center">
+                  <LuVideoOff size={32} className="text-gray-500" />
+                </div>
+              )}
             </div>
             {remoteUsers.map((remoteUser) => (
               <div key={remoteUser.uid} className="relative">
                 <div className="w-40 h-28 rounded-xl overflow-hidden bg-black"
                   ref={(el) => { if (el && remoteUser.videoTrack) remoteUser.videoTrack.play(el); }} />
-                <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full">👤 {displayUserName}</span>
+                <span className="absolute bottom-1 left-1 text-xs text-white bg-black/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <LuUser size={10} /> {displayUserName}
+                </span>
               </div>
             ))}
             {remoteUsers.length === 0 && (
@@ -337,9 +348,9 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
               <div className="relative shrink-0">
                 <div
                   onClick={() => !isMe && navigate(`/profile/${msg.uid}`)}
-                  className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                  className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden transition-transform active:scale-95"
                   style={{ cursor: isMe ? "default" : "pointer" }}
-                  title={isMe ? "" : `${msg.name} profilini ko'rish`}
+                  title={isMe ? "" : `${msg.name} ${t.viewProfile}`}
                 >
                   {msg.avatar ? <img src={msg.avatar} alt="" className="w-full h-full object-cover" /> : msg.name?.[0]?.toUpperCase() || "?"}
                 </div>
@@ -365,7 +376,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                     }`}>
                       <span className="font-semibold text-blue-400">{msg.replyTo.name}</span>
                       <p className="truncate mt-0.5">
-                        {msg.replyTo.type === "image" ? "📷 Rasm" : msg.replyTo.type === "audio" ? "🎙️ Ovozli xabar" : msg.replyTo.text}
+                        {msg.replyTo.type === "image" ? <><LuCamera className="inline mr-1" /> {t.imageRef}</> : msg.replyTo.type === "audio" ? <><LuMic className="inline mr-1" /> {t.audioRef}</> : msg.replyTo.text}
                       </p>
                     </div>
                   )}
@@ -378,7 +389,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                   )}
                   {msg.type === "image" && (
                     <div className={`rounded-2xl overflow-hidden ${isMe ? "rounded-br-sm" : "rounded-bl-sm"}`}>
-                      <img src={msg.imageUrl} alt="rasm"
+                      <img src={msg.imageUrl} alt={t.imageRef}
                         className="max-w-[240px] max-h-[200px] object-cover cursor-pointer hover:opacity-90 transition"
                         onClick={() => setPreviewImage(msg.imageUrl)} />
                     </div>
@@ -400,7 +411,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setShowReactions(showReactions === msg.id ? null : msg.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition ${darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-gray-200 hover:bg-gray-300"}`}>
-                      😊
+                      <LuSmile size={14} />
                     </button>
                     {canDelete && (
                       <button onClick={() => handleDelete(msg.id, msg.uid)}
@@ -409,7 +420,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                       </button>
                     )}
                     {isAdmin && !isMe && (
-                      <span className="text-xs bg-yellow-500 text-white px-1.5 py-0.5 rounded-full">A</span>
+                      <span className="text-[10px] bg-yellow-500 text-white px-1.5 py-0.5 rounded-full font-bold">{t.adminBadge[0]}</span>
                     )}
                   </div>
 
@@ -440,7 +451,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                 )}
 
                 <span className={`text-xs ${darkMode ? "text-gray-600" : "text-gray-400"}`}>
-                  {msg.createdAt?.toDate?.()?.toLocaleTimeString("uz", { hour: "2-digit", minute: "2-digit" }) || ""}
+                  {msg.createdAt?.toDate?.()?.toLocaleTimeString(t.lang === "uz" ? "uz-UZ" : "en-US", { hour: "2-digit", minute: "2-digit" }) || ""}
                 </span>
               </div>
             </div>
@@ -468,7 +479,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
               {!isMe && (
                 <button onClick={() => { navigate(`/profile/${msg.uid}`); setLongPressMsg(null); }}
                   className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-blue-400 hover:bg-slate-600" : "text-blue-500 hover:bg-gray-50"}`}>
-                  👤 Profilni ko'rish
+                  <LuUser size={16} /> {t.viewProfile}
                 </button>
               )}
               <button onClick={() => {
@@ -477,17 +488,17 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
                 inputRef.current?.focus();
               }}
                 className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-300 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-50"}`}>
-                <LuReply size={16} /> Javob berish
+                <LuReply size={16} /> {t.reply}
               </button>
               {canDelete && (
                 <button onClick={() => handleDelete(longPressMsg, msg.uid)}
                   className="w-full px-6 py-4 text-red-400 text-sm font-semibold text-left hover:bg-red-500/10 transition flex items-center gap-3">
-                  <LuTrash2 size={16} /> {t.deleteMessage.replace("🗑️", "")}
+                  <LuTrash2 size={16} /> {t.deleteMessage}
                 </button>
               )}
               <button onClick={() => setLongPressMsg(null)}
                 className={`w-full px-6 py-4 text-sm font-semibold text-left transition flex items-center gap-3 ${darkMode ? "text-gray-400 hover:bg-slate-600" : "text-gray-500 hover:bg-gray-50"}`}>
-                <LuX size={16} />{t.cancel.replace("✕", "")}
+                <LuX size={16} /> {t.cancel}
               </button>
             </div>
           </div>
@@ -506,7 +517,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
             </div>
             <button onClick={() => setReplyTo(null)}
               className={`ml-2 text-lg shrink-0 ${darkMode ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}>
-              ✕
+              <LuX size={14} />
             </button>
           </div>
         )}
@@ -539,7 +550,7 @@ const displayUserName = user?.displayName || "Foydalanuvchi";
             <div className={`flex-1 flex items-center justify-center rounded-xl py-2 text-sm font-medium ${
               recording ? "bg-red-500/20 text-red-400" : darkMode ? "bg-slate-700 text-gray-400" : "bg-gray-100 text-gray-500"
             }`}>
-              {recording ? t.recording : t.holdToRecord}
+              {recording ? <><LuCircleDot className="animate-pulse mr-2" /> {t.recording}</> : t.holdToRecord}
             </div>
             <button
               onMouseDown={startRecording} onMouseUp={stopRecording}

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useSound } from "../context/SoundContext";
+import { useLang } from "../context/useLang";
+import { LuCloudRain, LuHeadphones, LuKeyboard, LuVolumeX, LuVolume2, LuMusic, LuX } from "react-icons/lu";
 
 const Soundscape = ({ darkMode }) => {
   const {
@@ -10,6 +12,7 @@ const Soundscape = ({ darkMode }) => {
     isMuted,
     toggleMute,
   } = useSound();
+  const { t } = useLang();
   
   const [isOpen, setIsOpen] = useState(false);
 
@@ -27,15 +30,15 @@ const Soundscape = ({ darkMode }) => {
         >
           <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2 opacity-80">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            Developer Ambience
+            {t.ambienceTitle || "Developer Ambience"}
           </h3>
 
           <div className="space-y-3">
             {/* Ovozlar ro'yxati */}
             {[
-              { id: "rain", label: "Rain", icon: "🌧️", color: "bg-blue-500" },
-              { id: "lofi", label: "Lofi Beats", icon: "🎧", color: "bg-purple-500" },
-              { id: "keyboard", label: "Mechanical", icon: "⌨️", color: "bg-orange-500" }
+              { id: "rain", label: t.ambienceRain || "Rain", icon: <LuCloudRain />, color: "bg-blue-500" },
+              { id: "lofi", label: t.ambienceLofi || "Lofi Beats", icon: <LuHeadphones />, color: "bg-purple-500" },
+              { id: "keyboard", label: t.ambienceKeyboard || "Mechanical", icon: <LuKeyboard />, color: "bg-orange-500" }
             ].map((sound) => (
               <div key={sound.id} className="flex items-center justify-between">
                 <span className="text-sm">{sound.icon} {sound.label}</span>
@@ -47,7 +50,7 @@ const Soundscape = ({ darkMode }) => {
                       : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                   }`}
                 >
-                  {activeSounds[sound.id] ? "ON" : "OFF"}
+                  {activeSounds[sound.id] ? (t.on || "ON") : (t.off || "OFF")}
                 </button>
               </div>
             ))}
@@ -60,7 +63,7 @@ const Soundscape = ({ darkMode }) => {
                 onClick={toggleMute} 
                 className="text-xl hover:scale-110 active:scale-90 transition-transform"
               >
-                {isMuted || volume === 0 ? "🔇" : "🔊"}
+                {isMuted || volume === 0 ? <LuVolumeX /> : <LuVolume2 />}
               </button>
               <input
                 type="range"
@@ -85,7 +88,7 @@ const Soundscape = ({ darkMode }) => {
             : "bg-white border-blue-500 text-blue-500 hover:shadow-blue-200"
         }`}
       >
-        {isOpen ? "✕" : "🎵"}
+        {isOpen ? <LuX /> : <LuMusic />}
       </button>
     </div>
   );

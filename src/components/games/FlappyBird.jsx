@@ -3,7 +3,7 @@ import { useLang } from "../../context/useLang";
 import { saveScore } from "./Gameutils";
 import Leaderboard from "./Leaderboard";
 import { useAuth } from "../../context/useAuth";
-import { FaPlay, FaRedo } from "react-icons/fa";
+import { FaPlay, FaRedo, FaKiwiBird } from "react-icons/fa";
 
 const W = 320;
 const H = 480;
@@ -148,8 +148,8 @@ const FlappyBird = ({ darkMode }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      <h2 className={`text-xl font-extrabold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        🐦 Flappy Bird
+      <h2 className={`text-xl font-extrabold mb-4 flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <FaKiwiBird className="text-blue-500" /> Flappy Bird
       </h2>
 
       <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-blue-400"
@@ -159,7 +159,9 @@ const FlappyBird = ({ darkMode }) => {
 
         {!display.running && !display.gameOver && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-3">
-            <p className="text-white text-2xl font-extrabold">🐦 Flappy Bird</p>
+            <p className="text-white text-2xl font-extrabold flex items-center gap-2">
+              <FaKiwiBird /> Flappy Bird
+            </p>
             <p className="text-gray-300 text-sm">{t.clickOrSpace}</p>
            <button onClick={jump} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-white font-semibold rounded-xl flex items-center gap-2">
   <FaPlay /> {t.start}
