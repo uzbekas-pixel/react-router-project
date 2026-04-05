@@ -52,7 +52,7 @@ import InstructorPanel from "./routes/InstructorPanel";
 import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
-import BattleMode from "./routes/Battlemode";
+import BattleMode from "./routes/BattleMode";
 import { useNavigate } from "react-router-dom";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
