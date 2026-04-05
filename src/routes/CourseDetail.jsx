@@ -449,7 +449,7 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
               { role: "user", parts: [{ text: question }] },
             ],
             generationConfig: {
-              maxOutputTokens: 1000,
+              maxOutputTokens: 4096,
               temperature: 0.7,
             },
           }),
