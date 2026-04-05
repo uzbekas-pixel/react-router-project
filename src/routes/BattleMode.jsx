@@ -6,7 +6,7 @@ import {
   increment, collection, addDoc,
 } from "firebase/firestore";
 import {
-  getDatabase, ref, set, onValue, off,
+  getDatabase, ref, set, get, onValue, off,
   push, remove, onDisconnect, serverTimestamp as rtServerTimestamp,
 } from "firebase/database";
 import ScrollReveal from "../components/ScrollReveal";
@@ -146,90 +146,119 @@ const BattleMode = ({ darkMode, showToast }) => {
     if (battleRef.current) off(battleRef.current);
   }, []);
 
-  const startSearch = useCallback(async () => {
-    if (!user || loadingMatch) return;
-    if (myXP < wager) { showToast?.(`Yetarli XP yo'q! Kerak: ${wager}`, "error"); return; }
-    setLoadingMatch(true);
+ const startSearch = useCallback(async () => {
+  if (!user || loadingMatch) return;
+  if (myXP < wager) { showToast?.(`Yetarli XP yo'q! Kerak: ${wager}`, "error"); return; }
+  setLoadingMatch(true);
 
-    try {
-      const queuePath = ref(rtdb, "battleQueue");
-      const myEntry   = { uid: user.uid, displayName: user.displayName || "Foydalanuvchi", avatarUrl: user.photoURL || "", wager, joinedAt: rtServerTimestamp() };
+  try {
+    const queuePath = ref(rtdb, "battleQueue");
+    const myEntry   = { uid: user.uid, displayName: user.displayName || "Foydalanuvchi", avatarUrl: user.photoURL || "", wager, joinedAt: rtServerTimestamp() };
 
-      onValue(queuePath, async (snap) => {
-        off(queuePath);
-        const queue   = snap.val() || {};
-        const entries = Object.entries(queue).filter(([, v]) => v.uid !== user.uid && v.wager === wager);
+    // ✅ onlyOnce o'rniga get() ishlatamiz
 
-        if (entries.length > 0) {
-          const [opKey, opData] = entries[0];
-          const newBattleRef    = push(ref(rtdb, "battles"));
-          const bId             = newBattleRef.key;
-          const mySnap          = await getDoc(doc(db, "users", user.uid, "data", "stats"));
-          const myAvg           = mySnap.exists() ? (mySnap.data().quizAvg || 0) : 0;
-          const diff            = myAvg < 40 ? "Oson" : myAvg < 70 ? "O'rta" : "Qiyin";
-          const qs              = await generateBattleQuestions(diff);
+    const snap    = await get(queuePath);
+    const queue   = snap.val() || {};
+    const entries = Object.entries(queue).filter(([, v]) => v.uid !== user.uid && v.wager === wager);
 
-          await set(newBattleRef, {
-            id: bId, status: "countdown",
-            player1: { uid: user.uid, displayName: user.displayName || "P1", avatarUrl: user.photoURL || "", score: 0, answers: {} },
-            player2: { uid: opData.uid, displayName: opData.displayName, avatarUrl: opData.avatarUrl || "", score: 0, answers: {} },
-            questions: qs, wager, createdAt: rtServerTimestamp(),
-          });
-          await remove(ref(rtdb, `battleQueue/${opKey}`)).catch(() => {});
+    if (entries.length > 0) {
+      // --- Player1 yo'li ---
+      const [opKey, opData] = entries[0];
+      const newBattleRef    = push(ref(rtdb, "battles"));
+      const bId             = newBattleRef.key;
+      const mySnap          = await getDoc(doc(db, "users", user.uid, "data", "stats"));
+      const myAvg           = mySnap.exists() ? (mySnap.data().quizAvg || 0) : 0;
+      const diff            = myAvg < 40 ? "Oson" : myAvg < 70 ? "O'rta" : "Qiyin";
+      const qs              = await generateBattleQuestions(diff);
 
+      await set(newBattleRef, {
+        id: bId, status: "countdown",
+        player1: { uid: user.uid, displayName: user.displayName || "P1", avatarUrl: user.photoURL || "", score: 0, answers: {} },
+        player2: { uid: opData.uid, displayName: opData.displayName, avatarUrl: opData.avatarUrl || "", score: 0, answers: {} },
+        questions: qs, wager, createdAt: rtServerTimestamp(),
+      });
+      await remove(ref(rtdb, `battleQueue/${opKey}`)).catch(() => {});
+
+      battleIdRef.current  = bId;
+      myRoleRef.current    = "player1";
+      questionsRef.current = qs;
+      setOpponent({ uid: opData.uid, displayName: opData.displayName, avatarUrl: opData.avatarUrl });
+      setQuestions(qs);
+      setLoadingMatch(false);
+      setScreen("countdown");
+      startCountdown(bId);
+
+    } else {
+      // --- Player2 yo'li: queue'ga qo'shilish ---
+      const myQueueRef = push(queuePath);
+      queueRef.current = myQueueRef;
+      await set(myQueueRef, myEntry);
+      onDisconnect(myQueueRef).remove();
+      setScreen("searching");
+      setLoadingMatch(false);
+
+      // ✅ Battles'ni to'g'ri listen qilish + cleanup
+      const battlesPath = ref(rtdb, "battles");
+      const handleBattles = (bSnap) => {
+        const battles = bSnap.val() || {};
+        for (const [bId, battle] of Object.entries(battles)) {
+          if (battle.player2?.uid !== user.uid) continue;
+
+          // ✅ Topildi — listener'ni o'chiramiz
+          off(battlesPath, "value", handleBattles);
+          remove(myQueueRef).catch(() => {});
+          queueRef.current = null;
+
+          const qs = battle.questions || getShuffledFallback();
           battleIdRef.current  = bId;
-          myRoleRef.current    = "player1";
+          myRoleRef.current    = "player2";
           questionsRef.current = qs;
-          setOpponent({ uid: opData.uid, displayName: opData.displayName, avatarUrl: opData.avatarUrl });
+          setOpponent({ uid: battle.player1.uid, displayName: battle.player1.displayName, avatarUrl: battle.player1.avatarUrl });
           setQuestions(qs);
-          setLoadingMatch(false);
           setScreen("countdown");
           startCountdown(bId);
-
-        } else {
-          const myQueueRef = push(queuePath);
-          queueRef.current = myQueueRef;
-          await set(myQueueRef, myEntry);
-          onDisconnect(myQueueRef).remove();
-          setScreen("searching");
-          setLoadingMatch(false);
-
-          const battlesPath = ref(rtdb, "battles");
-          onValue(battlesPath, (bSnap) => {
-            const battles = bSnap.val() || {};
-            for (const [bId, battle] of Object.entries(battles)) {
-              if (battle.player2?.uid !== user.uid) continue;
-              off(battlesPath);
-              remove(myQueueRef).catch(() => {});
-              queueRef.current = null;
-              const qs = battle.questions || getShuffledFallback();
-              battleIdRef.current  = bId;
-              myRoleRef.current    = "player2";
-              questionsRef.current = qs;
-              setOpponent({ uid: battle.player1.uid, displayName: battle.player1.displayName, avatarUrl: battle.player1.avatarUrl });
-              setQuestions(qs);
-              setScreen("countdown");
-              startCountdown(bId);
-              break;
-            }
-          });
+          break;
         }
-      }, { onlyOnce: true });
+      };
 
-    } catch (err) {
-      console.error("Matchmaking:", err);
-      showToast?.("Xatolik! Qayta urinib ko'ring.", "error");
-      setLoadingMatch(false);
+      onValue(battlesPath, handleBattles);
+
+      // ✅ 60 soniyadan keyin timeout — topilmasa lobby'ga qaytish
+      setTimeout(() => {
+        if (queueRef.current) {
+          off(battlesPath, "value", handleBattles);
+          remove(myQueueRef).catch(() => {});
+          queueRef.current = null;
+          setScreen("lobby");
+          setLoadingMatch(false);
+          showToast?.("Raqib topilmadi. Qayta urinib ko'ring.", "error");
+        }
+      }, 60000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, wager, myXP, loadingMatch, rtdb, showToast]);
 
-  const cancelSearch = useCallback(async () => {
-    if (queueRef.current) { await remove(queueRef.current).catch(() => {}); queueRef.current = null; }
-    setScreen("lobby");
+  } catch (err) {
+    console.error("Matchmaking:", err);
+    showToast?.("Xatolik! Qayta urinib ko'ring.", "error");
     setLoadingMatch(false);
-  }, []);
+  }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user, wager, myXP, loadingMatch, rtdb, showToast]);
 
+const battlesListenerRef = useRef(null); // yangi ref qo'shing yuqorida
+
+// cancelSearch ichida:
+const cancelSearch = useCallback(async () => {
+  if (queueRef.current) { 
+    await remove(queueRef.current).catch(() => {}); 
+    queueRef.current = null; 
+  }
+  if (battlesListenerRef.current) {
+    off(ref(rtdb, "battles"), "value", battlesListenerRef.current);
+    battlesListenerRef.current = null;
+  }
+  setScreen("lobby");
+  setLoadingMatch(false);
+}, [rtdb]);
   const startCountdown = useCallback((bId) => {
     let c = 3;
     setCountdown(c);
