@@ -54,6 +54,9 @@ import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
 import BattleMode from "./routes/BattleMode";
 import { useNavigate } from "react-router-dom";
+import Supports from "./routes/Supports";
+import ResumeBuilder from "./routes/ResumeBuilder";
+import ProjectShowcase from "./routes/ProjectShowcase";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch(() => {});
@@ -392,6 +395,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/supports"
+  element={
+    <ProtectedRoute>
+      <Supports darkMode={darkMode} showToast={showToast} />
+    </ProtectedRoute>
+  }
+/>
+<Route path="/resume" element={<ProtectedRoute><ResumeBuilder darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+<Route path="/projects" element={<ProtectedRoute><ProjectShowcase darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
             <Route
               path="/friends"
               element={

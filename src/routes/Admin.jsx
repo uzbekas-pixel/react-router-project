@@ -10,7 +10,8 @@ import {
   LuInfo, LuCircleCheck, LuTriangleAlert, LuGift, LuGraduationCap,
   LuLayoutDashboard, LuUsers, LuTicket, LuBell, LuShield,
   LuChartBar, LuPlus, LuX, LuTrash2, LuCheck, LuMegaphone, LuSend,
-  LuBookOpen, LuUser, LuCoins,  LuClipboardList,
+  LuBookOpen, LuUser, LuCoins,  LuClipboardList, LuMonitorPlay,
+  LuBriefcase, LuPhoneCall
 } from "react-icons/lu";
 
 const NOTIF_TYPES = (t) => [
@@ -123,8 +124,14 @@ const Admin = ({ darkMode, showToast }) => {
   const [notifSending, setNotifSending] = useState(false);
   const [sentHistory, setSentHistory]   = useState([]);
   const [histLoading, setHistLoading]   = useState(false);
+  
+  // Kurslar
   const [pendingCourses, setPendingCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
+
+  // Mentorlar (YANGI QO'SHILGAN)
+  const [mentorApps, setMentorApps] = useState([]);
+  const [mentorsLoading, setMentorsLoading] = useState(false);
 
   // ── Foydalanuvchilar ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -160,10 +167,6 @@ const Admin = ({ darkMode, showToast }) => {
     setHistLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "promo") fetchPromoCodes();
-    if (activeTab === "notif") fetchNotifHistory();
-  }, [activeTab, fetchPromoCodes, fetchNotifHistory]);
   // ── Kutilayotgan kurslar (Pending) ───────────────────────────────────────
   const fetchPendingCourses = useCallback(async () => {
     setCoursesLoading(true);
@@ -178,13 +181,27 @@ const Admin = ({ darkMode, showToast }) => {
     setCoursesLoading(false);
   }, []);
 
+  // ── YANGI: Mentor arizalarini yuklash ────────────────────────────────────
+  const fetchMentorApps = useCallback(async () => {
+    setMentorsLoading(true);
+    try {
+      const snap = await getDocs(collection(db, "mentorApplications"));
+      const list = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter(app => app.status === "pending");
+      setMentorApps(list);
+    } catch (err) { console.error(err); }
+    setMentorsLoading(false);
+  }, []);
+
   useEffect(() => {
     if (activeTab === "promo") fetchPromoCodes();
     if (activeTab === "notif") fetchNotifHistory();
-    if (activeTab === "courses") fetchPendingCourses(); // Yangi tab
-  }, [activeTab, fetchPromoCodes, fetchNotifHistory, fetchPendingCourses]);
+    if (activeTab === "courses") fetchPendingCourses();
+    if (activeTab === "mentors") fetchMentorApps(); // Mentor arizalarini ham tab bosilganda yuklaydi
+  }, [activeTab, fetchPromoCodes, fetchNotifHistory, fetchPendingCourses, fetchMentorApps]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
+  // ── Handlers (Foydalanuvchilar) ──────────────────────────────────────────
   const handleDeleteUser = async (userId, userName) => {
     if (!window.confirm(`${userName} ${t.confirmDelete}`)) return;
     try {
@@ -193,9 +210,10 @@ const Admin = ({ darkMode, showToast }) => {
       showToast(`${userName} ${t.deleteSuccess}`, "success");
     } catch { showToast(t.deleteError, "error"); }
   };
- const handleApproveCourse = async (courseId, instructorId, title) => {
+
+  // ── Handlers (Kurslar) ───────────────────────────────────────────────────
+  const handleApproveCourse = async (courseId, instructorId, title) => {
     try {
-      // 🟢 BU YERDA STATUS "approved" BO'LISHI SHART
       await updateDoc(doc(db, "instructorCourses", courseId), { status: "approved" });
       setPendingCourses(prev => prev.filter(c => c.id !== courseId));
       showToast(t.courseApproved || "Kurs tasdiqlandi!", "success");
@@ -215,7 +233,6 @@ const Admin = ({ darkMode, showToast }) => {
     if (reason === null) return; 
 
     try {
-      // 🔴 BU YERDA STATUS "rejected" BO'LISHI SHART
       await updateDoc(doc(db, "instructorCourses", courseId), { status: "rejected", rejectReason: reason });
       setPendingCourses(prev => prev.map(c => c.id === courseId ? { ...c, status: "rejected" } : c));
       showToast(t.courseRejected || "Kurs rad etildi", "success");
@@ -229,6 +246,43 @@ const Admin = ({ darkMode, showToast }) => {
       }
     } catch (err) { showToast("Xatolik: " + err.message, "error"); }
   };
+
+  // ── Handlers (YANGI: Mentor arizalari) ──────────────────────────────────
+  const handleApproveMentor = async (appId, userId, userName) => {
+    if (!window.confirm(`${userName} ni rasmiy Mentor sifatida tasdiqlaysizmi?`)) return;
+    try {
+      await updateDoc(doc(db, "mentorApplications", appId), { status: "approved" });
+      await setDoc(doc(db, "users", userId), { isMentor: true }, { merge: true });
+      await setDoc(doc(db, "users", userId, "notifications", `mentor_appr_${Date.now()}`), {
+        title: "Mentorlik tasdiqlandi! 🎉",
+        message: "Tabriklaymiz! Sizning mentorlik arizangiz qabul qilindi.",
+        type: "success", read: false, createdAt: serverTimestamp(),
+      });
+      setMentorApps(prev => prev.filter(a => a.id !== appId));
+      showToast(`${userName} Mentor etib tayinlandi!`, "success");
+    } catch (err) { 
+      showToast("Xatolik: " + err.message, "error"); 
+    }
+  };
+
+  const handleRejectMentor = async (appId, userId, userName) => {
+    const reason = window.prompt(`${userName} arizasini rad etish sababini yozing:`);
+    if (reason === null) return;
+    try {
+      await updateDoc(doc(db, "mentorApplications", appId), { status: "rejected", rejectReason: reason });
+      await setDoc(doc(db, "users", userId, "notifications", `mentor_rej_${Date.now()}`), {
+        title: "Mentorlik arizasi rad etildi ❌",
+        message: `Afsuski arizangiz rad etildi. Sababi: ${reason}`,
+        type: "warning", read: false, createdAt: serverTimestamp(),
+      });
+      setMentorApps(prev => prev.filter(a => a.id !== appId));
+      showToast("Ariza rad etildi.", "success");
+    } catch (err) { 
+      showToast("Xatolik: " + err.message, "error"); 
+    }
+  };
+
+  // ── Handlers (Promo kodlar) ──────────────────────────────────────────────
   const handleAddPromo = async () => {
     const code = promoForm.code.trim().toUpperCase();
     if (!code || !promoForm.discount) { showToast("Kod va chegirma kiritilmadi!", "error"); return; }
@@ -264,6 +318,7 @@ const Admin = ({ darkMode, showToast }) => {
     } catch { showToast("Xatolik!", "error"); }
   };
 
+  // ── Handlers (Bildirishnomalar) ──────────────────────────────────────────
   const handleSendNotif = async () => {
     if (!notifForm.title.trim() || !notifForm.message.trim()) {
       showToast("Sarlavha va xabar kiritilmadi!", "error"); return;
@@ -331,10 +386,12 @@ const Admin = ({ darkMode, showToast }) => {
     fontSize: 13, outline: "none", boxSizing: "border-box",
   };
 
+  // ── TABS ─────────────────────────────────────────────────────────────────
   const tabs = [
     { id: "stats",       label: t.adminTabStats,        icon: <LuChartBar />      },
     { id: "users",       label: t.adminTabUsers,         icon: <LuUsers />         },
     { id: "instructors", label: t.adminTabInstructors,    icon: <LuGraduationCap /> },
+    { id: "mentors",     label: "Arizalar",            icon: <LuBriefcase /> }, // Mentor tab
     { id: "courses",     label: t.adminTabCourses, icon: <LuBookOpen />  },
     { id: "promo",       label: t.adminTabPromo,     icon: <LuTicket />        },
     { id: "notif",       label: t.adminTabNotif,    icon: <LuBell />          },
@@ -364,6 +421,10 @@ const Admin = ({ darkMode, showToast }) => {
                 : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
               }`}>
               {tab.icon} {tab.label}
+              {/* Yangi arizalar bo'lsa qizil nuqta ko'rsatamiz */}
+              {tab.id === "mentors" && mentorApps.length > 0 && (
+                <span className="ml-1 flex h-2 w-2 rounded-full bg-red-500"></span>
+              )}
             </button>
           ))}
         </div>
@@ -455,6 +516,130 @@ const Admin = ({ darkMode, showToast }) => {
         </ScrollReveal>
       )}
 
+      {/* ── YANGI BO'LIM: MENTORLIK ARIZALARI ── */}
+      {activeTab === "mentors" && (
+        <ScrollReveal direction="up" delay={200}>
+          <div className={cardClass}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+                <LuBriefcase className="text-purple-500" /> Mentorlikka Arizalar ({mentorApps.length})
+              </h3>
+            </div>
+            
+            {mentorsLoading ? (
+              <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin" /></div>
+            ) : mentorApps.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuBriefcase /></div>
+                <p style={{ color: "#6b7280" }}>Yangi arizalar yo'q.</p>
+              </div>
+            ) : mentorApps.map((app) => (
+                <div key={app.id} style={{ display: "flex", flexDirection: "column", gap: 12, padding: "20px", borderRadius: 16, marginBottom: 16, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
+                  
+                  <div className="flex items-center gap-4 border-b border-gray-200 dark:border-slate-700 pb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold overflow-hidden shadow-sm">
+                      {app.userAvatar ? <img src={app.userAvatar} alt="" className="w-full h-full object-cover" /> : app.userName?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div>
+                      <h4 className={`text-base font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>{app.userName}</h4>
+                      <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{app.userEmail}</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-sm font-semibold">
+                      <LuPhoneCall size={16} /> <a href={`tel:${app.phone}`}>{app.phone}</a>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-md">
+                        Yo'nalish: {app.subject}
+                      </span>
+                      <span className="text-xs text-gray-400">{app.createdAt?.toDate?.()?.toLocaleString("uz")}</span>
+                    </div>
+                    <p className={`text-sm leading-relaxed p-3 rounded-xl ${darkMode ? "bg-slate-800 text-gray-300" : "bg-white text-gray-700"} border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
+                      <span className="font-semibold block mb-1">Tajribasi va maqsadi:</span>
+                      "{app.reason}"
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3 mt-2">
+                    <button onClick={() => handleApproveMentor(app.id, app.userId, app.userName)}
+                      className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition flex justify-center items-center gap-2 shadow-sm shadow-green-500/20">
+                      <LuCheck /> Mentor qilib tasdiqlash
+                    </button>
+                    <button onClick={() => handleRejectMentor(app.id, app.userId, app.userName)}
+                      className="py-2.5 px-6 border border-red-500 text-red-500 hover:bg-red-50 hover:dark:bg-red-500/10 rounded-xl font-semibold transition flex justify-center items-center gap-2">
+                      <LuX /> Rad etish
+                    </button>
+                  </div>
+
+                </div>
+              ))
+            }
+          </div>
+        </ScrollReveal>
+      )}
+
+      {/* ── Kutilayotgan kurslar (Pending) ── */}
+      {activeTab === "courses" && (
+        <ScrollReveal direction="up" delay={200}>
+          <div className={cardClass}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+                <LuBookOpen className="text-orange-400" /> {t.pendingCoursesTitle} ({pendingCourses.length})
+              </h3>
+            </div>
+            
+            {coursesLoading
+              ? <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin" /></div>
+              : pendingCourses.length === 0
+              ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuBookOpen /></div>
+                  <p style={{ color: "#6b7280" }}>{t.noPendingCourses}</p>
+                </div>
+              )
+              : pendingCourses.map((course) => (
+                <div key={course.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px", borderRadius: 12, marginBottom: 12, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: course.status === "rejected" ? "#fee2e2" : "#fef3c7", color: course.status === "rejected" ? "#991b1b" : "#92400e" }}>
+                          {course.status === "rejected" ? t.courseStatusRejected : t.courseStatusPending}
+                        </span>
+                        <span style={{ fontSize: 11, background: "#eff6ff", color: "#3b82f6", padding: "2px 8px", borderRadius: 6 }}>{course.category}</span>
+                      </div>
+                      <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111" }}>{course.title}</h4>
+                      <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>{course.description}</p>
+                      
+                      <div style={{ display: "flex", gap: 14, fontSize: 12, color: "#6b7280", flexWrap: "wrap" }}>
+                        <span className="flex items-center gap-1"><LuUser /> {t.instructorBadge}: <b style={{ color: darkMode ? "#e2e8f0" : "#374151" }}>{course.instructorName}</b></span>
+                        <span className="flex items-center gap-1"><LuCoins /> {course.price === 0 ? t.free || "Bepul" : `${Number(course.price).toLocaleString()} so'm`}</span>
+                        <span className="flex items-center gap-1"><LuMonitorPlay /> {course.lessons?.length || 0} {t.lessonsCount || "ta dars"}</span>
+                      </div>
+                    </div>
+                    
+                   <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => handleApproveCourse(course.id, course.instructorId, course.title)}
+                      style={{ padding: "8px 14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                      ✓ Tasdiqlash
+                    </button>
+                    
+                    {course.status !== "rejected" && (
+                      <button onClick={() => handleRejectCourse(course.id, course.instructorId, course.title)}
+                        style={{ padding: "8px 14px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                        ✕ Rad etish
+                      </button>
+                    )}
+                  </div>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </ScrollReveal>
+      )}
+
       {/* ── Promo ── */}
       {activeTab === "promo" && (
         <ScrollReveal direction="up" delay={200}>
@@ -535,9 +720,19 @@ const Admin = ({ darkMode, showToast }) => {
                     </span>
                     <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.course === "all" ? "Barcha kurslar" : promo.course}</span>
                     <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.uses || 0}/{promo.maxUses} marta</span>
-                    <span style={{ padding: "2px 8px", borderRadius: 20, background: promo.valid ? "#d1fae5" : "#fee2e2", color: promo.valid ? "#065f46" : "#991b1b", fontSize: 11, fontWeight: 600 }}>
-                      {promo.valid ? <><LuCheck /> {t.promoActive || "Aktiv"}</> : <><LuX /> {t.promoInactive || "O'chirilgan"}</>}
-                    </span>
+                   <span style={{ 
+  display: "inline-flex", // yonma-yon qilish uchun 
+  alignItems: "center", // o'rtaga moslash uchun
+  gap: "4px", // icon va matn orasidagi masofa
+  padding: "2px 8px", 
+  borderRadius: 20, 
+  background: promo.valid ? "#d1fae5" : "#fee2e2", 
+  color: promo.valid ? "#065f46" : "#991b1b", 
+  fontSize: 11, 
+  fontWeight: 600 
+}}>
+  {promo.valid  ? <><LuCheck size={12} /> {t.promoActive || "Aktiv"}</> : <><LuX size={12} /> {t.promoInactive || "O'chirilgan"}</>}
+</span>
                   </div>
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button onClick={() => handleTogglePromo(promo.id, promo.valid)}
@@ -555,67 +750,7 @@ const Admin = ({ darkMode, showToast }) => {
           </div>
         </ScrollReveal>
       )}
-      {/* ── Kurslar (Pending) ── */}
-      {activeTab === "courses" && (
-        <ScrollReveal direction="up" delay={200}>
-          <div className={cardClass}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                <LuBookOpen className="text-orange-400" /> {t.pendingCoursesTitle} ({pendingCourses.length})
-              </h3>
-            </div>
-            
-            {coursesLoading
-              ? <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin" /></div>
-              : pendingCourses.length === 0
-              ? (
-                <div style={{ textAlign: "center", padding: "40px 0" }}>
-                  <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuBookOpen /></div>
-                  <p style={{ color: "#6b7280" }}>{t.noPendingCourses}</p>
-                </div>
-              )
-              : pendingCourses.map((course) => (
-                <div key={course.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px", borderRadius: 12, marginBottom: 12, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: course.status === "rejected" ? "#fee2e2" : "#fef3c7", color: course.status === "rejected" ? "#991b1b" : "#92400e" }}>
-                          {course.status === "rejected" ? t.courseStatusRejected : t.courseStatusPending}
-                        </span>
-                        <span style={{ fontSize: 11, background: "#eff6ff", color: "#3b82f6", padding: "2px 8px", borderRadius: 6 }}>{course.category}</span>
-                      </div>
-                      <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111" }}>{course.title}</h4>
-                      <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>{course.description}</p>
-                      
-                      <div style={{ display: "flex", gap: 14, fontSize: 12, color: "#6b7280", flexWrap: "wrap" }}>
-                        <span className="flex items-center gap-1"><LuUser /> {t.instructorBadge}: <b style={{ color: darkMode ? "#e2e8f0" : "#374151" }}>{course.instructorName}</b></span>
-                        <span className="flex items-center gap-1"><LuCoins /> {course.price === 0 ? t.free || "Bepul" : `${Number(course.price).toLocaleString()} so'm`}</span>
-                        <span className="flex items-center gap-1"><LuPlayCircle /> {course.lessons?.length || 0} {t.lessonsCount || "ta dars"}</span>
-                      </div>
-                    </div>
-                    
-                   <div style={{ display: "flex", gap: 8 }}>
-    {/* TASDIQLASH TUGMASI */}
-    <button onClick={() => handleApproveCourse(course.id, course.instructorId, course.title)}
-      style={{ padding: "8px 14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-      ✓ Tasdiqlash
-    </button>
-    
-    {/* RAD ETISH TUGMASI */}
-    {course.status !== "rejected" && (
-       <button onClick={() => handleRejectCourse(course.id, course.instructorId, course.title)}
-        style={{ padding: "8px 14px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-        ✕ Rad etish
-      </button>
-    )}
-  </div>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-        </ScrollReveal>
-      )}
+      
       {/* ── Bildirishnoma ── */}
       {activeTab === "notif" && (
         <ScrollReveal direction="up" delay={200}>
@@ -709,7 +844,7 @@ const Admin = ({ darkMode, showToast }) => {
                   </div>
                 )
                 : sentHistory.map((n) => {
-                  const typeInfo = NOTIF_TYPES.find((nt) => nt.value === n.type) || NOTIF_TYPES[0];
+                  const typeInfo = NOTIF_TYPES(t).find((nt) => nt.value === n.type) || NOTIF_TYPES(t)[0];
                   return (
                     <div key={n.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, marginBottom: 10, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderLeft: `4px solid ${typeInfo.color}` }}>
                       <span style={{ fontSize: 20, flexShrink: 0 }}>{typeInfo.label.split(" ")[0]}</span>

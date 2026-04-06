@@ -5,7 +5,7 @@ import { useAuth } from "../context/useAuth";
 import {
   doc, setDoc, getDoc, serverTimestamp,
   collection, addDoc, onSnapshot, orderBy, query,
-  increment, getDocs, where
+  increment, getDocs, where, arrayUnion // <-- SHU YERGA arrayUnion qo'shildi
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { generateLessonContent } from "./CourseDetailContent";
@@ -965,15 +965,23 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      if (course.price === 0) { setPurchased(true); setLoadingData(false); return; }
-      if (userPlan === "pro" || userPlan === "premium") { setPurchased(true); setLoadingData(false); return; }
+      // Bepul kurs yoki pro plan bo'lsa purchased=true, lekin progress ham yuklansin
+      const isFreeOrPro =
+        course.price === 0 ||
+        userPlan === "pro" ||
+        userPlan === "premium";
+
+      if (isFreeOrPro) setPurchased(true);
+
       if (!user) { setLoadingData(false); return; }
+
       try {
         const snap = await getDoc(doc(db, "users", user.uid, "progress", String(courseId)));
         if (!cancelled && snap.exists()) {
           const data = snap.data();
           setCompletedLessons(data.completedLessons || []);
-          setPurchased(data.purchased || false);
+          // Pullik kurs uchun purchased flagini ham tekshir
+          if (!isFreeOrPro) setPurchased(data.purchased || false);
         }
       } catch (err) { console.error("Progress load error:", err); }
       finally { if (!cancelled) setLoadingData(false); }
@@ -983,7 +991,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   }, [user, courseId, course.price, userPlan]);
 
   // ── Darsni tugatish ────────────────────────────────────────────────────
-  const markComplete = async (lessonId) => {
+ const markComplete = async (lessonId) => {
     if (completedLessons.includes(lessonId)) return;
     const newCompleted = [...completedLessons, lessonId];
     setCompletedLessons(newCompleted); // Optimistic update
@@ -998,13 +1006,27 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
       // DENORM — mirror xp to users/{uid} for Leaderboard
       await setDoc(doc(db, "users", user.uid), { xp: increment(10) }, { merge: true });
       showToast?.(`+10 XP qo'shildi! ✅`, "success");
+      
       if (newProgress === 100) {
         await setDoc(doc(db, "users", user.uid, "notifications", `course_${courseId}`),
           { title: "Kurs tugatildi! 🎉", message: `"${course.title}" muvaffaqiyatli tugatildi!`, type: "success", read: false, createdAt: serverTimestamp() }
         );
-        // DENORM — increment courses counter on users/{uid} for Leaderboard
-        await setDoc(doc(db, "users", user.uid), { courses: increment(1) }, { merge: true });
-        showToast?.(`🎉 "${course.title}" tugatildi!`, "success");
+        
+        // ------------------------------------------------------------------
+        // YANGILANGAN QISM: courses sonini oshirish va Support unvonini berish
+        // ------------------------------------------------------------------
+        await setDoc(doc(db, "users", user.uid), { 
+          courses: increment(1),
+          isSupport: true, // Support qilib belgilaymiz
+          supportSubjects: arrayUnion(course.category) // Qaysi fandan ekanligini massivga saqlaymiz
+        }, { merge: true });
+        
+        // ✅ Kurs tugatilganda talabalar sonini oshir (bir marta)
+        await setDoc(doc(db, "courses", String(courseId)), { students: increment(1) }, { merge: true });
+        setRealStudents(prev => prev + 1);
+        
+        // Toast xabarini ham yangiladik
+        showToast?.(`🎉 "${course.title}" tugatildi! Siz endi ${course.category} bo'yicha Support bo'ldingiz!`, "success");
       }
     } catch (err) {
       console.error("markComplete error:", err);
@@ -1024,6 +1046,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         { courseId, courseTitle: course.title, purchased: true, progress: 0, completedLessons: [], purchasedAt: serverTimestamp() },
         { merge: true }
       );
+      // talabalar soni kurs tugatilganda oshadi (markComplete da)
     } catch (err) { console.error("Purchase error:", err); }
   };
 
@@ -1181,7 +1204,19 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         <VideoLessonModal lesson={playingLesson} courseColor={course.color}
           courseRating={realRating} courseStudents={realStudents}
           courseId={courseId} courseCategory={course.category}
-          onClose={(wasCompleted) => { setPlayingLesson(null); if (wasCompleted === true) setTimeout(() => setShowRatingModal(true), 600); }}
+          onClose={(wasCompleted) => {
+            setPlayingLesson(null);
+            if (wasCompleted === true) {
+              // Faqat kurs 100% tugatilganda baholash oynasi chiqsin
+              const newCompleted = completedLessons.includes(playingLesson?.id)
+                ? completedLessons
+                : [...completedLessons, playingLesson?.id];
+              const newProgress = Math.round((newCompleted.length / totalLessons) * 100);
+              if (newProgress === 100) {
+                setTimeout(() => setShowRatingModal(true), 600);
+              }
+            }
+          }}
           onComplete={markComplete} darkMode={darkMode} />
       )}
       {showPayment && <PaymentModal course={course} onClose={() => setShowPayment(false)} onSuccess={handlePurchaseSuccess} darkMode={darkMode} />}

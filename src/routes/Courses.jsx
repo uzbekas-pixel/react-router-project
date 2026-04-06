@@ -308,34 +308,52 @@ const Courses = ({ darkMode, showToast }) => {
 
   useEffect(() => {
     let cancelled = false;
+    const unsubscribers = [];
+
     const fetchStats = async () => {
       const stats = {};
+
       for (const course of allCourses) {
         try {
+          // Reviews: bir martalik o'qish (kamdan kam o'zgaradi)
           let realRating = 0;
-          let realStudents = 0;
           const reviewsSnap = await getDocs(collection(db, "courses", String(course.id), "reviews"));
           if (!reviewsSnap.empty) {
             let sum = 0;
             reviewsSnap.forEach(d => { sum += Number(d.data().rating || 0); });
             realRating = Number((sum / reviewsSnap.size).toFixed(1));
           }
-
-          const courseSnap = await getDoc(doc(db, "courses", String(course.id)));
-          if (courseSnap.exists()) {
-            realStudents = courseSnap.data().students || 0;
-            if (reviewsSnap.empty && courseSnap.data().rating) realRating = courseSnap.data().rating;
-          }
-          
-          stats[course.id] = { rating: realRating, students: realStudents };
+          stats[course.id] = { rating: realRating, students: 0 };
         } catch (err) {
           console.error(err);
+          stats[course.id] = { rating: 0, students: 0 };
         }
       }
+
       if (!cancelled) setCourseStats(stats);
+
+      // courses/{id} hujjatlarini onSnapshot bilan tinglash — students real-time yangilansin
+      for (const course of allCourses) {
+        const unsub = onSnapshot(doc(db, "courses", String(course.id)), (snap) => {
+          if (!cancelled) {
+            setCourseStats(prev => ({
+              ...prev,
+              [course.id]: {
+                rating: prev[course.id]?.rating ?? 0,
+                students: snap.exists() ? (snap.data().students || 0) : 0,
+              }
+            }));
+          }
+        });
+        unsubscribers.push(unsub);
+      }
     };
+
     fetchStats();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      unsubscribers.forEach(unsub => unsub());
+    };
   }, [allCourses]);
 
   const realCourses = allCourses.map(c => ({

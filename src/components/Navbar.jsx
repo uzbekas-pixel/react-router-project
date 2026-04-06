@@ -22,7 +22,7 @@ import {
   LuGamepad2, LuCode, LuKeyboard, LuLanguages,
   LuUser, LuShieldCheck, LuBell, LuSun, LuMoon,
   LuDownload, LuInfo, LuMessageCircle, LuMusic2,
-  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX, LuRadio, LuLogOut, LuMenu, LuX
+  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX, LuRadio, LuLogOut, LuMenu, LuX, LuTerminal
 } from "react-icons/lu";
 import { MdOutlineLogout, MdOutlineLogin } from "react-icons/md";
 import { RiUserSmileLine } from "react-icons/ri";
@@ -135,6 +135,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
     { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
+    { path: "/supports",      label: "Ko'makchilar",               icon: <LuUsers className="text-green-400" />            },
+    { path: "/projects",      label: "Loyiha",                       icon: <LuTerminal className="text-cyan-400" />              },
     { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
     { path: "/certificate",   label: t.certificateNav,               icon: <LuAward className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
