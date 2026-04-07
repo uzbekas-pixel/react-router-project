@@ -5,7 +5,6 @@ import {
   LuGraduationCap,
   LuMessageSquare,
   LuGamepad2,
-  LuCode,
   LuInstagram
 } from "react-icons/lu";
 
@@ -14,15 +13,14 @@ const BottomNav = ({ darkMode }) => {
   const { t } = useLang();
 
   const tabs = [
-    { path: "/", icon: <LuGraduationCap />, label: t.coursesNav },
-    { path: "/chat", icon: <LuMessageSquare />, label: t.chatTab },
-    { path: "/games", icon: <LuGamepad2 />, label: t.gamesTab },
-    { path: "/code", icon: <LuCode />, label: t.codeTab },
-    { path: "/story", icon: <LuInstagram />, label: t.story },
+    { path: "/", icon: <LuGraduationCap size={26} />, label: t.coursesNav },
+    { path: "/chat", icon: <LuMessageSquare size={26} />, label: t.chatTab },
+    { path: "/games", icon: <LuGamepad2 size={26} />, label: t.gamesTab },
+    { path: "/story", icon: <LuInstagram size={26} />, label: t.story },
     {
       path: "/profile",
       icon: (
-        <div className="w-7 h-7 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center text-white text-xs font-bold border-2 border-blue-400">
+        <div className="w-7 h-7 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center text-white text-xl font-bold border-2 border-blue-400">
           {user?.photoURL
             ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
             : user?.displayName?.[0]?.toUpperCase() || "?"}

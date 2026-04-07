@@ -8,7 +8,7 @@ import { db } from "../firebase/config";
 import { usePWA } from "../hooks/usePWA";
 import CodeSnippets from "../routes/Codesnippets";
 
-import { LuCalendarCheck } from "react-icons/lu";
+import { LuCalendarCheck, LuClock } from "react-icons/lu";
 import { LuAward } from "react-icons/lu";
 import { LuSwords } from "react-icons/lu";
 import { LuCoins } from "react-icons/lu";
@@ -118,7 +118,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/ai-tutor",    label: t.aiTutorTitle,  icon: <LuBot className="text-green-400" />,      end: false },
   ];
 
-
   const sidebarLinks = [
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
@@ -142,6 +141,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
     { path: "/certificate",   label: t.certificateNav,               icon: <LuAward className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
+    { path: "/history", label: "Tarix", icon: <LuClock className="text-indigo-400" /> },
     { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
     { path: "/qa",            label: t.qaNav,                        icon: <LuMessageCircle className="text-blue-400" />     },
     ...(isAdmin
@@ -150,6 +150,17 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     ...(isInstructor
       ? [{ path: "/instructor", label: t.instructorPanelNav,icon: <LuBookOpen className="text-green-400" /> }]
       : []),
+  ];
+
+  // ── MOBIL MENYU UCHUN FILTR ───────────────────────────────────────────────
+  // Bottom nav'da qatnashadigan linklar va umuman olib tashlanadigan linklar (masalan, /code, /live) ro'yxati.
+  // Eslatma: Bottom nav'ingizda qaysi sahifalar bo'lsa, ularni shu yerga qo'shing.
+  const hiddenOnMobile = [
+    "/profile", "/chat", // <-- Bularni bottom nav linklari deb taxmin qildim
+    "/code", // /code telefondan umuman olib tashlandi
+    "/live" ,
+    "/dm",
+    "/story" // Avvalgi filtrda bor edi, uni ham shu yerga qo'shdim
   ];
 
   // ── Effects ───────────────────────────────────────────────────────────────
@@ -273,7 +284,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                 )}
               </div>
               
-
               {/* Auth */}
               {user ? (
                 <button onClick={logout} className="ml-2 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-red-400 hover:bg-red-400/10 transition-colors border border-red-400/20">
@@ -295,8 +305,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
 
           {/* ── Mobile Controls ───────────────────────────────────────────── */}
           <div className="flex md:hidden items-center gap-3">
-            
-            {/* 1. TIL ALMASHTIRISH TUGMASI (Yangi qo'shildi) */}
             <button 
               onClick={() => setLang(lang === "en" ? "uz" : "en")} 
               className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${darkMode ? "border-slate-700 text-slate-300 bg-slate-800" : "border-slate-200 text-slate-600 bg-slate-50"}`}
@@ -304,23 +312,24 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               {lang === "en" ? "UZ" : "EN"}
             </button>
 
-            {/* 2. KUNDUZGI/TUNGI REJIM */}
             <button onClick={() => setDarkMode(!darkMode)} className="text-slate-400">
               {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}
             </button>
             
-            {/* 3. MENYU OCHISH/YOPISH */}
             <button onClick={() => setMenuOpen(!menuOpen)} className={`text-2xl transition-colors ${darkMode ? "text-white" : "text-slate-900"}`}>
               {menuOpen ? <LuX /> : <LuMenu />}
             </button>
-            
           </div>
         </div>
 
       {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
         <div className={`md:hidden transition-all duration-500 ease-in-out ${menuOpen ? "max-h-[85vh] overflow-y-auto border-t border-slate-700/30" : "max-h-0 overflow-hidden"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(20px)" }}>
           <div className="p-6 pb-32 flex flex-col gap-2">
-            {navLinks.map((link) => (
+            
+            {/* O'ZGARISH: navLinks filter orqali bottom navdagi linklar olib tashlandi */}
+            {navLinks
+              .filter(link => !hiddenOnMobile.includes(link.path))
+              .map((link) => (
               <NavLink key={link.path} to={link.path} end={link.end} onClick={closeMenu} className={({ isActive }) => `flex items-center gap-4 p-4 rounded-2xl text-lg font-medium transition-all ${isActive ? "bg-blue-500/10 text-blue-400" : darkMode ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"}`}>
                 <span className="text-xl">{link.icon}</span>
                 {link.label}
@@ -330,20 +339,22 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             <div className="h-px bg-slate-700/30 my-4" />
             
             <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{t.newPagesTitle}</p>
-           <div className="grid grid-cols-3 gap-2">
-  {/* O'ZGARISH: .filter() orqali faqat telefonda /live sahifasi yashirildi */}
-  {sidebarLinks.filter(link => link.path !== "/live").map((link) => (
-    <NavLink 
-      key={link.path} 
-      to={link.path} 
-      onClick={closeMenu} 
-      className={({ isActive }) => `flex flex-col items-center justify-center p-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"}`}
-    >
-      <span className="text-2xl mb-1 opacity-80">{link.icon}</span>
-      <span className="text-[10px] font-medium text-center leading-tight truncate w-full">{link.label}</span>
-    </NavLink>
-  ))}
-</div>
+            <div className="grid grid-cols-3 gap-2">
+              {/* O'ZGARISH: sidebarLinks ham xuddi shunday filter qilindi (/code va boshqa bottom nav elementlari ko'rinmaydi) */}
+              {sidebarLinks
+                .filter(link => !hiddenOnMobile.includes(link.path))
+                .map((link) => (
+                <NavLink 
+                  key={link.path} 
+                  to={link.path} 
+                  onClick={closeMenu} 
+                  className={({ isActive }) => `flex flex-col items-center justify-center p-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"}`}
+                >
+                  <span className="text-2xl mb-1 opacity-80">{link.icon}</span>
+                  <span className="text-[10px] font-medium text-center leading-tight truncate w-full">{link.label}</span>
+                </NavLink>
+              ))}
+            </div>
 
             <div className="mt-auto pt-6 border-t border-slate-700/30">
               {isInstallable && (
@@ -374,7 +385,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         </div>
       </nav>
 
-      {/* ── Sidebar ───────────────────────────────────────────────────── */}
+      {/* ── Sidebar (Katta ekranlar / Yon tomondan chiquvchi menyu) ───────── */}
       <div className={`fixed inset-0 z-60 transition-opacity duration-500 ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
         <div className={`absolute top-0 right-0 h-full w-80 transition-transform duration-500 ease-out shadow-2xl overflow-y-auto ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.9)" : "rgba(255, 255, 255, 0.9)", backdropFilter: "blur(40px)", borderLeft: "1px solid rgba(255,255,255,0.1)" }}>
@@ -385,7 +396,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </div>
 
             <div className="flex flex-col gap-1 flex-1">
-              {/* Nav asosiy linklar */}
               {navLinks.map((link) => (
                 <NavLink key={link.path} to={link.path} end={link.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}>
                   <span className="text-xl opacity-75">{link.icon}</span>
@@ -396,7 +406,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
               <div className="h-px bg-slate-700/30 my-3" />
               <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t.newPagesTitle}</p>
 
-              {/* O'ZGARTIRILDI: Yangi sahifalar — barchasi (sidebarLinks ishlatildi) */}
               {sidebarLinks.map((link) => (
                 <NavLink key={link.path} to={link.path} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${isActive ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : darkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}>
                   <span className="text-xl opacity-75">{link.icon}</span>

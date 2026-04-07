@@ -1,7 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { Routes, Route, useLocation } from "react-router";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+
+// Asosiy komponentlar
 import Navbar from "./components/Navbar";
+import Onboarding from "./components/Onboarding";
+import ScrollToTop from "./components/ScrollToTop";
+import CustomCursor from "./components/CustomCursor";
+import ParticleBackground from "./components/ParticleBackground";
+import Toast from "./components/Toast";
+import Confetti from "./components/Confetti";
+import BottomNav from "./components/BottomNav";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+
+// Sahifalar (Routes)
 import Courses from "./routes/Courses";
 import Pricing from "./routes/Pricing";
 import Quiz from "./routes/Quiz";
@@ -12,31 +25,15 @@ import Leaderboard from "./routes/Leaderboard";
 import Schedule from "./routes/Schedule";
 import PromoCode from "./routes/PromoCode";
 import CreateCourse from "./routes/CreateCourse";
-import Onboarding from "./components/Onboarding";
-import { useOnboarding } from "./hooks/useOnboarding";
-import ScrollToTop from "./components/ScrollToTop";
-import CustomCursor from "./components/CustomCursor";
-import ParticleBackground from "./components/ParticleBackground";
-import Toast from "./components/Toast";
-import Confetti from "./components/Confetti";
 import Login from "./routes/Login";
 import Register from "./routes/Registar";
 import Profile from "./routes/Profile";
-import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./routes/NotFound";
 import ForgotPassword from "./routes/ForgotPassword";
 import Admin from "./routes/Admin";
-import AdminRoute from "./components/AdminRoute";
 import Chat from "./routes/Chat";
-import {
-  requestNotificationPermission,
-  setupMessageListener,
-} from "./hooks/useNotifications";
-import { useAuth } from "./context/useAuth";
 import TypingGame from "./routes/TypingGame";
 import MultiTyping from "./routes/MultiTyping";
-import { useOnlineStatus } from "./hooks/useOnlineStatus";
-import BottomNav from "./components/BottomNav";
 import Games from "./routes/Games";
 import CodeEditor from "./routes/CodeEditor";
 import DM from "./routes/DM";
@@ -53,12 +50,26 @@ import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
 import BattleMode from "./routes/BattleMode";
-import { useNavigate } from "react-router-dom";
 import Supports from "./routes/Supports";
 import ResumeBuilder from "./routes/ResumeBuilder";
 import ProjectShowcase from "./routes/ProjectShowcase";
 import PixelMarket from "./routes/PixelMarket";
 import PixelChallenge from "./routes/PixelChallenge";
+
+// Hook va Contextlar
+import { useOnboarding } from "./hooks/useOnboarding";
+import { requestNotificationPermission, setupMessageListener } from "./hooks/useNotifications";
+import { useAuth } from "./context/useAuth";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+
+// === Firebase & Yangi Funksiyalar ===
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "./firebase/config"; 
+import DailySpinModal from "./components/DailySpinModal"; 
+import PixelPetScene from "./components/PixelPetScene"; 
+import { Gift } from "lucide-react";
+import History from "./routes/History";
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch(() => {});
@@ -77,9 +88,7 @@ const themeStyles = {
 };
 
 function App() {
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("darkMode") === "true",
-  );
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       localStorage.setItem("darkMode", !prev);
@@ -94,19 +103,15 @@ function App() {
   const { show: showOnboarding, hide: hideOnboarding } = useOnboarding();
   const navigate = useNavigate();
 
-  const [currentTheme, setCurrentTheme] = useState(
-    localStorage.getItem("theme") || "default",
-  );
-  const [customBg, setCustomBg] = useState(
-    localStorage.getItem("customBg") || null,
-  );
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme") || "default");
+  const [customBg, setCustomBg] = useState(localStorage.getItem("customBg") || null);
+
+  const [showSpinModal, setShowSpinModal] = useState(false);
+  const [petData, setPetData] = useState(null);
 
   useOnlineStatus(user?.uid);
 
-  const showToast = useCallback(
-    (message, type = "success") => setToast({ message, type }),
-    [],
-  );
+  const showToast = useCallback((message, type = "success") => setToast({ message, type }), []);
   const showConfetti = () => setConfetti(true);
   const handleNavClick = () => {};
 
@@ -115,357 +120,154 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    // BUG #11 FIX — setupMessageListener returns unsubscribe; old onMessageListener() never cleaned up
     const unsub = setupMessageListener((payload) => {
       if (payload?.notification) {
-        showToast(
-          `${payload.notification.title}: ${payload.notification.body}`,
-          "info",
-        );
+        showToast(`${payload.notification.title}: ${payload.notification.body}`, "info");
       }
     });
     return () => unsub();
   }, [showToast]);
-  // BUG #17 FIX — removed empty useEffect(() => {}, [showToast]) dead code
-  // App.jsx da mavjud useEffect lardan biriga yoki alohida qo'shing:
-  useEffect(() => {
-    const goOffline = () => {
-      showToast("📵 Internet yo'q — offline rejimda ishlayapsiz", "error");
-    };
-    const goOnline = () => {
-      showToast("✅ Internet qaytdi!", "success");
-    };
 
+  useEffect(() => {
+    const goOffline = () => showToast("📵 Internet yo'q — offline rejimda ishlayapsiz", "error");
+    const goOnline = () => showToast("✅ Internet qaytdi!", "success");
     window.addEventListener("offline", goOffline);
     window.addEventListener("online", goOnline);
-
     return () => {
       window.removeEventListener("offline", goOffline);
       window.removeEventListener("online", goOnline);
     };
   }, [showToast]);
 
-  // Background style
-  const bgStyle = customBg
-    ? {
-        backgroundImage: `url(${customBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
+  // Pet va Spin ma'lumotlarini o'qish
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+           const data = userSnap.data();
+           
+           if (data.hasPet) {
+               setPetData({
+                   petLevel: data.petLevel || 1,
+                   petXP: data.petXP || 0,
+                   petType: data.petType || 1
+               });
+           }
+           
+           const lastSpin = data.lastSpinTime;
+           if (!lastSpin) {
+              setShowSpinModal(true);
+           } else {
+              const lastSpinDate = lastSpin.toDate();
+              const now = new Date();
+              const diffInMs = now - lastSpinDate;
+              const diffInHours = diffInMs / (1000 * 60 * 60);
+              if (diffInHours >= 12) {
+                 setShowSpinModal(true);
+              }
+           }
+        }
+      } catch (error) {
+        console.error("Ma'lumotlarni yuklashda xato:", error);
       }
+    };
+
+    const timeoutId = setTimeout(() => fetchUserData(), 1500);
+    return () => clearTimeout(timeoutId);
+  }, [user]);
+
+  // Pet Tuxumdan yorilganda bazani yangilash
+  const handlePetHatch = async () => {
+    if (user && petData) {
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await setDoc(userRef, { petLevel: 10 }, { merge: true });
+            setPetData(prev => ({ ...prev, petLevel: 10 }));
+            showConfetti();
+            showToast("Uraaa! Pixel Pet tuxumdan chiqdi! 🎉", "success");
+        } catch (error) {
+            console.error("Hatch paytida xato:", error);
+        }
+    }
+  };
+
+  const bgStyle = customBg
+    ? { backgroundImage: `url(${customBg})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }
     : currentTheme !== "default" && themeStyles[currentTheme]
       ? { background: themeStyles[currentTheme] }
       : {};
   const hasCustomBg = customBg || currentTheme !== "default";
+
   return (
-    <div
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${
-        hasCustomBg ? "" : darkMode ? "bg-gray-900" : "bg-gray-50"
-      }`}
-      style={bgStyle}
-    >
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${hasCustomBg ? "" : darkMode ? "bg-slate-900" : "bg-slate-50"}`} style={bgStyle}>
       <ParticleBackground darkMode={darkMode} />
       <CustomCursor darkMode={darkMode} />
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
 
-      {showOnboarding && (
-        <Onboarding
-          darkMode={darkMode}
-          onComplete={hideOnboarding}
-          navigate={navigate}
+      {showSpinModal && (
+        <DailySpinModal 
+          darkMode={darkMode} 
+          onClose={() => setShowSpinModal(false)}
+          showToast={showToast}
+          showConfetti={showConfetti}
         />
       )}
 
-      <Navbar
-        darkMode={darkMode}
-        setDarkMode={toggleDarkMode}
-        onNavClick={handleNavClick}
-      />
+      {showOnboarding && <Onboarding darkMode={darkMode} onComplete={hideOnboarding} navigate={navigate} />}
+
+      <Navbar darkMode={darkMode} setDarkMode={toggleDarkMode} onNavClick={handleNavClick} />
 
       <div className="mt-16 pb-20">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            {/* ── Asosiy ── */}
-            <Route
-              path="/"
-              element={
-                <Courses
-                  darkMode={darkMode}
-                  showToast={showToast}
-                  showConfetti={showConfetti}
-                />
-              }
-            />
-            <Route
-              path="/courses"
-              element={
-                <Courses
-                  darkMode={darkMode}
-                  showToast={showToast}
-                  showConfetti={showConfetti}
-                />
-              }
-            />
+            <Route path="/" element={<Courses darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/courses" element={<Courses darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/pricing" element={<Pricing darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/ai-tutor" element={<AiTutor darkMode={darkMode} showToast={showToast} />} />
 
-            <Route
-              path="/pricing"
-              element={<Pricing darkMode={darkMode} showToast={showToast} />}
-            />
-            <Route
-              path="/ai-tutor"
-              element={<AiTutor darkMode={darkMode} showToast={showToast} />}
-            />
+            <Route path="/quiz" element={<ProtectedRoute><Quiz darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<Dashboard darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/notifications" element={<Notifications darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/leaderboard" element={<Leaderboard darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/schedule" element={<Schedule darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/promo" element={<PromoCode darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/create-course" element={<CreateCourse darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/qa" element={<QA darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/live" element={<Live darkMode={darkMode} showToast={showToast} />} />
 
-            {/* ── O'quv ── */}
-            <Route
-              path="/quiz"
-              element={
-                <ProtectedRoute>
-                  <Quiz darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={<Dashboard darkMode={darkMode} showToast={showToast} />}
-            />
-            <Route
-              path="/notifications"
-              element={
-                <Notifications darkMode={darkMode} showToast={showToast} />
-              }
-            />
-            <Route
-              path="/leaderboard"
-              element={
-                <Leaderboard darkMode={darkMode} showToast={showToast} />
-              }
-            />
-            <Route
-              path="/schedule"
-              element={<Schedule darkMode={darkMode} showToast={showToast} />}
-            />
-            <Route
-              path="/promo"
-              element={<PromoCode darkMode={darkMode} showToast={showToast} />}
-            />
-            <Route
-              path="/create-course"
-              element={
-                <CreateCourse darkMode={darkMode} showToast={showToast} />
-              }
-            />
-            <Route
-              path="/qa"
-              element={<QA darkMode={darkMode} showToast={showToast} />}
-            />
-            <Route
-              path="/live"
-              element={<Live darkMode={darkMode} showToast={showToast} />}
-            />
+            <Route path="/login" element={<Login darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/register" element={<Register darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} />} />
+            <Route path="/forgot-password" element={<ForgotPassword darkMode={darkMode} showToast={showToast} />} />
+            <Route path="/battlemode" element={<BattleMode darkMode={darkMode} showToast={showToast} />} />
 
-            {/* ── Auth ── */}
-            <Route
-              path="/login"
-              element={
-                <Login
-                  darkMode={darkMode}
-                  showToast={showToast}
-                  showConfetti={showConfetti}
-                />
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <Register
-                  darkMode={darkMode}
-                  showToast={showToast}
-                  showConfetti={showConfetti}
-                />
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <ForgotPassword darkMode={darkMode} showToast={showToast} />
-              }
-            />
-            <Route
-              path="/battlemode"
-              element={<BattleMode darkMode={darkMode} showToast={showToast} />}
-            />
-
-            {/* ── Protected ── */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile
-                    darkMode={darkMode}
-                    showToast={showToast}
-                    showConfetti={showConfetti}
-                  />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <Admin darkMode={darkMode} showToast={showToast} />
-                </AdminRoute>
-              }
-            />
-
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <Chat darkMode={darkMode} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/typing"
-              element={
-                <ProtectedRoute>
-                  <TypingGame darkMode={darkMode} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/multiplayer"
-              element={
-                <ProtectedRoute>
-                  <MultiTyping darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/games"
-              element={
-                <ProtectedRoute>
-                  <Games darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/code"
-              element={
-                <ProtectedRoute>
-                  <CodeEditor darkMode={darkMode} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/story"
-              element={
-                <ProtectedRoute>
-                  <Story darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/dm"
-              element={
-                <ProtectedRoute>
-                  <DM darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/daily"
-              element={
-                <ProtectedRoute>
-                  <DailyTasks darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-  path="/supports"
-  element={
-    <ProtectedRoute>
-      <Supports darkMode={darkMode} showToast={showToast} />
-    </ProtectedRoute>
-  }
-/>
-<Route path="/resume" element={<ProtectedRoute><ResumeBuilder darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-<Route path="/projects" element={<ProtectedRoute><ProjectShowcase darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-<Route path="/pixel-market" element={<ProtectedRoute><PixelMarket darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-<Route path="/pixel-challenge" element={<ProtectedRoute><PixelChallenge darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <Friends darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/certificate"
-              element={
-                <ProtectedRoute>
-                  <Certificate darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/referral"
-              element={
-                <ProtectedRoute>
-                  <Referral darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/tournament"
-              element={
-                <ProtectedRoute>
-                  <Tournament darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/shop"
-              element={
-                <ProtectedRoute>
-                  <CoinShop darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor"
-              element={
-                <ProtectedRoute>
-                  <InstructorPanel darkMode={darkMode} showToast={showToast} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/:userId"
-              element={
-                <ProtectedRoute>
-                  <UserProfile darkMode={darkMode} />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/profile" element={<ProtectedRoute><Profile darkMode={darkMode} showToast={showToast} showConfetti={showConfetti} /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><Admin darkMode={darkMode} showToast={showToast} /></AdminRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Chat darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/typing" element={<ProtectedRoute><TypingGame darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/multiplayer" element={<ProtectedRoute><MultiTyping darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/games" element={<ProtectedRoute><Games darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/code" element={<ProtectedRoute><CodeEditor darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/story" element={<ProtectedRoute><Story darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/dm" element={<ProtectedRoute><DM darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/daily" element={<ProtectedRoute><DailyTasks darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/supports" element={<ProtectedRoute><Supports darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/resume" element={<ProtectedRoute><ResumeBuilder darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><ProjectShowcase darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/pixel-market" element={<ProtectedRoute><PixelMarket darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/pixel-challenge" element={<ProtectedRoute><PixelChallenge darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/certificate" element={<ProtectedRoute><Certificate darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/referral" element={<ProtectedRoute><Referral darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/tournament" element={<ProtectedRoute><Tournament darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/shop" element={<ProtectedRoute><CoinShop darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/instructor" element={<ProtectedRoute><InstructorPanel darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+            <Route path="/profile/:userId" element={<ProtectedRoute><UserProfile darkMode={darkMode} /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><History darkMode={darkMode} /></ProtectedRoute>} />
             <Route
               path="/settings"
               element={
@@ -488,7 +290,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route path="*" element={<NotFound darkMode={darkMode} />} />
           </Routes>
         </AnimatePresence>
@@ -496,6 +297,26 @@ function App() {
 
       <ScrollToTop darkMode={darkMode} />
       <BottomNav darkMode={darkMode} />
+
+      {/* === Suzuvchi Tugma (Pet yoki Sovg'a Qutisi) === */}
+      {user && (
+        <div className="fixed z-100 flex items-center justify-center
+                     md:left-6 md:top-24 md:bottom-auto md:right-auto
+                     bottom-24 right-6 top-auto left-auto"
+        >
+            {petData ? (
+                <PixelPetScene petData={petData} darkMode={darkMode} onHatch={handlePetHatch} />
+            ) : (
+                <button
+                  onClick={() => setShowSpinModal(true)}
+                  className="flex items-center justify-center w-12 h-12 bg-linear-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white rounded-full shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-110 transition-transform duration-300"
+                  title="Omadlar Aylanmasi"
+                >
+                  <Gift size={24} />
+                </button>
+            )}
+        </div>
+      )}
     </div>
   );
 }

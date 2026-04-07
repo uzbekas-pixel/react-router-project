@@ -10,8 +10,12 @@ import {
   onSnapshot,
   serverTimestamp,
   runTransaction,
-  increment,
+  collection,
+  query,
+  orderBy,
+  limit,
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import {
   LuCoins,
   LuShoppingBag,
@@ -532,7 +536,6 @@ const CoinShop = ({ darkMode, showToast }) => {
           const d = snap.data();
           setCoins(d.coins || 0);
           setOwned(d.owned || []);
-          setHistory(d.history || []);
           setActiveNameColor(d.activeNameColor || "default");
           setVideoAvatarUrl(d.videoAvatarUrl || "");
         }
@@ -543,6 +546,20 @@ const CoinShop = ({ darkMode, showToast }) => {
         setDataReady(true);
       }
     );
+    return () => unsub();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "users", user.uid, "history"),
+      orderBy("date", "desc"),
+      limit(20)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const hist = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setHistory(hist);
+    });
     return () => unsub();
   }, [user]);
 
@@ -602,7 +619,7 @@ const CoinShop = ({ darkMode, showToast }) => {
         const wSnap = await transaction.get(wRef);
         const w = wSnap.exists()
           ? wSnap.data()
-          : { coins: 0, owned: [], history: [] };
+          : { coins: 0, owned: [] };
 
         if ((w.coins || 0) < item.price) throw new Error("INSUFFICIENT_COINS");
 
@@ -613,31 +630,21 @@ const CoinShop = ({ darkMode, showToast }) => {
         const extras = {};
         if (isNameColor) extras.activeNameColor = item.nameColor;
 
-        const newHistory = [
-          {
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            date: new Date().toLocaleDateString(
-              t.lang === "uz" ? "uz-UZ" : "en-US"
-            ),
-          },
-          ...(w.history || []),
-        ].slice(0, 20);
 
-        // Hamyonni yangilash
+        // Hamyonni yangilash (Coins va History qismi olib tashlandi, giveReward orqali qilinadi)
         transaction.set(
           wRef,
           {
-            coins: (w.coins || 0) - item.price,
             owned: newOwned,
-            history: newHistory,
             updatedAt: serverTimestamp(),
             ...extras,
           },
           { merge: true }
         );
       });
+
+      // Tangalarni yechish va tarixga yozish
+      await giveReward(user.uid, -item.price, "coins", item.name + " xaridi");
 
       // Profilga ism rangini saqlash
       if (isNameColor) {
@@ -652,18 +659,7 @@ const CoinShop = ({ darkMode, showToast }) => {
       // XP va maxSnippets kabi boshqa funksiyalar
       if (item.id === "xp_pack_500" || item.id === "xp_pack_1000") {
         const bonus = item.id === "xp_pack_500" ? 500 : 1000;
-        const sRef = doc(db, "users", user.uid, "data", "stats");
-        const sSnap = await getDoc(sRef);
-        const curXP = sSnap.exists() ? sSnap.data().xp || 0 : 0;
-
-        await setDoc(
-          sRef,
-          { ...(sSnap.data() || {}), xp: curXP + bonus },
-          { merge: true }
-        );
-        await setDoc(uRef, { xp: increment(bonus) }, { merge: true });
-
-        setXp(curXP + bonus);
+        await giveReward(user.uid, bonus, "xp", item.name);
       }
 
       if (item.id === "snippet_slot_5") {
@@ -712,34 +708,24 @@ const CoinShop = ({ darkMode, showToast }) => {
         const wSnap = await transaction.get(wRef);
         const w = wSnap.exists()
           ? wSnap.data()
-          : { coins: 0, owned: [], history: [] };
+          : { coins: 0, owned: [] };
 
         if ((w.coins || 0) < 300) throw new Error("INSUFFICIENT_COINS");
 
-        const newHistory = [
-          {
-            id: "video_avatar",
-            name: t.itemVideoAvatarName || "Video Avatar",
-            price: 300,
-            date: new Date().toLocaleDateString(
-              t.lang === "uz" ? "uz-UZ" : "en-US"
-            ),
-          },
-          ...(w.history || []),
-        ].slice(0, 20);
 
         transaction.set(
           wRef,
           {
-            coins: (w.coins || 0) - 300,
             owned: [...new Set([...(w.owned || []), "video_avatar"])],
-            history: newHistory,
             videoAvatarUrl: url,
             updatedAt: serverTimestamp(),
           },
           { merge: true }
         );
       });
+
+      // Tangalarni yechish
+      await giveReward(user.uid, -300, "coins", "Video Avatar xaridi");
 
       await setDoc(
         doc(db, "users", user.uid),
@@ -773,32 +759,8 @@ const CoinShop = ({ darkMode, showToast }) => {
     setConverting(true);
 
     try {
-      const sRef = doc(db, "users", user.uid, "data", "stats");
-      const sSnap = await getDoc(sRef);
-      const curXP = sSnap.exists() ? sSnap.data().xp || 0 : 0;
-
-      await setDoc(
-        sRef,
-        { ...(sSnap.data() || {}), xp: curXP - amount },
-        { merge: true }
-      );
-      setXp(curXP - amount);
-
-      const wRef = doc(db, "users", user.uid, "data", "wallet");
-      const wSnap = await getDoc(wRef);
-      const curW = wSnap.exists()
-        ? wSnap.data()
-        : { coins: 0, owned: [], history: [] };
-
-      await setDoc(
-        wRef,
-        {
-          ...curW,
-          coins: (curW.coins || 0) + gained,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      await giveReward(user.uid, -amount, "xp", "Tangaga almashtirildi");
+      await giveReward(user.uid, gained, "coins", "XP konvertatsiyasi");
       showToast?.(
         `✅ ${amount} XP → ${gained} ${
           t.convertSuccess || "Tanga aylantirildi"

@@ -6,6 +6,7 @@ import {
   collection, getDocs, addDoc, doc, getDoc,
   serverTimestamp, runTransaction, query, orderBy, deleteDoc
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import { 
   LuCode, LuCoins, LuShoppingBag, LuPlus, 
   LuCheck, LuDownload, LuUser, LuSearch,
@@ -98,18 +99,18 @@ const PixelMarket = ({ darkMode, showToast }) => {
         
         if (buyerCoins < item.price) throw new Error("INSUFFICIENT_COINS");
 
-        const sellerRef = doc(db, "users", item.sellerId, "data", "wallet");
-        const sellerSnap = await transaction.get(sellerRef);
-        const sellerCoins = sellerSnap.exists() ? sellerSnap.data().coins || 0 : 0;
-
         const itemRef = doc(db, "market_items", item.id);
         const itemSnap = await transaction.get(itemRef);
         const itemBuyers = itemSnap.data().buyers || [];
 
-        transaction.update(buyerRef, { coins: buyerCoins - item.price });
-        transaction.set(sellerRef, { coins: sellerCoins + item.price }, { merge: true });
+        if (itemBuyers.includes(user.uid)) throw new Error("ALREADY_BOUGHT");
+        
         transaction.update(itemRef, { buyers: [...itemBuyers, user.uid] });
       });
+
+      // Markaziy tizim orqali tangalarni yechish va berish
+      await giveReward(user.uid, -item.price, "coins", `Pixel Market xaridi: ${item.title}`);
+      await giveReward(item.sellerId, item.price, "coins", `Pixel Market sotuvi: ${item.title}`);
 
       showToast?.(`Muvaffaqiyatli xarid qilindi! ${item.price} tanga yechildi.`, "success");
       setMyCoins(prev => prev - item.price);

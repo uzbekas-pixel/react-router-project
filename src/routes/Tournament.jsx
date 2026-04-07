@@ -3,9 +3,10 @@ import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { db } from "../firebase/config";
 import {
-  doc, getDoc, setDoc, addDoc, updateDoc, collection,
+  doc, getDoc, setDoc, addDoc, collection,
   onSnapshot, query, orderBy, limit, serverTimestamp,
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import {
   LuTrophy, LuSwords, LuKeyboard, LuTarget,
   LuArrowRight, LuArrowLeft, LuRefreshCw,
@@ -187,13 +188,7 @@ const Tournament = ({ darkMode, showToast }) => {
       setMyBest(updated);
 
       const xp = Math.max(10, type === "typing" ? Math.floor(score/5) : Math.floor(score/3));
-      const statsRef  = doc(db, "users", user.uid, "data", "stats");
-      const statsSnap = await getDoc(statsRef);
-      if (statsSnap.exists()) {
-        await updateDoc(statsRef, { xp:(statsSnap.data().xp||0) + xp });
-      } else {
-        await setDoc(statsRef, { xp, streak:0 });
-      }
+      await giveReward(user.uid, xp, "xp", `Turnir natijasi (${type})`);
       showToast && showToast(`🏆 +${xp} XP qo'shildi!`, "success");
     } catch (err) { console.error(err); }
   }, [user, weekKey, myBest, showToast]);

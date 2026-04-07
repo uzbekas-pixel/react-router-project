@@ -6,6 +6,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc,
   updateDoc, query, where, serverTimestamp, increment,
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import {
   LuGift, LuCopy, LuCheck, LuUsers, LuStar,
   LuZap, LuShare2, LuTrophy,
@@ -117,13 +118,7 @@ const Referral = ({ darkMode, showToast }) => {
       const ownerData = ownerDoc.data();
 
       // Kod egasiga XP qo'shish
-      const ownerStatsRef  = doc(db, "users", ownerData.uid, "data", "stats");
-      const ownerStatsSnap = await getDoc(ownerStatsRef);
-      if (ownerStatsSnap.exists()) {
-        await updateDoc(ownerStatsRef, { xp: increment(REFERRAL_XP) });
-      } else {
-        await setDoc(ownerStatsRef, { xp: REFERRAL_XP, streak: 0 });
-      }
+      await giveReward(ownerData.uid, REFERRAL_XP, "xp", "Do'st taklif qilgani uchun");
 
       // Kod egasining referral totalEarned yangilash
       await updateDoc(doc(db, "referrals", ownerData.uid), {
@@ -131,13 +126,7 @@ const Referral = ({ darkMode, showToast }) => {
       });
 
       // O'ziga XP qo'shish
-      const myStatsRef  = doc(db, "users", user.uid, "data", "stats");
-      const myStatsSnap = await getDoc(myStatsRef);
-      if (myStatsSnap.exists()) {
-        await updateDoc(myStatsRef, { xp: increment(REFERRED_XP) });
-      } else {
-        await setDoc(myStatsRef, { xp: REFERRED_XP, streak: 0 });
-      }
+      await giveReward(user.uid, REFERRED_XP, "xp", "Taklif orqali qo'shilgani uchun");
 
       // O'z referral doc yangilash
       await updateDoc(doc(db, "referrals", user.uid), {

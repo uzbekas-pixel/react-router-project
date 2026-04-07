@@ -5,8 +5,9 @@ import { useAuth } from "../context/useAuth";
 import {
   doc, setDoc, getDoc, serverTimestamp,
   collection, addDoc, onSnapshot, orderBy, query,
-  increment, getDocs, where, arrayUnion // <-- SHU YERGA arrayUnion qo'shildi
+  increment, getDocs, where, arrayUnion
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import { db } from "../firebase/config";
 import { generateLessonContent } from "./CourseDetailContent";
 
@@ -156,9 +157,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
         avatar: user.photoURL || null, rating: newReview.rating,
         text: newReview.text, createdAt: serverTimestamp(),
       });
-      await setDoc(doc(db, "users", user.uid, "data", "stats"), { xp: increment(5) }, { merge: true });
-      // DENORM — mirror +5 xp to users/{uid}
-      await setDoc(doc(db, "users", user.uid), { xp: increment(5) }, { merge: true });
+      await giveReward(user.uid, 5, "xp", "Kursga sharh qoldirildi");
       setSubmitted(true);
       setNewReview({ rating: 5, text: "" });
       if (isModal && onFinish) setTimeout(() => onFinish(), 1500);
@@ -1002,9 +1001,7 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         { courseId, courseTitle: course.title, completedLessons: newCompleted, purchased: true, progress: newProgress, lastStudied: serverTimestamp() },
         { merge: true }
       );
-      await setDoc(doc(db, "users", user.uid, "data", "stats"), { xp: increment(10) }, { merge: true });
-      // DENORM — mirror xp to users/{uid} for Leaderboard
-      await setDoc(doc(db, "users", user.uid), { xp: increment(10) }, { merge: true });
+      await giveReward(user.uid, 10, "xp", "Darsni muvaffaqiyatli yakunladi");
       showToast?.(`+10 XP qo'shildi! ✅`, "success");
       
       if (newProgress === 100) {

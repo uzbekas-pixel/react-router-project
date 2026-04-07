@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/useAuth";
 import { doc, getDoc, setDoc, increment, updateDoc } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
 import {
@@ -19,8 +20,8 @@ LuInfo,
   LuTimer,
  LuCheck,
   LuSettings, 
-
-
+LuX
+,
   LuTarget
 } from "react-icons/lu";
 import { completeRealTask } from "../utils/taskManager";
@@ -486,11 +487,12 @@ const Quiz = ({ darkMode, showToast }) => {
       const newHS = score > prevHS ? score : prevHS;
 
       await setDoc(statsRef, {
-        xp: (old.xp || 0) + xpGained, quizAvg: newAvg, quizCount: oldCount + 1,
+        quizAvg: newAvg, quizCount: oldCount + 1,
         highScores: { ...(old.highScores || {}), [cat]: newHS },
       }, { merge: true });
 
-      await setDoc(doc(db, "users", user.uid), { xp: increment(xpGained), quizAvg: newAvg }, { merge: true });
+      await setDoc(doc(db, "users", user.uid), { quizAvg: newAvg }, { merge: true });
+      await giveReward(user.uid, xpGained, "xp", "Quiz muvaffaqiyatli yakunlandi");
       showToast?.(`+${xpGained} XP! ✅`, "success");
       completeRealTask(user.uid, "quiz");
     } catch (err) { console.error(err); }
@@ -783,7 +785,7 @@ const Quiz = ({ darkMode, showToast }) => {
                           ? "bg-white/20 text-white"
                           : darkMode ? "bg-slate-900/60 text-slate-500 group-hover:text-white" : "bg-white text-slate-400 shadow-sm"
                       }`}>
-                        {selected !== null && isCorrectAnswer ? <LuCheck /> : selected !== null && isUserSelection ? <LuXCircle /> : String.fromCharCode(65 + i)}
+                        {selected !== null && isCorrectAnswer ? <LuCheck /> : selected !== null && isUserSelection ? <LuX /> : String.fromCharCode(65 + i)}
                       </div>
                       <span className="flex-1">{opt}</span>
                     </button>
@@ -863,7 +865,7 @@ const Quiz = ({ darkMode, showToast }) => {
                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-1 transition-all ${
                       a.correct ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
                     }`}>
-                      {a.correct ? <LuCheck size={22}/> : <LuXCircle size={22}/>}
+                      {a.correct ? <LuCheck size={22}/> : <LuX size={22}/>}
                     </div>
                     <div className="flex-1">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">

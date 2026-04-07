@@ -3,8 +3,9 @@ import ScrollReveal from "../components/ScrollReveal";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import {
-  doc, getDoc, setDoc, serverTimestamp, increment, onSnapshot
+  doc, setDoc, serverTimestamp, increment, onSnapshot
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import {
   LuFlame, LuStar, LuZap, LuTrophy, LuCheck,
   LuTarget, LuBookOpen, LuKeyboard,
@@ -96,16 +97,12 @@ const DailyTasks = ({ darkMode, showToast }) => {
         
         await setDoc(
           doc(db, "users", user.uid, "data", "stats"),
-          { xp: increment(10), streak: increment(1) },
+          { streak: increment(1) },
           { merge: true }
         );
         
-        // Leaderboard uchun asosiy user doc ga yozish
-        const refreshed = await getDoc(doc(db, "users", user.uid, "data", "stats"));
-        if(refreshed.exists()) {
-           const freshData = refreshed.data();
-           await setDoc(doc(db, "users", user.uid), { xp: freshData.xp, streak: freshData.streak }, { merge: true });
-        }
+        await setDoc(doc(db, "users", user.uid), { streak: increment(1) }, { merge: true });
+        await giveReward(user.uid, 10, "xp", "Kunlik kirish bonusi");
         
         setTasks(newTasks);
         setLoading(false);

@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../context/useAuth";
 import { db } from "../firebase/config";
 import {
-  doc, getDoc, setDoc, runTransaction,
+  doc, getDoc, setDoc,
   increment, collection, addDoc,
 } from "firebase/firestore";
+import { giveReward } from "../utils/rewardSystem";
 import {
   getDatabase, ref, set, get, onValue, off,
   push, remove, onDisconnect, serverTimestamp as rtServerTimestamp,
@@ -351,12 +352,9 @@ const cancelSearch = useCallback(async () => {
       (async () => {
         try {
           const statsRef = doc(db, "users", user.uid, "data", "stats");
-          await runTransaction(db, async (tx) => {
-            const snap = await tx.get(statsRef);
-            const old  = snap.exists() ? snap.data() : {};
-            tx.set(statsRef, { xp: Math.max(0, (old.xp || 0) + xpDelta), battleWins: (old.battleWins || 0) + (iWon ? 1 : 0) }, { merge: true });
-          });
-          await setDoc(doc(db, "users", user.uid), { xp: increment(xpDelta) }, { merge: true });
+          await setDoc(statsRef, { battleWins: increment(iWon ? 1 : 0) }, { merge: true });
+          await giveReward(user.uid, xpDelta, "xp", iWon ? "Battle g'alabasi" : isDraw ? "Battle durang" : "Battle mag'lubiyati");
+
           await addDoc(collection(db, "users", user.uid, "notifications"), {
             title: iWon ? "🏆 G'alaba!" : isDraw ? "🤝 Durang!" : "💪 Jang tugadi!",
             message: `${score}/${qs.length} savol. XP: ${xpDelta >= 0 ? "+" : ""}${xpDelta}`,
