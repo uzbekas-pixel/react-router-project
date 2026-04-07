@@ -22,7 +22,7 @@ import {
   LuGamepad2, LuCode, LuKeyboard, LuLanguages,
   LuUser, LuShieldCheck, LuBell, LuSun, LuMoon,
   LuDownload, LuInfo, LuMessageCircle, LuMusic2,
-  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX, LuRadio, LuLogOut, LuMenu, LuX, LuTerminal
+  LuCloudRain, LuHeadphones, LuVolume2, LuVolumeX, LuRadio, LuLogOut, LuMenu, LuX, LuTerminal,LuStore
 } from "react-icons/lu";
 import { MdOutlineLogout, MdOutlineLogin } from "react-icons/md";
 import { RiUserSmileLine } from "react-icons/ri";
@@ -125,12 +125,14 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/battlemode",    label: t.battleModeNav,                icon: <LuSwords className="text-red-400" />             },
     { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
+    { path: "/pixel-challenge", label: "Pixel Challenge",            icon: <LuSwords className="text-red-400" />             },
     { path: "/live",          label: t.liveClassNav,                 icon: <LuRadio className="text-red-400" />              },
     { path: "/chat",          label: t.chatTab,                      icon: <LuMessageSquare className="text-green-400" />    },
     { path: "/dm",            label: t.dm,                           icon: <LuMail className="text-blue-400" />              },
     { path: "/daily",         label: t.dailyTasksNav,                icon: <LuCalendarCheck className="text-orange-400" />   },
     { path: "/friends",       label: t.friendsNav,                   icon: <LuUsers className="text-blue-400" />             },
     { path: "/referral",      label: t.referralNav,                  icon: <LuGift className="text-pink-400" />              },
+    { path: "/pixel-market",  label: "Pixel Market",                 icon: <LuStore className="text-yellow-400" />              },
     { path: "/tournament",    label: t.tournamentNav,                icon: <LuSwords className="text-red-400" />             },
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },

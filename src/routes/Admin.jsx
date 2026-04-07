@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+  import { useState, useEffect, useCallback } from "react";
 import {
   collection, getDocs, deleteDoc, doc,
   setDoc, updateDoc, serverTimestamp, addDoc, writeBatch, getDoc,
@@ -11,7 +11,7 @@ import {
   LuLayoutDashboard, LuUsers, LuTicket, LuBell, LuShield,
   LuChartBar, LuPlus, LuX, LuTrash2, LuCheck, LuMegaphone, LuSend,
   LuBookOpen, LuUser, LuCoins,  LuClipboardList, LuMonitorPlay,
-  LuBriefcase, LuPhoneCall
+  LuBriefcase, LuPhoneCall, LuAward, LuClock
 } from "react-icons/lu";
 
 const NOTIF_TYPES = (t) => [
@@ -129,9 +129,16 @@ const Admin = ({ darkMode, showToast }) => {
   const [pendingCourses, setPendingCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
 
-  // Mentorlar (YANGI QO'SHILGAN)
+  // Mentorlar 
   const [mentorApps, setMentorApps] = useState([]);
   const [mentorsLoading, setMentorsLoading] = useState(false);
+
+  // Xakatonlar (PIXEL CHALLENGE)
+  const [challenges, setChallenges] = useState([]);
+  const [chalLoading, setChalLoading] = useState(false);
+  const [showChalForm, setShowChalForm] = useState(false);
+  const [chalForm, setChalForm] = useState({ title: "", desc: "", prize: 500, duration: 24 });
+  const [chalSaving, setChalSaving] = useState(false);
 
   // ── Foydalanuvchilar ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -145,7 +152,7 @@ const Admin = ({ darkMode, showToast }) => {
     fetchUsers();
   }, [showToast, t.loadError]);
 
-  // ── Promo kodlar ─────────────────────────────────────────────────────────
+  // ── Fetch Functions ─────────────────────────────────────────────────────────
   const fetchPromoCodes = useCallback(async () => {
     setPromoLoading(true);
     try {
@@ -155,7 +162,6 @@ const Admin = ({ darkMode, showToast }) => {
     setPromoLoading(false);
   }, [showToast]);
 
-  // ── Bildirishnomalar tarixi ──────────────────────────────────────────────
   const fetchNotifHistory = useCallback(async () => {
     setHistLoading(true);
     try {
@@ -167,12 +173,10 @@ const Admin = ({ darkMode, showToast }) => {
     setHistLoading(false);
   }, []);
 
-  // ── Kutilayotgan kurslar (Pending) ───────────────────────────────────────
   const fetchPendingCourses = useCallback(async () => {
     setCoursesLoading(true);
     try {
       const snap = await getDocs(collection(db, "instructorCourses"));
-      // Faqat tasdiqlanmagan kurslarni olamiz
       const list = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter(c => c.status === "pending" || c.status === "rejected");
@@ -181,7 +185,6 @@ const Admin = ({ darkMode, showToast }) => {
     setCoursesLoading(false);
   }, []);
 
-  // ── YANGI: Mentor arizalarini yuklash ────────────────────────────────────
   const fetchMentorApps = useCallback(async () => {
     setMentorsLoading(true);
     try {
@@ -194,12 +197,24 @@ const Admin = ({ darkMode, showToast }) => {
     setMentorsLoading(false);
   }, []);
 
+  const fetchChallenges = useCallback(async () => {
+    setChalLoading(true);
+    try {
+      const snap = await getDocs(collection(db, "challenges"));
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setChallenges(list);
+    } catch (err) { console.error(err); }
+    setChalLoading(false);
+  }, []);
+
   useEffect(() => {
     if (activeTab === "promo") fetchPromoCodes();
     if (activeTab === "notif") fetchNotifHistory();
     if (activeTab === "courses") fetchPendingCourses();
-    if (activeTab === "mentors") fetchMentorApps(); // Mentor arizalarini ham tab bosilganda yuklaydi
-  }, [activeTab, fetchPromoCodes, fetchNotifHistory, fetchPendingCourses, fetchMentorApps]);
+    if (activeTab === "mentors") fetchMentorApps(); 
+    if (activeTab === "challenges") fetchChallenges(); // Xakatonlarni yuklash
+  }, [activeTab, fetchPromoCodes, fetchNotifHistory, fetchPendingCourses, fetchMentorApps, fetchChallenges]);
 
   // ── Handlers (Foydalanuvchilar) ──────────────────────────────────────────
   const handleDeleteUser = async (userId, userName) => {
@@ -209,6 +224,62 @@ const Admin = ({ darkMode, showToast }) => {
       setUsers(users.filter((u) => u.id !== userId));
       showToast(`${userName} ${t.deleteSuccess}`, "success");
     } catch { showToast(t.deleteError, "error"); }
+  };
+
+  // ── Handlers (Xakatonlar / Challenges) ──────────────────────────────────
+  const handleAddChallenge = async () => {
+    if (!chalForm.title.trim() || !chalForm.desc.trim() || !chalForm.duration || !chalForm.prize) {
+      showToast("Barcha maydonlarni to'ldiring!", "error"); return;
+    }
+    setChalSaving(true);
+    try {
+      // Yangisi ochilganda oldingi barcha "active" musobaqalarni avtomatik yopish (Tavsiya qilinadi)
+      const activeChals = challenges.filter(c => c.status === "active");
+      for (let c of activeChals) {
+        await updateDoc(doc(db, "challenges", c.id), { status: "ended" });
+      }
+
+      const endDate = new Date(Date.now() + (Number(chalForm.duration) * 60 * 60 * 1000));
+
+      await addDoc(collection(db, "challenges"), {
+        title: chalForm.title.trim(),
+        desc: chalForm.desc.trim(),
+        prize: Number(chalForm.prize),
+        status: "active",
+        createdAt: serverTimestamp(),
+        endDate: endDate
+      });
+
+      showToast("Yangi musobaqa e'lon qilindi! Taymer ishga tushdi.", "success");
+      setShowChalForm(false);
+      setChalForm({ title: "", desc: "", prize: 500, duration: 24 });
+      fetchChallenges();
+    } catch (err) {
+      console.error(err);
+      showToast("Xatolik yuz berdi", "error");
+    }
+    setChalSaving(false);
+  };
+
+  const handleToggleChallengeStatus = async (id, currentStatus) => {
+    try {
+      await updateDoc(doc(db, "challenges", id), { status: currentStatus === "active" ? "ended" : "active" });
+      fetchChallenges();
+      showToast("Holat o'zgardi", "success");
+    } catch (err) { 
+      console.error(err);
+      showToast("Xatolik", "error"); }
+  };
+
+  const handleDeleteChallenge = async (id) => {
+    if (!window.confirm("Musobaqani va uning ishlarini butunlay o'chirishni tasdiqlaysizmi?")) return;
+    try {
+      await deleteDoc(doc(db, "challenges", id));
+      setChallenges(prev => prev.filter(c => c.id !== id));
+      showToast("Musobaqa o'chirildi", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Xatolik", "error"); }
   };
 
   // ── Handlers (Kurslar) ───────────────────────────────────────────────────
@@ -247,7 +318,7 @@ const Admin = ({ darkMode, showToast }) => {
     } catch (err) { showToast("Xatolik: " + err.message, "error"); }
   };
 
-  // ── Handlers (YANGI: Mentor arizalari) ──────────────────────────────────
+  // ── Handlers (Mentor arizalari) ──────────────────────────────────
   const handleApproveMentor = async (appId, userId, userName) => {
     if (!window.confirm(`${userName} ni rasmiy Mentor sifatida tasdiqlaysizmi?`)) return;
     try {
@@ -391,8 +462,9 @@ const Admin = ({ darkMode, showToast }) => {
     { id: "stats",       label: t.adminTabStats,        icon: <LuChartBar />      },
     { id: "users",       label: t.adminTabUsers,         icon: <LuUsers />         },
     { id: "instructors", label: t.adminTabInstructors,    icon: <LuGraduationCap /> },
-    { id: "mentors",     label: "Arizalar",            icon: <LuBriefcase /> }, // Mentor tab
+    { id: "mentors",     label: "Arizalar",            icon: <LuBriefcase /> },
     { id: "courses",     label: t.adminTabCourses, icon: <LuBookOpen />  },
+    { id: "challenges",  label: "Xakaton",             icon: <LuAward /> }, // Xakaton tabi qo'shildi
     { id: "promo",       label: t.adminTabPromo,     icon: <LuTicket />        },
     { id: "notif",       label: t.adminTabNotif,    icon: <LuBell />          },
   ];
@@ -421,7 +493,6 @@ const Admin = ({ darkMode, showToast }) => {
                 : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
               }`}>
               {tab.icon} {tab.label}
-              {/* Yangi arizalar bo'lsa qizil nuqta ko'rsatamiz */}
               {tab.id === "mentors" && mentorApps.length > 0 && (
                 <span className="ml-1 flex h-2 w-2 rounded-full bg-red-500"></span>
               )}
@@ -516,7 +587,7 @@ const Admin = ({ darkMode, showToast }) => {
         </ScrollReveal>
       )}
 
-      {/* ── YANGI BO'LIM: MENTORLIK ARIZALARI ── */}
+      {/* ── MENTORLIK ARIZALARI ── */}
       {activeTab === "mentors" && (
         <ScrollReveal direction="up" delay={200}>
           <div className={cardClass}>
@@ -640,6 +711,118 @@ const Admin = ({ darkMode, showToast }) => {
         </ScrollReveal>
       )}
 
+      {/* ── XAKATONLAR (Pixel Challenge) ── */}
+      {activeTab === "challenges" && (
+        <ScrollReveal direction="up" delay={200}>
+          <div className={cardClass}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+                <LuAward className="text-purple-500" /> Pixel Challenges ({challenges.length})
+              </h3>
+              <button onClick={() => setShowChalForm(!showChalForm)}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2">
+                {showChalForm ? <><LuX /> Bekor qilish</> : <><LuPlus /> Yangi e'lon qilish</>}
+              </button>
+            </div>
+
+            {showChalForm && (
+              <div style={{ background: darkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, padding: "20px", marginBottom: 20, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
+                <h4 style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>Yangi Xakaton yaratish</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Sarlavha *</label>
+                    <input value={chalForm.title} placeholder="Masalan: Minimal Music Player"
+                      onChange={(e) => setChalForm({ ...chalForm, title: e.target.value })} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Qisqacha ta'rif va qoidalar *</label>
+                    <textarea value={chalForm.desc} placeholder="Talablar va shartlarni yozing..." rows={3}
+                      onChange={(e) => setChalForm({ ...chalForm, desc: e.target.value })} style={{...inputStyle, resize: "none"}} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Mukofot (Tanga) *</label>
+                      <input 
+  type="number" 
+  value={chalForm.prize} 
+  placeholder="500"
+  onChange={(e) => setChalForm({ ...chalForm, prize: e.target.value })} 
+  style={inputStyle}
+  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+/>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Davomiyligi (Soat) *</label>
+                      <input 
+  type="number" 
+  value={chalForm.duration} 
+  placeholder="24"
+  onChange={(e) => setChalForm({ ...chalForm, duration: e.target.value })} 
+  style={inputStyle}
+  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+/>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                  <button onClick={handleAddChallenge} disabled={chalSaving}
+                    style={{ padding: "10px 24px", background: chalSaving ? "#d8b4fe" : "#9333ea", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: chalSaving ? "default" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                    {chalSaving ? "Saqlanmoqda..." : <><LuCheck /> E'lon qilish</>}
+                  </button>
+                  <button onClick={() => setShowChalForm(false)}
+                    style={{ padding: "10px 16px", background: "transparent", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, color: darkMode ? "#94a3b8" : "#374151", cursor: "pointer" }}>
+                    Bekor qilish
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {chalLoading
+              ? <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin" /></div>
+              : challenges.length === 0
+              ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuAward /></div>
+                  <p style={{ color: "#6b7280" }}>Hali musobaqalar yo'q. Yangi e'lon qiling!</p>
+                </div>
+              )
+              : challenges.map((chal) => (
+                <div key={chal.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px", borderRadius: 12, marginBottom: 12, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${chal.status === "active" ? (darkMode ? "#3b82f655" : "#3b82f6") : (darkMode ? "#334155" : "#e5e7eb")}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: chal.status === "active" ? "#dcfce7" : "#f1f5f9", color: chal.status === "active" ? "#166534" : "#475569" }}>
+                          {chal.status === "active" ? "Aktiv" : "Tugagan"}
+                        </span>
+                        <span className="flex items-center gap-1 text-amber-500 text-xs font-bold"><LuCoins /> {chal.prize} Tanga</span>
+                      </div>
+                      <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111" }}>{chal.title}</h4>
+                      <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>{chal.desc}</p>
+                      
+                      <div style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 16 }}>
+                         <span className="flex items-center gap-1"><LuClock size={12}/> Boshlandi: {chal.createdAt?.toDate?.()?.toLocaleString("uz") || "—"}</span>
+                         <span className="flex items-center gap-1"><LuClock size={12}/> Tugaydi: {chal.endDate?.toDate?.()?.toLocaleString("uz") || "—"}</span>
+                      </div>
+                    </div>
+                    
+                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <button onClick={() => handleToggleChallengeStatus(chal.id, chal.status)}
+                      style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${chal.status === "active" ? "#f59e0b" : "#10b981"}`, color: chal.status === "active" ? "#f59e0b" : "#10b981", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                      {chal.status === "active" ? "To'xtatish" : "Qayta aktivlash"}
+                    </button>
+                    <button onClick={() => handleDeleteChallenge(chal.id)}
+                      style={{ padding: "6px 12px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <LuTrash2 size={14} />
+                    </button>
+                  </div>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </ScrollReveal>
+      )}
+
       {/* ── Promo ── */}
       {activeTab === "promo" && (
         <ScrollReveal direction="up" delay={200}>
@@ -665,8 +848,14 @@ const Admin = ({ darkMode, showToast }) => {
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.discount} *</label>
-                    <input type="number" value={promoForm.discount} placeholder="50"
-                      onChange={(e) => setPromoForm({ ...promoForm, discount: e.target.value })} style={inputStyle} />
+                    <input 
+  type="number" 
+  value={promoForm.discount} 
+  placeholder="50"
+  onChange={(e) => setPromoForm({ ...promoForm, discount: e.target.value })} 
+  style={inputStyle}
+  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+/>
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoType}</label>
@@ -685,8 +874,14 @@ const Admin = ({ darkMode, showToast }) => {
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoMaxUses}</label>
-                    <input type="number" value={promoForm.maxUses} placeholder="100"
-                      onChange={(e) => setPromoForm({ ...promoForm, maxUses: e.target.value })} style={inputStyle} />
+                   <input 
+  type="number" 
+  value={promoForm.maxUses} 
+  placeholder="100"
+  onChange={(e) => setPromoForm({ ...promoForm, maxUses: e.target.value })} 
+  style={inputStyle}
+  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+/>
                   </div>
                 </div>
                 <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
@@ -721,9 +916,9 @@ const Admin = ({ darkMode, showToast }) => {
                     <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.course === "all" ? "Barcha kurslar" : promo.course}</span>
                     <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.uses || 0}/{promo.maxUses} marta</span>
                    <span style={{ 
-  display: "inline-flex", // yonma-yon qilish uchun 
-  alignItems: "center", // o'rtaga moslash uchun
-  gap: "4px", // icon va matn orasidagi masofa
+  display: "inline-flex", 
+  alignItems: "center", 
+  gap: "4px", 
   padding: "2px 8px", 
   borderRadius: 20, 
   background: promo.valid ? "#d1fae5" : "#fee2e2", 
@@ -756,7 +951,6 @@ const Admin = ({ darkMode, showToast }) => {
         <ScrollReveal direction="up" delay={200}>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* Yuborish formasi */}
             <div className={cardClass}>
               <h3 className={`text-lg font-bold mb-6 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
                 <LuBell className="text-blue-400" /> {t.adminTabNotif}
@@ -829,7 +1023,6 @@ const Admin = ({ darkMode, showToast }) => {
               </button>
             </div>
 
-            {/* Yuborilgan tarix */}
             <div className={cardClass}>
               <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
                 <LuClipboardList className="text-gray-400" /> {t.sentNotifications}

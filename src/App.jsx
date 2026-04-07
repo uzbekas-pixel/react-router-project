@@ -57,6 +57,8 @@ import { useNavigate } from "react-router-dom";
 import Supports from "./routes/Supports";
 import ResumeBuilder from "./routes/ResumeBuilder";
 import ProjectShowcase from "./routes/ProjectShowcase";
+import PixelMarket from "./routes/PixelMarket";
+import PixelChallenge from "./routes/PixelChallenge";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch(() => {});
@@ -405,6 +407,8 @@ function App() {
 />
 <Route path="/resume" element={<ProtectedRoute><ResumeBuilder darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
 <Route path="/projects" element={<ProtectedRoute><ProjectShowcase darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+<Route path="/pixel-market" element={<ProtectedRoute><PixelMarket darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
+<Route path="/pixel-challenge" element={<ProtectedRoute><PixelChallenge darkMode={darkMode} showToast={showToast} /></ProtectedRoute>} />
             <Route
               path="/friends"
               element={

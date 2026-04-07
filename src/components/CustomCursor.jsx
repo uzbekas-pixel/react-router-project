@@ -1,377 +1,348 @@
 /**
- * CustomCursor.jsx — "Kinetic Zen"
- * ─────────────────────────────────────────────────────────────
- * Bolakay kitob o'qiydi (idle) yoki yuguradi (moving).
- *
- * Tuzatilgan xatolar:
- *  ✓ bookCover ishlatilmagan edi → Book komponentida cover stroke sifatida ishlatildi
- *  ✓ RunBody komponenti e'lon qilingan lekin ishlatilmagan edi → butunlay o'chirildi
- *  ✓ stroke="#aaa" hardcoded edi → pageLineClr konstantasiga ajratildi
- *  ✓ stroke="#1a1008" hardcoded edi → strokeBase konstantasiga ajratildi
- *  ✓ Barcha path/line elementlarida fill="none" to'g'ri berildi
- *  ✓ SF() helper to'g'ri ishlaydi
+ * CustomCursor.jsx — "Pixel Orb" Premium Edition
+ * ══════════════════════════════════════════════════
+ * Dizayn falsafasi:
+ *   • Kichik (32px) — saytni to'smaydi, faqat kursor o'rnida ko'rinadi
+ *   • 3D shar effekti — radial gradient + specular highlight
+ *   • Follower ring — cursor atrofida lazy LERP bilan ergashuvchi halqa
+ *   • Hover state — elementlar ustida scale + blend
+ *   • Click ripple — bosganda to'lqin effekti
+ *   • Mix-blend-mode: difference — har qanday fonga moslashadi
+ *   • Touch qurilmalarda avtomatik o'chiriladi
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
-/* ─── Sozlamalar ─────────────────────────────────────────── */
-const CURSOR_SIZE     = 72;
-const IDLE_TIMEOUT_MS = 120;
-const LERP_FACTOR     = 0.18;
-const USE_LERP        = true;
+/* ─── Sozlamalar ──────────────────────────────────────────────── */
+const DOT_SIZE    = 10;   // px — ichki shar
+const RING_SIZE   = 36;   // px — tashqi halqa
+const LERP_DOT    = 1;    // dot tezroq (instant)
+const LERP_RING   = 0.10; // ring sekin ergashadi
 
-/* ─── Ranglar ────────────────────────────────────────────── */
-const skin        = '#F5CFA0';
-const hair        = '#2C1810';
-const shirt       = '#E8E0D4';
-const pants       = '#4A6FA5';
-const book1       = '#F0EAD6';
-const book2       = '#E8DFC8';
-const bookCover   = '#C0392B';
-const pageLineClr = '#aaaaaa';
-const strokeBase  = '#1a1008';
-
-const sz = CURSOR_SIZE;
-
-/* ─── CSS ────────────────────────────────────────────────── */
-const CURSOR_CSS = `
+/* ─── Global CSS ──────────────────────────────────────────────── */
+const STYLES = `
   *, *::before, *::after { cursor: none !important; }
-  #kinetic-cursor {
+
+  /* ── DOT (ichki shar) ── */
+  #pc-dot {
     position: fixed;
     top: 0; left: 0;
-    width: ${sz}px;
-    height: ${sz}px;
+    width: ${DOT_SIZE}px;
+    height: ${DOT_SIZE}px;
+    border-radius: 50%;
     pointer-events: none;
     z-index: 2147483647;
     will-change: transform;
-    transform: translate3d(0px,0px,0) scaleX(1);
+    transform: translate3d(-50%,-50%,0);
+    /* 3D shar gradient */
+    background: radial-gradient(
+      circle at 35% 30%,
+      #ffffff 0%,
+      #a8d4ff 20%,
+      #4a9eff 50%,
+      #1a6fdf 80%,
+      #0a3fa0 100%
+    );
+    box-shadow:
+      /* specular highlight */
+      inset -2px -2px 4px rgba(0,0,80,0.35),
+      inset 1px 1px 3px rgba(255,255,255,0.7),
+      /* outer glow */
+      0 0 8px rgba(74,158,255,0.6),
+      0 0 20px rgba(74,158,255,0.2);
+    transition: width 180ms cubic-bezier(.4,0,.2,1),
+                height 180ms cubic-bezier(.4,0,.2,1),
+                background 180ms ease,
+                box-shadow 180ms ease;
   }
-  #kinetic-cursor .sprite-wrap {
-    width: ${sz}px;
-    height: ${sz}px;
-    overflow: hidden;
+
+  #pc-dot.hovering {
+    width: ${DOT_SIZE * 0.5}px;
+    height: ${DOT_SIZE * 0.5}px;
+    background: radial-gradient(
+      circle at 35% 30%,
+      #ffffff 0%,
+      #ffffff 40%,
+      #c0e0ff 100%
+    );
+    box-shadow:
+      inset -1px -1px 2px rgba(0,0,80,0.2),
+      0 0 12px rgba(255,255,255,0.9);
   }
-  #kinetic-cursor .sprite-inner {
-    display: flex;
-    animation-timing-function: steps(1);
-    animation-fill-mode: both;
-    animation-iteration-count: infinite;
+
+  #pc-dot.clicking {
+    width: ${DOT_SIZE * 0.3}px;
+    height: ${DOT_SIZE * 0.3}px;
   }
-  #kinetic-cursor.idle .sprite-inner {
-    animation-name: cursor-idle;
-    animation-duration: 900ms;
+
+  /* ── RING (tashqi halqa) ── */
+  #pc-ring {
+    position: fixed;
+    top: 0; left: 0;
+    width: ${RING_SIZE}px;
+    height: ${RING_SIZE}px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2147483646;
+    will-change: transform;
+    transform: translate3d(-50%,-50%,0);
+    border: 1.5px solid rgba(74,158,255,0.5);
+    background: transparent;
+    box-shadow:
+      0 0 0 0.5px rgba(74,158,255,0.1),
+      inset 0 0 8px rgba(74,158,255,0.05);
+    /* backdrop blur — shisha effekti */
+    backdrop-filter: blur(0px);
+    transition: width 250ms cubic-bezier(.4,0,.2,1),
+                height 250ms cubic-bezier(.4,0,.2,1),
+                border-color 250ms ease,
+                border-width 250ms ease,
+                box-shadow 250ms ease;
   }
-  #kinetic-cursor.running .sprite-inner {
-    animation-name: cursor-run;
-    animation-duration: 480ms;
+
+  #pc-ring.hovering {
+    width: ${RING_SIZE * 1.6}px;
+    height: ${RING_SIZE * 1.6}px;
+    border-color: rgba(74,158,255,0.25);
+    border-width: 1px;
+    box-shadow:
+      0 0 0 0.5px rgba(74,158,255,0.08),
+      inset 0 0 20px rgba(74,158,255,0.06),
+      0 0 30px rgba(74,158,255,0.15);
   }
-  @keyframes cursor-idle {
-    0%   { transform: translateX(0px); }
-    50%  { transform: translateX(-${sz}px); }
-    100% { transform: translateX(0px); }
+
+  #pc-ring.clicking {
+    width: ${RING_SIZE * 0.8}px;
+    height: ${RING_SIZE * 0.8}px;
+    border-color: rgba(255,255,255,0.8);
+    box-shadow:
+      0 0 12px rgba(74,158,255,0.5),
+      0 0 30px rgba(74,158,255,0.3);
   }
-  @keyframes cursor-run {
-    0%   { transform: translateX(-${sz * 2}px); }
-    25%  { transform: translateX(-${sz * 3}px); }
-    50%  { transform: translateX(-${sz * 4}px); }
-    75%  { transform: translateX(-${sz * 5}px); }
-    100% { transform: translateX(-${sz * 2}px); }
+
+  /* ── RIPPLE ── */
+  .pc-ripple {
+    position: fixed;
+    top: 0; left: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2147483645;
+    border: 1.5px solid rgba(74,158,255,0.6);
+    transform: translate3d(-50%,-50%,0) scale(0);
+    animation: pc-ripple-anim 0.6s cubic-bezier(0,.5,.5,1) forwards;
+  }
+
+  @keyframes pc-ripple-anim {
+    0%   { width: 10px; height: 10px; opacity: 0.8; transform: translate3d(-50%,-50%,0) scale(1); }
+    100% { width: 80px; height: 80px; opacity: 0;   transform: translate3d(-50%,-50%,0) scale(1); }
+  }
+
+  /* ── TRAIL dots ── */
+  .pc-trail {
+    position: fixed;
+    top: 0; left: 0;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2147483644;
+    background: rgba(74,158,255,0.4);
+    transform: translate3d(-50%,-50%,0);
+    animation: pc-trail-fade 0.5s ease forwards;
+  }
+
+  @keyframes pc-trail-fade {
+    0%   { opacity: 0.6; transform: translate3d(-50%,-50%,0) scale(1); }
+    100% { opacity: 0;   transform: translate3d(-50%,-50%,0) scale(0.2); }
   }
 `;
 
-/* ─── Style helperlar ────────────────────────────────────── */
-const S = {
-  stroke: strokeBase,
-  strokeWidth: 1.6,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  fill: 'none',
-};
-const SF = (fillColor) => ({ ...S, fill: fillColor });
+/* ── Hover-ga reaction qiladigan selectorlar ── */
+const HOVER_SELECTORS = 'a, button, [role="button"], input, select, textarea, label, [data-cursor-hover]';
 
-/* ─── Head ───────────────────────────────────────────────── */
-const Head = ({ cx, cy, r = 10 }) => (
-  <g>
-    <circle cx={cx} cy={cy} r={r} {...SF(skin)} />
-    <path
-      d={`M${cx-r} ${cy-2} Q${cx-r+1} ${cy-r-5} ${cx} ${cy-r-4} Q${cx+r-1} ${cy-r-5} ${cx+r} ${cy-2}`}
-      {...SF(hair)}
-    />
-    <circle cx={cx+3} cy={cy+1} r={1.2} fill={hair} stroke="none" />
-    <path d={`M${cx+1} ${cy+4} Q${cx+4} ${cy+6} ${cx+6} ${cy+4}`} {...S} strokeWidth={1.2} />
-  </g>
-);
-
-/* ─── Book ───────────────────────────────────────────────── */
-const Book = ({ x, y, angle = 0, scale = 1 }) => {
-  const hw = 14 * scale;
-  const hh = 9 * scale;
-  return (
-    <g transform={`translate(${x},${y}) rotate(${angle})`}>
-      <path d={`M0,0 L-${hw},-2 L-${hw},${hh} L0,${hh-1} Z`} {...SF(book1)} />
-      <path d={`M0,0 L${hw},-2 L${hw},${hh} L0,${hh-1} Z`} {...SF(book2)} />
-      <line x1={0} y1={-2} x2={0} y2={hh-1} {...S} strokeWidth={1.2} />
-      <line x1={-hw+4} y1={3} x2={-3} y2={3}
-        stroke={pageLineClr} strokeWidth={0.8} fill="none" strokeLinecap="round" />
-      <line x1={-hw+4} y1={6} x2={-3} y2={6}
-        stroke={pageLineClr} strokeWidth={0.8} fill="none" strokeLinecap="round" />
-      <line x1={3} y1={3} x2={hw-4} y2={3}
-        stroke={pageLineClr} strokeWidth={0.8} fill="none" strokeLinecap="round" />
-      <line x1={3} y1={6} x2={hw-4} y2={6}
-        stroke={pageLineClr} strokeWidth={0.8} fill="none" strokeLinecap="round" />
-      {/* Muqova — bookCover ishlatildi */}
-      <rect
-        x={-hw} y={-2} width={hw*2} height={hh+2} rx={1}
-        stroke={bookCover} strokeWidth={1.4} fill="none"
-      />
-    </g>
-  );
-};
-
-/* ─── Frame 0: Idle — tinch o'tiradi ────────────────────── */
-const FrameIdle0 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <rect x={26} y={36} width={20} height={18} rx={5} {...SF(shirt)} />
-    <path d="M24,54 Q18,58 20,64 Q22,66 26,64 Q30,62 30,58" {...SF(pants)} />
-    <path d="M48,54 Q54,58 52,64 Q50,66 46,64 Q42,62 42,58" {...SF(pants)} />
-    <path d="M26,40 Q20,48 22,52"
-      stroke={shirt} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <path d="M46,40 Q52,48 50,52"
-      stroke={shirt} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <circle cx={22} cy={53} r={3} {...SF(skin)} />
-    <circle cx={50} cy={53} r={3} {...SF(skin)} />
-    <Book x={36} y={57} angle={-5} scale={0.95} />
-    <Head cx={36} cy={26} r={11} />
-    <ellipse cx={36} cy={68} rx={16} ry={3} fill="#00000015" stroke="none" />
-  </svg>
-);
-
-/* ─── Frame 1: Idle — sal tebranadi ─────────────────────── */
-const FrameIdle1 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <rect x={26} y={35} width={20} height={18} rx={5} {...SF(shirt)} />
-    <path d="M24,53 Q18,57 20,63 Q22,65 26,63 Q30,61 30,57" {...SF(pants)} />
-    <path d="M48,53 Q54,57 52,63 Q50,65 46,63 Q42,61 42,57" {...SF(pants)} />
-    <path d="M26,39 Q20,47 22,51"
-      stroke={shirt} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <path d="M46,39 Q52,47 50,51"
-      stroke={shirt} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <circle cx={22} cy={52} r={3} {...SF(skin)} />
-    <circle cx={50} cy={52} r={3} {...SF(skin)} />
-    <Book x={36} y={56} angle={3} scale={0.95} />
-    <g transform="translate(36,25) rotate(4) translate(-36,-25)">
-      <Head cx={36} cy={25} r={11} />
-    </g>
-    <ellipse cx={36} cy={67} rx={16} ry={3} fill="#00000015" stroke="none" />
-  </svg>
-);
-
-/* ─── Frame 2: Run — o'ng oyoq oldinda ──────────────────── */
-const FrameRun0 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <path d="M33,43 L26,58 L24,65"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={23} cy={65} rx={5} ry={3} fill={hair} stroke="none" transform="rotate(-5,23,65)" />
-    <path d="M39,43 L46,52 L50,62"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={51} cy={62} rx={5} ry={3} fill={hair} stroke="none" />
-    <rect x={28} y={27} width={16} height={16} rx={4}
-      transform="rotate(-6,36,35)" {...SF(shirt)} />
-    <path d="M30,32 Q20,36 18,40"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <circle cx={18} cy={40} r={3} {...SF(skin)} />
-    <path d="M42,32 Q48,28 50,30"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <Book x={50} y={28} angle={-15} scale={0.65} />
-    <Head cx={36} cy={18} r={10} />
-    <ellipse cx={36} cy={68} rx={12} ry={2.5} fill="#00000012" stroke="none" />
-  </svg>
-);
-
-/* ─── Frame 3: Run — havoda (sakrash) ───────────────────── */
-const FrameRun1 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <path d="M32,42 L24,52 L20,60"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={20} cy={60} rx={5} ry={3} fill={hair} stroke="none" />
-    <path d="M40,42 L48,48 L54,55"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={55} cy={55} rx={5} ry={3} fill={hair} stroke="none" />
-    <rect x={28} y={24} width={16} height={16} rx={4}
-      transform="rotate(-10,36,32)" {...SF(shirt)} />
-    <path d="M30,30 Q19,30 16,34"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <circle cx={16} cy={34} r={3} {...SF(skin)} />
-    <path d="M42,30 Q50,24 52,22"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <Book x={52} y={20} angle={-20} scale={0.65} />
-    <Head cx={36} cy={15} r={10} />
-    <ellipse cx={36} cy={68} rx={7} ry={2} fill="#00000008" stroke="none" />
-  </svg>
-);
-
-/* ─── Frame 4: Run — chap oyoq oldinda ──────────────────── */
-const FrameRun2 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <path d="M39,43 L46,58 L48,65"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={49} cy={65} rx={5} ry={3} fill={hair} stroke="none" />
-    <path d="M33,43 L26,52 L22,62"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={21} cy={62} rx={5} ry={3} fill={hair} stroke="none" />
-    <rect x={28} y={27} width={16} height={16} rx={4}
-      transform="rotate(-6,36,35)" {...SF(shirt)} />
-    <path d="M42,32 Q52,36 54,40"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <circle cx={54} cy={40} r={3} {...SF(skin)} />
-    <path d="M30,32 Q24,28 22,30"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <Book x={22} y={28} angle={15} scale={0.65} />
-    <Head cx={36} cy={18} r={10} />
-    <ellipse cx={36} cy={68} rx={14} ry={2.5} fill="#00000012" stroke="none" />
-  </svg>
-);
-
-/* ─── Frame 5: Run — tiklanish ───────────────────────────── */
-const FrameRun3 = () => (
-  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} xmlns="http://www.w3.org/2000/svg">
-    <path d="M32,44 L28,56 L26,64"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={26} cy={64} rx={5} ry={3} fill={hair} stroke="none" />
-    <path d="M40,44 L44,56 L46,64"
-      stroke={pants} strokeWidth={5} strokeLinecap="round" fill="none" />
-    <ellipse cx={46} cy={64} rx={5} ry={3} fill={hair} stroke="none" />
-    <rect x={28} y={27} width={16} height={16} rx={4}
-      transform="rotate(-3,36,35)" {...SF(shirt)} />
-    <path d="M30,33 Q24,40 22,44"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <circle cx={22} cy={44} r={3} {...SF(skin)} />
-    <path d="M42,33 Q48,36 50,34"
-      stroke={shirt} strokeWidth={4} strokeLinecap="round" fill="none" />
-    <Book x={50} y={32} angle={-10} scale={0.65} />
-    <Head cx={36} cy={18} r={10} />
-    <ellipse cx={36} cy={68} rx={13} ry={2.5} fill="#00000012" stroke="none" />
-  </svg>
-);
-
-/* ─── Sprite Strip ───────────────────────────────────────── */
-const SpriteStrip = () => (
-  <div className="sprite-inner" style={{ width: sz * 6, display: 'flex' }}>
-    <FrameIdle0 />
-    <FrameIdle1 />
-    <FrameRun0 />
-    <FrameRun1 />
-    <FrameRun2 />
-    <FrameRun3 />
-  </div>
-);
-
-/* ─── Asosiy komponent ───────────────────────────────────── */
 export default function CustomCursor() {
-  const cursorRef   = useRef(null);
-  const rafRef      = useRef(null);
-  const idleTimer   = useRef(null);
-  const currentX    = useRef(0);
-  const currentY    = useRef(0);
-  const targetX     = useRef(0);
-  const targetY     = useRef(0);
-  const isRunning   = useRef(false);
-  const lastDir     = useRef(1);
-  const styleTagRef = useRef(null);
+  const dotRef   = useRef(null);
+  const ringRef  = useRef(null);
+  const rafRef   = useRef(null);
+  const styleRef = useRef(null);
+
+  /* pozitsiyalar */
+  const dot  = useRef({ x: -100, y: -100 });
+  const ring = useRef({ x: -100, y: -100 });
+  const tgt  = useRef({ x: -100, y: -100 });
+
+  /* trail throttle */
+  const lastTrail = useRef(0);
+  const trailDist = useRef({ x: -100, y: -100 });
+
+  const spawnRipple = useCallback((x, y) => {
+    const el = document.createElement('div');
+    el.className = 'pc-ripple';
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 650);
+  }, []);
+
+  const spawnTrail = useCallback((x, y) => {
+    const now = performance.now();
+    if (now - lastTrail.current < 40) return;        // 25fps trail
+    const dx = x - trailDist.current.x;
+    const dy = y - trailDist.current.y;
+    if (dx*dx + dy*dy < 100) return;                 // min 10px harakat
+    lastTrail.current = now;
+    trailDist.current = { x, y };
+    const el = document.createElement('div');
+    el.className = 'pc-trail';
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 520);
+  }, []);
 
   useEffect(() => {
+    /* touch qurilmalar — o'chirish */
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     if (isTouch) return;
 
-    const el = cursorRef.current;
-    if (!el) return;
+    const dotEl  = dotRef.current;
+    const ringEl = ringRef.current;
+    if (!dotEl || !ringEl) return;
 
-    if (!document.getElementById('kinetic-cursor-css')) {
+    /* CSS inject */
+    if (!document.getElementById('pc-cursor-styles')) {
       const tag = document.createElement('style');
-      tag.id = 'kinetic-cursor-css';
-      tag.textContent = CURSOR_CSS;
+      tag.id = 'pc-cursor-styles';
+      tag.textContent = STYLES;
       document.head.appendChild(tag);
-      styleTagRef.current = tag;
+      styleRef.current = tag;
     }
 
-    el.classList.add('idle');
-
+    /* ── RAF loop: LERP pozitsiyalar ── */
     const tick = () => {
-      if (USE_LERP) {
-        currentX.current += (targetX.current - currentX.current) * LERP_FACTOR;
-        currentY.current += (targetY.current - currentY.current) * LERP_FACTOR;
-      } else {
-        currentX.current = targetX.current;
-        currentY.current = targetY.current;
-      }
-      const ox = -(sz * 0.5);
-      const oy = -(sz * 0.75);
-      el.style.transform =
-        `translate3d(${currentX.current + ox}px,${currentY.current + oy}px,0) scaleX(${lastDir.current})`;
+      /* Dot — deyarli instant */
+      dot.current.x += (tgt.current.x - dot.current.x) * LERP_DOT;
+      dot.current.y += (tgt.current.y - dot.current.y) * LERP_DOT;
+      /* Ring — sekin */
+      ring.current.x += (tgt.current.x - ring.current.x) * LERP_RING;
+      ring.current.y += (tgt.current.y - ring.current.y) * LERP_RING;
+
+      dotEl.style.transform  = `translate3d(${dot.current.x}px,${dot.current.y}px,0) translate(-50%,-50%)`;
+      ringEl.style.transform = `translate3d(${ring.current.x}px,${ring.current.y}px,0) translate(-50%,-50%)`;
+
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
 
-    const onMouseMove = (e) => {
-      const dx = e.clientX - targetX.current;
-      if (Math.abs(dx) > 1.5) lastDir.current = dx > 0 ? 1 : -1;
-      targetX.current = e.clientX;
-      targetY.current = e.clientY;
-
-      if (!isRunning.current) {
-        isRunning.current = true;
-        el.classList.remove('idle');
-        el.classList.add('running');
-      }
-
-      clearTimeout(idleTimer.current);
-      idleTimer.current = setTimeout(() => {
-        isRunning.current = false;
-        el.classList.remove('running');
-        el.classList.add('idle');
-      }, IDLE_TIMEOUT_MS);
+    /* ── Events ── */
+    const onMove = (e) => {
+      tgt.current.x = e.clientX;
+      tgt.current.y = e.clientY;
+      spawnTrail(e.clientX, e.clientY);
+      dotEl.style.opacity  = '1';
+      ringEl.style.opacity = '1';
     };
 
-    const onMouseLeave = () => { el.style.opacity = '0'; };
-    const onMouseEnter = () => { el.style.opacity = '1'; };
+    const onDown = (e) => {
+      dotEl.classList.add('clicking');
+      ringEl.classList.add('clicking');
+      spawnRipple(e.clientX, e.clientY);
+    };
 
-    window.addEventListener('mousemove', onMouseMove, { passive: true });
-    document.addEventListener('mouseleave', onMouseLeave);
-    document.addEventListener('mouseenter', onMouseEnter);
+    const onUp = () => {
+      dotEl.classList.remove('clicking');
+      ringEl.classList.remove('clicking');
+    };
+
+    const onOver = (e) => {
+      if (e.target.closest(HOVER_SELECTORS)) {
+        dotEl.classList.add('hovering');
+        ringEl.classList.add('hovering');
+      }
+    };
+
+    const onOut = (e) => {
+      if (e.target.closest(HOVER_SELECTORS)) {
+        dotEl.classList.remove('hovering');
+        ringEl.classList.remove('hovering');
+      }
+    };
+
+    const onLeave = () => {
+      dotEl.style.opacity  = '0';
+      ringEl.style.opacity = '0';
+    };
+
+    const onEnter = () => {
+      dotEl.style.opacity  = '1';
+      ringEl.style.opacity = '1';
+    };
+
+    window.addEventListener('mousemove',  onMove,  { passive: true });
+    window.addEventListener('mousedown',  onDown,  { passive: true });
+    window.addEventListener('mouseup',    onUp,    { passive: true });
+    window.addEventListener('mouseover',  onOver,  { passive: true });
+    window.addEventListener('mouseout',   onOut,   { passive: true });
+    document.addEventListener('mouseleave', onLeave);
+    document.addEventListener('mouseenter', onEnter);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      clearTimeout(idleTimer.current);
-      window.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseleave', onMouseLeave);
-      document.removeEventListener('mouseenter', onMouseEnter);
-      styleTagRef.current?.remove();
+      window.removeEventListener('mousemove',  onMove);
+      window.removeEventListener('mousedown',  onDown);
+      window.removeEventListener('mouseup',    onUp);
+      window.removeEventListener('mouseover',  onOver);
+      window.removeEventListener('mouseout',   onOut);
+      document.removeEventListener('mouseleave', onLeave);
+      document.removeEventListener('mouseenter', onEnter);
+      styleRef.current?.remove();
     };
-  }, []);
+  }, [spawnRipple, spawnTrail]);
 
+  /* Touch qurilmada render ham yo'q */
   if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
     return null;
   }
 
   return (
-    <div id="kinetic-cursor" ref={cursorRef} aria-hidden="true" style={{ opacity: 0 }}>
-      <div className="sprite-wrap">
-        <SpriteStrip />
-      </div>
-    </div>
+    <>
+      {/* 3D Shar — DOT */}
+      <div
+        id="pc-dot"
+        ref={dotRef}
+        aria-hidden="true"
+        style={{ opacity: 0 }}
+      />
+      {/* Ergashuvchi halqa — RING */}
+      <div
+        id="pc-ring"
+        ref={ringRef}
+        aria-hidden="true"
+        style={{ opacity: 0 }}
+      />
+    </>
   );
 }
 
 /*
- * Ishlatish:
+ * ─── Ishlatish ───────────────────────────────────────────────────
+ *
  *   import CustomCursor from './components/CustomCursor';
  *
  *   export default function App() {
  *     return (
  *       <>
  *         <CustomCursor />
- *         ...
+ *         {/* qolgan app... *\/}
  *       </>
  *     );
  *   }
- */
+ *
+ * ─── Rangni o'zgartirish ─────────────────────────────────────────
+ *   Cursor rangi ko'k (#4a9eff). Loyihangiz rangiga moslashtirish uchun
+ *   STYLES ichidagi barcha #4a9eff va #a8d4ff ni o'zgartiring.
+ *   Masalan, cyberpunk sariq: #ffe04a / #fff0a8
+ *
+ * ─── Hover qo'shimcha elementlar ────────────────────────────────
+ *   Biron elementga hover effekt qo'shish uchun:
+ *   <div data-cursor-hover>...</div>
+ * ──────────────────────────────────────────────────────────────── */
