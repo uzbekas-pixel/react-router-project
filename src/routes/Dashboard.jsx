@@ -9,8 +9,7 @@ import {
 import { getNameStyleByKey } from "../constants/shopConstants";
 import { 
   LuBook, 
-  
-LuCheck,
+  LuCheck,
   LuClock, 
   LuTarget, 
   LuTrophy, 
@@ -21,7 +20,9 @@ LuCheck,
   LuActivity, 
   LuAward, 
   LuChevronRight,
-
+  LuTimer,
+  LuPartyPopper,
+  LuInfo
 } from "react-icons/lu";
 
 const MiniBar = ({ value, max, color, darkMode }) => {
@@ -154,7 +155,7 @@ const Dashboard = ({ darkMode, showToast }) => {
 
       if (newProgress === 100) {
         await unlockAchievement("firstCourse");
-        showToast?.(`🎉 ${course.title} ${t.courseCompleted}`, "success");
+        showToast?.(`${course.title} ${t.courseCompleted}`, "success");
       } else {
         showToast?.(t.lessonMarked, "success");
       }
@@ -162,18 +163,23 @@ const Dashboard = ({ darkMode, showToast }) => {
       const days = ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"];
       const today = days[new Date().getDay()];
       const weeklyRef = doc(db, "users", user.uid, "data", "weekly");
-      const newWeekly = { ...weekly, [today]: (weekly[today] || 0) + 30 };
-      await setDoc(weeklyRef, newWeekly);
-      setWeekly(newWeekly);
+      
+      setWeekly(prev => {
+        const next = { ...prev, [today]: (prev[today] || 0) + 30 };
+        setDoc(weeklyRef, next).catch(console.error);
+        return next;
+      });
     } catch (err) { console.error(err); }
     setMarking(null);
   };
 
   const unlockAchievement = async (key) => {
     if (!user || achievements[key]) return;
-    const newAch = { ...achievements, [key]: true };
-    await setDoc(doc(db, "users", user.uid, "data", "achievements"), newAch);
-    setAchievements(newAch);
+    setAchievements(prev => {
+      const next = { ...prev, [key]: true };
+      setDoc(doc(db, "users", user.uid, "data", "achievements"), next).catch(console.error);
+      return next;
+    });
     showToast?.(t.newAchievement, "success");
   };
 

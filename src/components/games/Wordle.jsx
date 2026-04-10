@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "../../context/useLang";
-import { FaRedo, FaFont } from "react-icons/fa";
+import { LuRefreshCw, LuType, LuPartyPopper, LuDelete } from "react-icons/lu";
 
 const WORDS_EN = [
   "apple", "brave", "chord", "drain", "eagle", "flame", "grace", "heart", "ideal", "juice",
@@ -51,10 +51,16 @@ const Wordle = ({ darkMode }) => {
   const [shake, setShake] = useState(false);
   const [message, setMessage] = useState("");
 
-  const showMsg = (msg, duration = 1500) => {
+  const msgTimeoutRef = useRef(null);
+  const showMsg = useCallback((msg, duration = 1500) => {
+    if (msgTimeoutRef.current) clearTimeout(msgTimeoutRef.current);
     setMessage(msg);
-    setTimeout(() => setMessage(""), duration);
-  };
+    msgTimeoutRef.current = setTimeout(() => setMessage(""), duration);
+  }, []);
+
+  useEffect(() => () => {
+    if (msgTimeoutRef.current) clearTimeout(msgTimeoutRef.current);
+  }, []);
 
   const reset = (newLang) => {
     const l = newLang ?? lang;
@@ -78,7 +84,7 @@ const Wordle = ({ darkMode }) => {
 
     if (current === answer) {
       setGameOver(true);
-      showMsg(t.wordleWin || (lang === "uz" ? "Ajoyib! 🎉" : "Brilliant! 🎉"), 3000);
+      showMsg(<div className="flex items-center gap-2">{t.wordleWin || (lang === "uz" ? "Ajoyib!" : "Brilliant!")} <LuPartyPopper /></div>, 3000);
       return;
     }
     if (newGuesses.length >= MAX_GUESSES) {
@@ -168,7 +174,7 @@ const Wordle = ({ darkMode }) => {
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm mb-4 mt-10">
         <h2 className={`text-2xl font-extrabold flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-          <FaFont className="text-blue-500" /> Wordle
+          <LuType className="text-blue-500" /> Wordle
         </h2>
         <div className="flex items-center gap-2">
           {/* Til */}
@@ -185,7 +191,7 @@ const Wordle = ({ darkMode }) => {
           </div>
          <button onClick={() => reset()}
   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>
-  <FaRedo /> {t.again}
+  <LuRefreshCw /> {t.again}
 </button>
         </div>
       </div>

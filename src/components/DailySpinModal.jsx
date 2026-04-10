@@ -109,17 +109,17 @@ const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
           // Vaqtni har doim yangilaymiz
           await setDoc(userRef, { lastSpinTime: serverTimestamp() }, { merge: true });
           
-          if (prize.type !== "none") {
+         if (prize.type !== "none") {
             showConfetti && showConfetti();
             const message = prize.type === "pet_egg" 
-              ? `🔥 Tabriklaymiz! Siz Pixel Tuxum yutib oldingiz! 🎉`
-              : `Tabriklaymiz! Siz ${prize.option} yutib oldingiz! 🎉`;
+              ? `Pixel Tuxum yutdingiz!`
+              : `+${prize.option}`; // Qisqa yozuv: "+10 Coin"
             showToast && showToast(message, "success");
           } else {
-             showToast && showToast("Afsuski yutuq chiqmadi, 12 soatdan keyin yana urinib ko'ring!", "info");
+             showToast && showToast("Yutuq chiqmadi!", "info");
           }
         }
-      } catch (error) {
+      } catch (error) { 
         console.error("Yutuqni saqlashda xato:", error);
         showToast("Xatolik yuz berdi", "error");
       }

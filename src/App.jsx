@@ -68,6 +68,7 @@ import { db } from "./firebase/config";
 import DailySpinModal from "./components/DailySpinModal"; 
 import PixelPetScene from "./components/PixelPetScene"; 
 import { Gift } from "lucide-react";
+import { LuWifiOff, LuPartyPopper } from "react-icons/lu";
 import History from "./routes/History";
 
 if ("serviceWorker" in navigator) {
@@ -129,8 +130,8 @@ function App() {
   }, [showToast]);
 
   useEffect(() => {
-    const goOffline = () => showToast("📵 Internet yo'q — offline rejimda ishlayapsiz", "error");
-    const goOnline = () => showToast("✅ Internet qaytdi!", "success");
+    const goOffline = () => showToast("Internet yo'q — offline rejimda ishlayapsiz", "error");
+    const goOnline = () => showToast("Internet qaytdi!", "success");
     window.addEventListener("offline", goOffline);
     window.addEventListener("online", goOnline);
     return () => {
@@ -187,7 +188,7 @@ function App() {
             await setDoc(userRef, { petLevel: 10 }, { merge: true });
             setPetData(prev => ({ ...prev, petLevel: 10 }));
             showConfetti();
-            showToast("Uraaa! Pixel Pet tuxumdan chiqdi! 🎉", "success");
+            showToast("Uraaa! Pixel Pet tuxumdan chiqdi!", "success");
         } catch (error) {
             console.error("Hatch paytida xato:", error);
         }

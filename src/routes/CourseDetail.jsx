@@ -1,4 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { 
+  LuPlay, LuCheck, LuStar, LuBot, LuMessageSquare, LuX, LuChevronRight, LuSend, LuTrash2, LuSmile,
+  LuPartyPopper, LuUsers, LuArrowRight, LuLock, LuSmartphone, LuInfinity, LuAward, LuRotateCcw
+} from "react-icons/lu";
 import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
@@ -10,6 +14,7 @@ import {
 import { giveReward } from "../utils/rewardSystem";
 import { db } from "../firebase/config";
 import { generateLessonContent } from "./CourseDetailContent";
+import { completeRealTask } from "../utils/taskManager"; 
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COURSES DATA
@@ -113,7 +118,7 @@ const Stars = ({ rating, interactive = false, onChange }) => (
   <div style={{ display: "flex", gap: 3 }}>
     {[1, 2, 3, 4, 5].map((s) => (
       <span key={s} onClick={() => interactive && onChange?.(s)}
-        style={{ fontSize: interactive ? 24 : 14, color: s <= rating ? "#f59e0b" : "#d1d5db", cursor: interactive ? "pointer" : "default" }}>★</span>
+        style={{ fontSize: interactive ? 24 : 14, color: s <= rating ? "#f59e0b" : "#d1d5db", cursor: interactive ? "pointer" : "default" }}><LuStar /></span>
     ))}
   </div>
 );
@@ -140,30 +145,32 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
   const handleSubmit = async () => {
     if (!newReview.text.trim() || !user) return;
     setLoading(true);
-    try {
-      // BUG #16 FIX — prevent duplicate reviews from the same user
-      const existingQ = query(
-        collection(db, "courses", String(courseId), "reviews"),
-        where("uid", "==", user.uid)
-      );
-      const existingSnap = await getDocs(existingQ);
-      if (!existingSnap.empty) {
-        showToast?.("Siz allaqachon sharh yozdingiz!", "error");
-        setLoading(false);
-        return;
-      }
-      await addDoc(collection(db, "courses", String(courseId), "reviews"), {
-        uid: user.uid, name: user.displayName || user.email,
-        avatar: user.photoURL || null, rating: newReview.rating,
-        text: newReview.text, createdAt: serverTimestamp(),
-      });
-      await giveReward(user.uid, 5, "xp", "Kursga sharh qoldirildi");
-      setSubmitted(true);
-      setNewReview({ rating: 5, text: "" });
-      if (isModal && onFinish) setTimeout(() => onFinish(), 1500);
-      else setTimeout(() => setSubmitted(false), 3000);
-    } catch (err) { console.error("Review error:", err); }
-    setLoading(false);
+    const timer = setTimeout(async () => {
+      try {
+        const existingQ = query(
+          collection(db, "courses", String(courseId), "reviews"),
+          where("uid", "==", user.uid)
+        );
+        const existingSnap = await getDocs(existingQ);
+        if (!existingSnap.empty) {
+          showToast?.("Siz allaqachon sharh yozdingiz!", "error");
+          setLoading(false);
+          return;
+        }
+        await addDoc(collection(db, "courses", String(courseId), "reviews"), {
+          uid: user.uid, name: user.displayName || user.email,
+          avatar: user.photoURL || null, rating: newReview.rating,
+          text: newReview.text, createdAt: serverTimestamp(),
+        });
+        await giveReward(user.uid, 5, "xp", "Kursga sharh qoldirildi");
+        setSubmitted(true);
+        setNewReview({ rating: 5, text: "" });
+        if (isModal && onFinish) setTimeout(() => onFinish(), 1500);
+        else setTimeout(() => setSubmitted(false), 3000);
+      } catch (err) { console.error("Review error:", err); }
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
   };
 
   const avg = allReviews.length
@@ -186,7 +193,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
               return (
                 <div key={star} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 12, color: "#6b7280", width: 16 }}>{star}</span>
-                  <span style={{ fontSize: 12, color: "#f59e0b" }}>★</span>
+                  <span style={{ fontSize: 12, color: "#f59e0b" }}><LuStar /></span>
                   <div style={{ flex: 1, height: 6, borderRadius: 3, background: darkMode ? "#334155" : "#e5e7eb" }}>
                     <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: "#f59e0b" }} />
                   </div>
@@ -204,7 +211,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
         </div>
       ) : submitted ? (
         <div style={{ marginBottom: 20, padding: "12px 16px", background: "#d1fae5", borderRadius: 10, fontSize: 13, color: "#065f46", fontWeight: 600 }}>
-          ✅ Sharhingiz qabul qilindi! +5 XP qo'shildi 🎉
+          <LuCheck className="inline mr-2" /> Sharhingiz qabul qilindi! +5 XP qo'shildi <LuPartyPopper className="inline ml-1" />
         </div>
       ) : (
         <div style={{ marginBottom: isModal ? 0 : 20, padding: "16px 20px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
@@ -218,14 +225,14 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
           />
           <button onClick={handleSubmit} disabled={loading || !newReview.text.trim()}
             style={{ marginTop: 8, padding: "8px 20px", background: loading ? "#93c5fd" : "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: loading || !newReview.text.trim() ? "default" : "pointer", opacity: !newReview.text.trim() ? 0.6 : 1 }}>
-            {loading ? "⏳..." : "Yuborish"}
+            {loading ? "⏳..." : <><LuSend className="inline mr-1" /> Yuborish</>}
           </button>
         </div>
       )}
 
       {!isModal && (
         allReviews.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 13, padding: "20px 0" }}>Hali sharhlar yo'q. Birinchi bo'ling! ⭐</p>
+          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 13, padding: "20px 0" }}>Hali sharhlar yo'q. Birinchi bo'ling! <LuStar className="inline" /></p>
         ) : (
           allReviews.map((r) => (
             <div key={r.id} style={{ marginBottom: 14, padding: "14px 16px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#f3f4f6"}` }}>
@@ -254,7 +261,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
 const RatingModal = ({ courseId, onClose, darkMode }) => (
   <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
     <div style={{ width: "100%", maxWidth: 420, background: darkMode ? "#1e293b" : "#fff", borderRadius: 24, padding: 30, textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)" }}>
-      <div style={{ fontSize: 60, marginBottom: 10 }}>⭐</div>
+      <div style={{ fontSize: 60, marginBottom: 10 }}><LuStar className="text-amber-500" /></div>
       <h2 style={{ color: darkMode ? "#fff" : "#111", fontSize: 22, fontWeight: 800, margin: "0 0 8px" }}>Dars qanday bo'ldi?</h2>
       <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>Fikringiz biz uchun muhim! Kursni baholang va XP yutib oling.</p>
       <Reviews courseId={courseId} darkMode={darkMode} isModal={true} onFinish={onClose} showToast={undefined} />
@@ -265,9 +272,6 @@ const RatingModal = ({ courseId, onClose, darkMode }) => (
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AI LESSON MODAL — Comprehensive AI-Tutor Engine (v2)
-// • NO iframe / videoId references
-// • Firebase onComplete / onClose contract is FULLY PRESERVED
-// • z-index: 10000 — above sidebar, below nothing
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /* ─── CSS injected once ─── */
@@ -342,7 +346,6 @@ const CodeBlock = ({ code, lang = "js", accent }) => {
   const ext = { js: "script.js", jsx: "App.jsx", html: "index.html", css: "styles.css", ts: "main.ts" }[lang] || "code.txt";
   return (
     <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${accent}44`, marginTop: 4 }}>
-      {/* titlebar */}
       <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#161b22" }}>
         {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c }} />)}
         <span style={{ marginLeft: 8, fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{ext}</span>
@@ -350,7 +353,6 @@ const CodeBlock = ({ code, lang = "js", accent }) => {
           {copied ? "✓ Nusxalandi" : "Nusxalash"}
         </button>
       </div>
-      {/* lines */}
       <pre className="ai-code-block ai-scroll" style={{ margin: 0, padding: "18px 20px", background: "#0d1117", color: "#d4d4d4", fontSize: 12.5, lineHeight: 1.8, overflowX: "auto", maxHeight: 280 }}>
         {code.split("\n").map((ln, i) => (
           <div key={i} style={{ display: "flex", gap: 12 }}>
@@ -430,7 +432,6 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       const systemPrompt = `Sen "Uzbekas AI" nomli mutaxassis o'qituvchisan. Hozir "${lessonTitle}" kursining "${slideTitle}" slaydini o'rgatmoqdasan. Barcha javoblarni O'zbek tilida ber. Qisqa (3-5 gap), aniq va amaliy javob ber. Kerak bo'lsa kod misoli keltir.`;
 
-      // Gemini history formatiga o'tkazish (system promptni birinchi user xabar sifatida qo'shamiz)
       const geminiHistory = newMsgs.slice(0, -1).map(m => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.content }],
@@ -469,16 +470,14 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
 
   return (
     <div className="ai-pop-in" style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: panelBg, borderTop: `1.5px solid ${accent}55`, borderRadius: "18px 18px 0 0", display: "flex", flexDirection: "column", height: 340, zIndex: 20, backdropFilter: "blur(20px)" }}>
-      {/* header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderBottom: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, flexShrink: 0 }}>
-        <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${accent},${accent}88)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, animation: "ai-breathe 2.5s ease-in-out infinite" }}>🤖</div>
+        <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${accent},${accent}88)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, animation: "ai-breathe 2.5s ease-in-out infinite" }}><LuBot /></div>
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: accent }}>Uzbekas AI</div>
           <div style={{ fontSize: 10, color: "#6b7280" }}>Mavzu: {slideTitle}</div>
         </div>
-        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 18, color: "#94a3b8", cursor: "pointer" }}>✕</button>
+        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 18, color: "#94a3b8", cursor: "pointer" }}><LuX /></button>
       </div>
-      {/* messages */}
       <div className="ai-scroll" style={{ flex: 1, overflowY: "auto", padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.length === 0 && (
           <div style={{ textAlign: "center", color: "#6b7280", fontSize: 13, paddingTop: 20 }}>
@@ -499,14 +498,13 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
         )}
         <div ref={bottomRef} />
       </div>
-      {/* input */}
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, display: "flex", gap: 8, flexShrink: 0 }}>
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && ask()}
           placeholder="Savolingizni yozing... (Enter = yuborish)"
           style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: `1.5px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#0f172a" : "#f8fafc", color: text, fontSize: 13, outline: "none" }} />
         <button onClick={ask} disabled={!q.trim() || loading}
           style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: q.trim() && !loading ? accent : "#94a3b8", color: "#fff", fontSize: 13, fontWeight: 700, cursor: q.trim() && !loading ? "pointer" : "default", transition: "background .2s" }}>
-          →
+          <LuSend />
         </button>
       </div>
     </div>
@@ -546,7 +544,7 @@ const SlideContent = ({ content, accent, darkMode }) => {
           <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {block.items.map((pt, j) => (
               <div key={j} style={{ display: "flex", gap: 12, padding: "11px 16px", borderRadius: 12, background: darkMode ? "rgba(16,185,129,.07)" : "rgba(16,185,129,.05)", border: "1px solid rgba(16,185,129,.25)" }}>
-                <span style={{ color: "#10b981", fontSize: 16, flexShrink: 0 }}>✓</span>
+                <span style={{ color: "#10b981", fontSize: 16, flexShrink: 0 }}><LuCheck /></span>
                 <span style={{ fontSize: 13.5, color: text, lineHeight: 1.6 }}>{pt}</span>
               </div>
             ))}
@@ -579,7 +577,7 @@ const AIAvatar = ({ text, accent, darkMode, done }) => {
   return (
     <div style={{ display: "flex", gap: 14, padding: "14px 20px", borderBottom: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, flexShrink: 0, background: darkMode ? `${accent}0a` : `${accent}07` }}>
       <div style={{ position: "relative", flexShrink: 0 }}>
-        <div style={{ width: 46, height: 46, borderRadius: "50%", background: `linear-gradient(135deg,${accent}ee,${accent}66)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, animation: "ai-breathe 3s ease-in-out infinite", boxShadow: `0 0 0 3px ${accent}33` }}>🤖</div>
+        <div style={{ width: 46, height: 46, borderRadius: "50%", background: `linear-gradient(135deg,${accent}ee,${accent}66)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, animation: "ai-breathe 3s ease-in-out infinite", boxShadow: `0 0 0 3px ${accent}33` }}><LuBot /></div>
         <div style={{ position: "absolute", bottom: 1, right: 1, width: 12, height: 12, borderRadius: "50%", background: "#4ade80", border: "2px solid " + (darkMode ? "#0d1117" : "#fff"), animation: "ai-pulse 2s infinite" }} />
       </div>
       <div style={{ flex: 1 }}>
@@ -596,8 +594,7 @@ const AIAvatar = ({ text, accent, darkMode, done }) => {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   AILessonModal  ←  MAIN EXPORT (replaces VideoLessonModal)
-   Props interface is IDENTICAL — no changes needed in CourseDetail's JSX.
+   AILessonModal  ←  MAIN EXPORT
 ───────────────────────────────────────────────────────────────────────────── */
 const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, onClose, onComplete, darkMode, courseId, courseCategory }) => {
   const slides   = generateLessonContent(lesson, courseId, courseCategory);
@@ -621,7 +618,6 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
   const headerBg = darkMode ? "#060b18"  : "#ffffff";
   const borderC  = darkMode ? "#1e2d45"  : "#e2e8f0";
 
-  /* avatar text per slide type */
   const avatarLines = {
     intro:     `Salom! Men Uzbekas AI — sizning shaxsiy o'qituvchingizman. Bugun "${lesson.title}" mavzusidan boshlaymiz. Tayyor bo'lsangiz, keling!`,
     theory:    `Ajoyib! Endi nazariyani o'rganamiz. Bu qism muhim — diqqat bilan o'qing. Har bir tushunchani tushunish keyingi bosqich uchun poydevor.`,
@@ -631,26 +627,27 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
     summary:   `Darsni muvaffaqiyatli yakunladingiz! 🎉 Siz bugun juda ko'p narsa o'rgandingiz. "Tugatdim" tugmasini bosib, XP yutib oling!`,
   };
 
-  /* ESC key handler */
   useEffect(() => {
     const fn = (e) => { if (e.key === "Escape") onClose(false); };
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
   }, [onClose]);
 
-  /* mark viewed */
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setViewed(prev => new Set([...prev, cur])); setAvatarDone(false); }, [cur]);
 
   const goTo = (idx) => {
     if (idx < 0 || idx >= slides.length) return;
+    setViewed(prev => {
+      const next = new Set(prev);
+      next.add(idx);
+      return next;
+    });
+    setAvatarDone(false);
     setDir(idx > cur ? 1 : -1);
     setAnimKey(k => k + 1);
     setCur(idx);
     setShowChat(false);
   };
 
-  /* inject CSS once */
   useEffect(() => {
     const id = "__uzbekas-ai-css__";
     if (!document.getElementById(id)) {
@@ -662,8 +659,6 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
   }, []);
 
   const slideClass = dir > 0 ? "ai-slide-fwd" : "ai-slide-bwd";
-
-  /* ── Slide type label badge ── */
   const typeColors = { intro:"#7c3aed", theory:"#1d4ed8", code:"#0f766e", challenge:"#b45309", practices:"#166534", summary:"#10b981" };
   const typeBg = typeColors[slide.type] || accent;
 
@@ -676,12 +671,8 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
         onClick={e => e.stopPropagation()}
         style={{ width: "100%", maxWidth: 900, maxHeight: "94vh", borderRadius: 24, overflow: "hidden", background: modalBg, display: "flex", flexDirection: "column", boxShadow: `0 0 0 1px ${accent}55, 0 40px 100px rgba(0,0,0,.7)`, position: "relative", cursor: "default !important" }}
       >
-        {/* ── Top reading progress bar ── */}
         <TopProgressBar pct={pct} accent={accent} />
-
-        {/* ── Modal Header ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 24px", background: headerBg, borderBottom: `1px solid ${borderC}`, flexShrink: 0, paddingTop: 18 }}>
-          {/* dot nav */}
           <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1 }}>
             {slides.map((s, i) => (
               <button
@@ -692,23 +683,18 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
               />
             ))}
           </div>
-
-          {/* lesson title */}
           <div style={{ textAlign: "center", flex: 2 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: textMain, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lesson.title}</div>
             <div style={{ fontSize: 10.5, color: textSub, marginTop: 2 }}>{viewed.size}/{slides.length} slayd ko'rildi • {pct}% bajarildi</div>
           </div>
-
           <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
             <button onClick={() => setShowChat(v => !v)}
               style={{ padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${accent}`, background: showChat ? accent : "transparent", color: showChat ? "#fff" : accent, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, transition: "all .2s" }}>
-              🤖 AI Chat
+              <LuBot /> AI Chat
             </button>
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280", padding: "0 2px", lineHeight: 1 }}>✕</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280", padding: "0 2px", lineHeight: 1 }}><LuX /></button>
           </div>
         </div>
-
-        {/* ── AI Avatar ── */}
         <AIAvatar
           key={`av-${cur}`}
           text={avatarLines[slide.type] || avatarLines.intro}
@@ -716,22 +702,16 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
           darkMode={darkMode}
           done={avatarDone}
         />
-
-        {/* ── Scrollable Slide Area ── */}
         <div className="ai-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 24px", position: "relative" }}>
           <div key={`slide-${animKey}`} className={slideClass}>
-
-            {/* Slide card (glassmorphism) */}
             <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, position: "relative" }}>
               <img src={lesson.thumbnail || "https://placehold.co/800x400/3b82f6/ffffff?text=Lesson"} alt={lesson.title} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
                 <span style={{ background: accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{lesson.category || "AI Dars"}</span>
                 <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{lesson.title}</h1>
-                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}>⭐ {courseRating || 0} · 👥 {(courseStudents || 0).toLocaleString()} talaba</p>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}><LuStar className="inline text-amber-400" /> {courseRating || 0} · <LuUsers className="inline text-indigo-400" /> {(courseStudents || 0).toLocaleString()} talaba</p>
               </div>
             </div>
-
-            {/* Slide header row */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
               <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${typeBg}44,${typeBg}18)`, border: `1.5px solid ${typeBg}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
                 {slide.icon}
@@ -744,12 +724,8 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
                 <div style={{ fontSize: 17, fontWeight: 800, color: textMain, lineHeight: 1.3 }}>{slide.title}</div>
               </div>
             </div>
-
-            {/* Slide content */}
             <SlideContent content={slide.content} accent={accent} darkMode={darkMode} />
           </div>
-
-          {/* AI Chat panel — sticky bottom */}
           {showChat && (
             <div style={{ position: "sticky", bottom: 0, left: 0, right: 0, zIndex: 20 }}>
               <AIChatPanel
@@ -762,8 +738,6 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
             </div>
           )}
         </div>
-
-        {/* ── Footer Navigation ── */}
         <div style={{ padding: "14px 24px 18px", borderTop: `1px solid ${borderC}`, background: headerBg, flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button
@@ -773,13 +747,12 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
               style={{ padding: "12px 22px", borderRadius: 13, border: `1.5px solid ${borderC}`, background: "transparent", color: cur === 0 ? "#475569" : textMain, fontSize: 13, fontWeight: 600, cursor: cur === 0 ? "not-allowed" : "pointer", opacity: cur === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 6 }}>
               ← Oldingi
             </button>
-
             {!isLast ? (
               <button
                 className="ai-nav-btn"
                 onClick={() => goTo(cur + 1)}
                 style={{ flex: 1, padding: "12px 22px", borderRadius: 13, border: "none", background: accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: `0 4px 18px ${accent}60` }}>
-                Keyingi slayd →
+                Keyingi slayd <LuArrowRight />
               </button>
             ) : (
               <button
@@ -792,7 +765,6 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -843,7 +815,7 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
           <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>
             {step === 3 ? `✅ ${t.paymentSuccess}` : `💳 ${t.paymentTitle}`}
           </p>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280" }}><LuX /></button>
         </div>
         <div style={{ padding: 20 }}>
           {step === 1 && (
@@ -860,7 +832,7 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(2)} style={{ width: "100%", padding: "12px 0", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Davom etish →</button>
+              <button onClick={() => setStep(2)} style={{ width: "100%", padding: "12px 0", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Davom etish <LuArrowRight /></button>
             </>
           )}
           {step === 2 && (
@@ -885,12 +857,12 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
           )}
           {step === 3 && (
             <div style={{ textAlign: "center", padding: "10px 0" }}>
-              <div style={{ fontSize: 56, marginBottom: 12 }}>🎉</div>
+              <div style={{ fontSize: 56, marginBottom: 12 }}><LuPartyPopper className="text-emerald-500" /></div>
               <p style={{ fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111", margin: "0 0 6px" }}>Tabriklaymiz!</p>
               <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 20px" }}>"{course.title}" kursiga muvaffaqiyatli yozildingiz!</p>
               <button onClick={() => { onSuccess(); onClose(); }}
                 style={{ padding: "11px 28px", background: "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                O'qishni boshlash →
+                O'qishni boshlash <LuArrowRight />
               </button>
             </div>
           )}
@@ -960,26 +932,17 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
     { q: "O'qituvchi bilan bog'lanish mumkinmi?", a: "Ha, har bir dars ostidagi izoh bo'limida savol berishingiz mumkin." },
   ];
 
-  // ── Firebase progress yuklash ──────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      // Bepul kurs yoki pro plan bo'lsa purchased=true, lekin progress ham yuklansin
-      const isFreeOrPro =
-        course.price === 0 ||
-        userPlan === "pro" ||
-        userPlan === "premium";
-
+      const isFreeOrPro = course.price === 0 || userPlan === "pro" || userPlan === "premium";
       if (isFreeOrPro) setPurchased(true);
-
       if (!user) { setLoadingData(false); return; }
-
       try {
         const snap = await getDoc(doc(db, "users", user.uid, "progress", String(courseId)));
         if (!cancelled && snap.exists()) {
           const data = snap.data();
           setCompletedLessons(data.completedLessons || []);
-          // Pullik kurs uchun purchased flagini ham tekshir
           if (!isFreeOrPro) setPurchased(data.purchased || false);
         }
       } catch (err) { console.error("Progress load error:", err); }
@@ -989,11 +952,10 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
     return () => { cancelled = true; };
   }, [user, courseId, course.price, userPlan]);
 
-  // ── Darsni tugatish ────────────────────────────────────────────────────
- const markComplete = async (lessonId) => {
+  const markComplete = async (lessonId) => {
     if (completedLessons.includes(lessonId)) return;
     const newCompleted = [...completedLessons, lessonId];
-    setCompletedLessons(newCompleted); // Optimistic update
+    setCompletedLessons(newCompleted);
     const newProgress = Math.round((newCompleted.length / totalLessons) * 100);
     if (!user) return;
     try {
@@ -1003,37 +965,29 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
       );
       await giveReward(user.uid, 10, "xp", "Darsni muvaffaqiyatli yakunladi");
       showToast?.(`+10 XP qo'shildi! ✅`, "success");
+      await completeRealTask(user.uid, "watch_lesson", showToast);
+      await completeRealTask(user.uid, "watch_3lessons", showToast);
       
       if (newProgress === 100) {
         await setDoc(doc(db, "users", user.uid, "notifications", `course_${courseId}`),
           { title: "Kurs tugatildi! 🎉", message: `"${course.title}" muvaffaqiyatli tugatildi!`, type: "success", read: false, createdAt: serverTimestamp() }
         );
-        
-        // ------------------------------------------------------------------
-        // YANGILANGAN QISM: courses sonini oshirish va Support unvonini berish
-        // ------------------------------------------------------------------
         await setDoc(doc(db, "users", user.uid), { 
           courses: increment(1),
-          isSupport: true, // Support qilib belgilaymiz
-          supportSubjects: arrayUnion(course.category) // Qaysi fandan ekanligini massivga saqlaymiz
+          isSupport: true,
+          supportSubjects: arrayUnion(course.category)
         }, { merge: true });
-        
-        // ✅ Kurs tugatilganda talabalar sonini oshir (bir marta)
         await setDoc(doc(db, "courses", String(courseId)), { students: increment(1) }, { merge: true });
         setRealStudents(prev => prev + 1);
-        
-        // Toast xabarini ham yangiladik
         showToast?.(`🎉 "${course.title}" tugatildi! Siz endi ${course.category} bo'yicha Support bo'ldingiz!`, "success");
       }
     } catch (err) {
       console.error("markComplete error:", err);
-      // BUG #8 FIX — rollback optimistic update on network/Firestore failure
       setCompletedLessons(completedLessons);
       showToast?.("Saqlashda xatolik. Internetni tekshiring.", "error");
     }
   };
 
-  // ── Kurs sotib olish ───────────────────────────────────────────────────
   const handlePurchaseSuccess = async () => {
     setPurchased(true);
     onPurchased?.(courseId);
@@ -1043,7 +997,6 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         { courseId, courseTitle: course.title, purchased: true, progress: 0, completedLessons: [], purchasedAt: serverTimestamp() },
         { merge: true }
       );
-      // talabalar soni kurs tugatilganda oshadi (markComplete da)
     } catch (err) { console.error("Purchase error:", err); }
   };
 
@@ -1055,36 +1008,28 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   );
 
   return (
-    // position:relative — AiPopup absolute pozitsiyasi uchun zarur
     <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: "32px 20px 80px", position: "relative" }}>
-
-
-
       <button onClick={onBack}
         style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#3b82f6", fontSize: 14, fontWeight: 600, marginBottom: 20, padding: 0 }}>
         {t.backToCatalog}
       </button>
 
-      {/* Kurs banner */}
       <ScrollReveal direction="up">
         <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 16, position: "relative" }}>
           <img src={course.thumbnail} alt={course.title} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
             <span style={{ background: course.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{course.category}</span>
             <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{course.title}</h1>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}>⭐ {realRating || 0} · 👥 {(realStudents || 0).toLocaleString()} talaba</p>
+            <div className="flex items-center gap-4 text-xs font-bold text-slate-200 mt-2">
+              <span className="flex items-center gap-1.5"><LuStar className="text-amber-400" /> {realRating || 0}</span>
+              <span className="flex items-center gap-1.5"><LuUsers className="text-indigo-400" /> {(realStudents || 0).toLocaleString()} talaba</span>
+            </div>
           </div>
         </div>
       </ScrollReveal>
 
-
-
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
-
-        {/* Chap qism */}
         <div style={{ flex: "1 1 520px" }}>
-
-          {/* Progress */}
           {purchased && (
             <ScrollReveal direction="up">
               <div style={{ marginBottom: 20, padding: "16px 20px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
@@ -1100,13 +1045,12 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
                   {progress === 100 ? " 🎉 — Kurs tugatildi!" : ""}
                 </p>
                 {progress === 100 && (
-                  <button style={{ marginTop: 10, padding: "8px 18px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t.certificateBtn}</button>
+                  <button style={{ marginTop: 10, padding: "8px 18px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}><LuAward className="inline mr-1" /> {t.certificateBtn}</button>
                 )}
               </div>
             </ScrollReveal>
           )}
 
-          {/* Tabs */}
           <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
             {[{ id: "lessons", label: t.lessonsTab }, { id: "reviews", label: t.reviewsTab }, { id: "faq", label: t.faqTab }].map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -1116,7 +1060,6 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
             ))}
           </div>
 
-          {/* Darslar */}
           {activeTab === "lessons" && (
             <div>
               <p style={{ margin: "0 0 14px", fontSize: 13, color: "#6b7280" }}>{course.sections.length} {t.sectionsCount} · {totalLessons} {t.lessonsCount}</p>
@@ -1140,14 +1083,13 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
                             onMouseLeave={(e) => { e.currentTarget.style.background = done ? (darkMode ? "#0f2818" : "#f0fdf4") : (darkMode ? "#0f172a" : "#fff"); }}
                           >
                             <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2px solid ${done ? "#10b981" : locked ? "#9ca3af" : "#3b82f6"}`, background: done ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: done ? "#fff" : locked ? "#9ca3af" : "#3b82f6", flexShrink: 0 }}>
-                              {done ? "✓" : locked ? "🔒" : "▶"}
+                              {done ? <LuCheck /> : locked ? <LuLock /> : <LuPlay />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <span style={{ fontSize: 13, color: darkMode ? "#e2e8f0" : "#374151" }}>{lesson.title}</span>
                               {lesson.free && !purchased && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}>{t.freeLesson}</span>}
-                              {done && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}>✓ {t.completedLabel}</span>}
+                              {done && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}><LuCheck className="inline" /> {t.completedLabel}</span>}
                             </div>
-                            <span style={{ fontSize: 12, color: "#9ca3af" }}></span>
                           </div>
                         );
                       })}
@@ -1162,7 +1104,6 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
           {activeTab === "faq" && <div>{faqs.map((faq, i) => <FaqItem key={i} faq={faq} darkMode={darkMode} />)}</div>}
         </div>
 
-        {/* O'ng CTA */}
         <div style={{ width: 260, flexShrink: 0 }}>
           <div style={{ position: "sticky", top: 84, background: darkMode ? "#1e293b" : "#fff", borderRadius: 16, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, padding: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.1)" }}>
             <p style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800, color: purchased ? "#10b981" : "#3b82f6" }}>
@@ -1182,13 +1123,13 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
-                { icon: "📱", text: t.mobileAccess },
-                { icon: "♾️", text: t.lifeTimeAccess },
-                { icon: "🏆", text: t.certificate },
-                { icon: "🔄", text: t.moneyBack },
+                { icon: <LuSmartphone />, text: t.mobileAccess },
+                { icon: <LuInfinity />, text: t.lifeTimeAccess },
+                { icon: <LuAward />, text: t.certificate },
+                { icon: <LuRotateCcw />, text: t.moneyBack },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                  <span style={{ fontSize: 14, color: "#3b82f6" }}>{item.icon}</span>
                   <span style={{ fontSize: 12, color: darkMode ? "#94a3b8" : "#6b7280" }}>{item.text}</span>
                 </div>
               ))}

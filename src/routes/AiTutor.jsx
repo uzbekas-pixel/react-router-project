@@ -6,7 +6,7 @@ import {
   LuMic, LuMicOff, LuPaperclip, LuRefreshCw, LuSend, 
   LuX, LuGlobe, LuPalette, LuZap, LuFlame, LuLanguages, 
   LuBot, LuUser, LuInbox, LuMessageSquare, LuAtom,
-  LuBriefcase, LuVolume2, LuVolumeX 
+  LuBriefcase, LuVolume2, LuVolumeX, LuTimer
 } from "react-icons/lu";
 
 const getQuickTopics = (t, lang) => {
@@ -406,7 +406,7 @@ const AiTutor = ({ darkMode, showToast }) => {
       console.error("Gemini xato:", err.message);
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", content: `❌ Xatolik: ${err.message}` },
+        { role: "assistant", content: `Xatolik: ${err.message}` },
       ]);
       showToast && showToast(t.aiConnectError, "error");
     }
@@ -736,7 +736,7 @@ const AiTutor = ({ darkMode, showToast }) => {
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            {imageUploading ? "⏳" : <LuPaperclip size={16} />}
+            {imageUploading ? <LuTimer className="animate-spin" size={16} /> : <LuPaperclip size={16} />}
           </button>
         )}
 

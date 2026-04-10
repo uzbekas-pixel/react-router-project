@@ -9,7 +9,7 @@ import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import {
   LuCamera, LuVideo, LuSend, LuTrash2,
-  LuHeart, LuMessageCircle, LuX,
+  LuHeart, LuMessageCircle, LuX, LuShield, LuCrown,
 } from "react-icons/lu";
 import { getNameStyleByKey } from "../constants/shopConstants";
 const IMGBB_KEY    = "2166816880e7d95d3a1fccc6a40a0a2b";
@@ -111,7 +111,7 @@ const Story = ({ darkMode, showToast }) => {
         likes:     [],
         createdAt: serverTimestamp(),
       });
-      showToast?.("Story qo'shildi! 🎉", "success");
+      showToast?.("Story qo'shildi!", "success");
     } catch (err) {
       console.error("Image upload error:", err);
       showToast?.(t.imageError, "error");
@@ -140,7 +140,7 @@ const Story = ({ darkMode, showToast }) => {
           likes:     [],
           createdAt: serverTimestamp(),
         });
-        showToast?.("Video story qo'shildi! 🎉", "success");
+        showToast?.("Video story qo'shildi!", "success");
         setUploading(false);
       };
     } catch (err) {
@@ -401,7 +401,7 @@ const Story = ({ darkMode, showToast }) => {
 
         {groupedList.length === 0 && (
           <div className={`flex items-center justify-center flex-1 py-4 text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-            Hali story yo'q. Birinchi bo'lib qo'shing! 🌟
+            Hali story yo'q. Birinchi bo'lib qo'shing!
           </div>
         )}
       </div>
@@ -556,7 +556,7 @@ const Story = ({ darkMode, showToast }) => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                  <span className="text-white text-sm font-semibold">💬 Izohlar ({comments.length})</span>
+                  <span className="text-white text-sm font-semibold flex items-center gap-2"><LuMessageCircle size={16} /> Izohlar ({comments.length})</span>
                   <button onClick={toggleComments} className="text-white/60 hover:text-white transition">
                     <LuX size={18} />
                   </button>
@@ -564,7 +564,7 @@ const Story = ({ darkMode, showToast }) => {
 
                 <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
                   {comments.length === 0 ? (
-                    <p className="text-white/50 text-xs text-center py-4">Hali izoh yo'q. Birinchi bo'ling! 💬</p>
+                    <p className="text-white/50 text-xs text-center py-4">Hali izoh yo'q. Birinchi bo'ling!</p>
                   ) : (
                     comments.map((c) => (
                       <div key={c.id} className="flex items-start gap-2 group">

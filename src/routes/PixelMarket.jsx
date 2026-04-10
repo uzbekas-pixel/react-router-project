@@ -75,7 +75,7 @@ const PixelMarket = ({ darkMode, showToast }) => {
         buyers: [], 
         createdAt: serverTimestamp()
       });
-      showToast?.("Mahsulotingiz sotuvga qo'yildi! 🎉", "success");
+      showToast?.("Mahsulotingiz sotuvga qo'yildi!", "success");
       setNewItem({ title: "", desc: "", code: "", price: 50, category: "react" });
       setTab("market");
       fetchMarketItems();
@@ -88,7 +88,7 @@ const PixelMarket = ({ darkMode, showToast }) => {
 
   const handleBuyItem = async (item) => {
     if (!user) return;
-    if (myCoins < item.price) return showToast?.("Tangangiz yetarli emas! 🪙", "error");
+    if (myCoins < item.price) return showToast?.("Tangangiz yetarli emas!", "error");
 
     setActionLoading(item.id);
     try {

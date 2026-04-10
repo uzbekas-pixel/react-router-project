@@ -3,8 +3,11 @@ import { useLang } from "../../context/useLang";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/useAuth";
 import { doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
-import { FaRedo, FaSignOutAlt, FaCopy, FaGlobe, FaUsers, FaUserSecret, FaHandshake, FaGlobeAmericas, FaGamepad } from "react-icons/fa";
-import { LuSwords, LuTrophy } from "react-icons/lu";
+import { 
+  LuRefreshCw, LuLogOut, LuCopy, LuGlobe, LuUsers, LuUser, 
+  LuHandshake, LuGamepad, LuSwords, LuTrophy, LuTimer, LuSparkles,
+  LuCircle, LuX, LuRotateCcw 
+} from "react-icons/lu";
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -54,9 +57,9 @@ const LocalGame = ({ darkMode, t }) => {
       {/* Skor */}
       <div className="flex gap-3">
         {[
-          { label: t.player1 || "O'yinchi 1", key: "X", icon: "❌" },
-          { label: t.draw || "Durrang", key: "Draw", icon: <FaHandshake className="text-yellow-400 inline mb-1" /> },
-          { label: t.player2 || "O'yinchi 2", key: "O", icon: "⭕" }
+          { label: t.player1 || "Player 1", key: "X", icon: <LuX className="inline mb-1" /> },
+          { label: t.draw || "Draw", key: "Draw", icon: <LuHandshake className="text-yellow-400 inline mb-1" /> },
+          { label: t.player2 || "Player 2", key: "O", icon: <LuCircle className="inline mb-1" /> }
         ].map(({ label, key, icon }) => (
           <div key={key} className={`px-4 py-2 rounded-xl text-center min-w-[80px] ${darkMode ? "bg-slate-700" : "bg-white shadow"}`}>
             <p className={`text-xs font-semibold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{icon} {label}</p>
@@ -68,8 +71,8 @@ const LocalGame = ({ darkMode, t }) => {
       {/* Status */}
       <div className={`text-center font-semibold flex items-center justify-center gap-1.5 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
         {winner
-          ? winner === "Draw" ? <><FaHandshake className="text-yellow-400"/> {t.drawExclamation || "Durrang!"}</> : <><LuTrophy className="text-yellow-400"/> {winner === "X" ? (t.player1Wins || "O'yinchi 1 yutdi!") : (t.player2Wins || "O'yinchi 2 yutdi!")}</>
-          : <>{t.yourTurn || "Navbat"}: <span className="ml-1">{isX ? "❌" : "⭕"}</span></>}
+          ? winner === "Draw" ? <><LuHandshake className="text-yellow-400"/> {t.drawExclamation || "Draw!"}</> : <><LuTrophy className="text-yellow-400"/> {winner === "X" ? (t.player1Wins || "Player 1 wins!") : (t.player2Wins || "Player 2 wins!")}</>
+          : <>{t.yourTurn || "Turn"}: <span className="ml-1 inline-flex items-center">{isX ? <LuX size={20} /> : <LuCircle size={20} />}</span></>}
       </div>
 
       {/* Board */}
@@ -84,20 +87,20 @@ const LocalGame = ({ darkMode, t }) => {
                   ? "bg-slate-800 hover:bg-slate-700 border border-slate-600"
                   : "bg-white hover:bg-gray-50 border border-gray-200 shadow"
                 }`}>
-              {cell === "X" ? <span className="text-blue-400">❌</span> : cell === "O" ? <span className="text-red-400">⭕</span> : ""}
+              {cell === "X" ? <LuX className="text-blue-400" /> : cell === "O" ? <LuCircle className="text-red-400" /> : ""}
             </button>
           );
         })}
       </div>
 
       <div className="flex gap-3">
-       <button onClick={reset}
-  className={`px-6 py-2 rounded-xl font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-  <FaRedo /> {t.again}
-</button>
+        <button onClick={reset}
+          className={`px-6 py-2 rounded-xl font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          <LuRotateCcw /> {t.again || "Again"}
+        </button>
         <button onClick={() => { reset(); setScores({ X: 0, O: 0, Draw: 0 }); }}
           className={`px-6 py-2 rounded-xl font-semibold transition flex items-center gap-2 ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-          <FaRedo /> {t.resetScore || "Hisobni sifrlash"}
+          <LuRefreshCw /> {t.resetScore || "Reset Score"}
         </button>
       </div>
     </div>
@@ -128,7 +131,7 @@ const OnlineGame = ({ darkMode, t, user }) => {
         setRoomData(null);
         setScreen("lobby");
         setRoomId("");
-        setError(t.roomDeleted || "Room o'chirildi!");
+        setError(t.roomDeleted || "Room deleted!");
         return;
       }
       setRoomData(snap.data());
@@ -206,13 +209,10 @@ const OnlineGame = ({ darkMode, t, user }) => {
   if (screen === "lobby") return (
     <div className={`w-full max-w-sm mx-auto rounded-2xl p-6 shadow-xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
       <h3 className={`text-lg font-extrabold mb-4 text-center flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        <FaGlobeAmericas className="text-blue-500" /> {t.onlineGame || "Online O'yin"}
+        <LuGlobe className="text-blue-500" /> {t.onlineGame || "Online O'yin"}
       </h3>
       {error && <p className="text-red-400 text-sm text-center mb-3">{error}</p>}
-      <button onClick={createRoom}
-        className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition mb-3 flex items-center justify-center gap-2">
-        <FaGamepad /> {t.createRoomBtn || "Yangi room yaratish"}
-      </button>
+        <LuGamepad /> {t.createRoomBtn || "Yangi room yaratish"}
       <div className="flex gap-2">
         <input type="text" placeholder={t.enterRoomId || "Room ID kiriting..."} value={joinInput}
           onChange={e => setJoinInput(e.target.value.toUpperCase())} maxLength={6}
@@ -229,13 +229,13 @@ const OnlineGame = ({ darkMode, t, user }) => {
   // Waiting
   if (screen === "waiting") return (
     <div className={`w-full max-w-sm mx-auto rounded-2xl p-8 text-center shadow-xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
-      <div className="text-5xl mb-4 text-gray-400 animate-spin-slow">⏳</div>
+      <div className="text-5xl mb-4 text-gray-400 flex justify-center"><LuTimer className="animate-spin-slow" /></div>
       <h3 className={`text-lg font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.waitingOpponent || "Raqib kutilmoqda..."}</h3>
       <p className={`text-sm mb-4 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.sendCodeToFriend || "Do'stingizga bu kodni yuboring:"}</p>
       <div className={`text-4xl font-extrabold tracking-widest mb-4 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>{roomId}</div>
     <button onClick={() => { navigator.clipboard.writeText(roomId); }}
   className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-  <FaCopy /> {t.copyBtn || "Nusxalash"}
+  <LuCopy /> {t.copyBtn || "Nusxalash"}
 </button>
       <br />
       <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline mt-2">{t.cancelBtn || "Bekor qilish"}</button>
@@ -252,9 +252,9 @@ const OnlineGame = ({ darkMode, t, user }) => {
       {/* Skor */}
       <div className="flex gap-2 w-full">
         {[
-          { label: `${myName} (${mySymbol === "X" ? "❌" : "⭕"})`, val: scores[mySymbol], color: "text-blue-400", icon: <FaUserSecret className="text-blue-400 inline mb-1 mr-1" /> },
-          { label: t.draw || "Durrang", val: scores["Draw"], color: darkMode ? "text-gray-300" : "text-gray-600", icon: <FaHandshake className="text-yellow-400 inline mb-1 mr-1" /> },
-          { label: `${opponentName} (${opponentSymbol === "X" ? "❌" : "⭕"})`, val: scores[opponentSymbol], color: "text-red-400", icon: <FaUserSecret className="text-red-400 inline mb-1 mr-1" /> },
+          { label: `${myName} (${mySymbol === "X" ? "X" : "O"})`, val: scores[mySymbol], color: "text-blue-400", icon: <LuUser className="text-blue-400 inline mb-1 mr-1" /> },
+          { label: t.draw || "Durrang", val: scores["Draw"], color: darkMode ? "text-gray-300" : "text-gray-600", icon: <LuHandshake className="text-yellow-400 inline mb-1 mr-1" /> },
+          { label: `${opponentName} (${opponentSymbol === "X" ? "X" : "O"})`, val: scores[opponentSymbol], color: "text-red-400", icon: <LuUser className="text-red-400 inline mb-1 mr-1" /> },
         ].map((s, i) => (
           <div key={i} className={`flex-1 px-2 py-2 rounded-xl text-center ${darkMode ? "bg-slate-700" : "bg-white shadow"}`}>
             <p className={`text-[10px] font-semibold truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{s.icon}{s.label}</p>
@@ -268,8 +268,8 @@ const OnlineGame = ({ darkMode, t, user }) => {
         {!roomData?.guestUid
           ? (t.waitingOpponent || "Raqib kutilmoqda...")
           : winner
-            ? winner === "Draw" ? <><FaHandshake className="text-yellow-400" /> {t.drawExclamation || "Durrang!"}</> : <><LuTrophy className="text-yellow-400" /> {winner === mySymbol ? (t.youWin || "Siz yutdingiz!") : `${opponentName} ${t.opponentWins || "yutdi!"}`}</>
-            : isMyTurn ? <><span className="text-yellow-400">✨</span> {t.yourTurn || "Sizning navbatingiz"}</> : `${opponentName} ${t.opponentThinking || "o'ylayapti..."}`
+            ? winner === "Draw" ? <><LuHandshake className="text-yellow-400" /> {t.drawExclamation || "Durrang!"}</> : <><LuTrophy className="text-yellow-400" /> {winner === mySymbol ? (t.youWin || "Siz yutdingiz!") : `${opponentName} ${t.opponentWins || "yutdi!"}`}</>
+            : isMyTurn ? <><LuSparkles className="text-yellow-400" /> {t.yourTurn || "Sizning navbatingiz"}</> : `${opponentName} ${t.opponentThinking || "o'ylayapti..."}`
         }
       </div>
 
@@ -297,7 +297,7 @@ const OnlineGame = ({ darkMode, t, user }) => {
         )}
       <button onClick={leaveRoom}
   className={`px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-  <FaSignOutAlt /> {t.leaveRoomBtn || "Chiqish"}
+  <LuLogOut /> {t.leaveRoomBtn || "Chiqish"}
 </button>
       </div>
     </div>
@@ -319,10 +319,10 @@ const TicTacToe = ({ darkMode }) => {
       {/* Mode tanlash */}
       <div className={`flex rounded-2xl overflow-hidden border mb-6 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
       <button onClick={() => setMode("local")} className={`px-6 py-2 text-sm font-semibold transition flex items-center gap-2 ${mode === "local" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"}`}>
-  <FaUsers /> {t.localMode || "2 kishi (local)"}
+  <LuUsers /> {t.localMode || "2 kishi (local)"}
 </button>
 <button onClick={() => setMode("online")} className={`px-6 py-2 text-sm font-semibold transition flex items-center gap-2 ${mode === "online" ? "bg-blue-500 text-white" : darkMode ? "text-gray-400 hover:bg-slate-700" : "text-gray-500 hover:bg-gray-100"}`}>
-  <FaGlobe /> {t.onlineMode || "Online"}
+  <LuGlobe /> {t.onlineMode || "Online"}
 </button>
       </div>
 

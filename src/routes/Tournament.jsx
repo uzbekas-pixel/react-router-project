@@ -10,6 +10,7 @@ import { giveReward } from "../utils/rewardSystem";
 import {
   LuTrophy, LuSwords, LuKeyboard, LuTarget,
   LuArrowRight, LuArrowLeft, LuRefreshCw,
+  LuMedal, LuCheck, LuX, LuPartyPopper, LuActivity, LuTimer
 } from "react-icons/lu";
 
 const WORDS = [
@@ -34,7 +35,11 @@ const QUIZ_QUESTIONS = [
   { q:"Promise.all qachon reject?",        options:["Hech qachon","Bitta reject","Hammasi reject","2 ta reject"],                                   answer:1 },
 ];
 
-const MEDAL = ["🥇","🥈","🥉"];
+const MEDAL_ICONS = [
+  <LuMedal className="text-amber-500" size={24} />,
+  <LuMedal className="text-slate-400" size={24} />,
+  <LuMedal className="text-amber-700" size={24} />
+];
 
 const getWeekKey = () => {
   const d   = new Date();
@@ -84,7 +89,7 @@ const WordsBox = ({ words, currentIndex, input, getLetterColor, darkMode, onFocu
 const LeaderboardList = ({ entries, currentUid, darkMode, type }) => {
   if (entries.length === 0) return (
     <div style={{ textAlign:"center", padding:"40px 0", color:"#6b7280" }}>
-      <div style={{ fontSize:40, marginBottom:10, opacity:0.3 }}>🏆</div>
+      <div style={{ fontSize:40, marginBottom:10, opacity:0.3, display:"flex", justifyContent:"center" }}><LuTrophy /></div>
       <p>Hali natijalar yo'q. Birinchi bo'ling!</p>
     </div>
   );
@@ -92,8 +97,8 @@ const LeaderboardList = ({ entries, currentUid, darkMode, type }) => {
     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
       {entries.map((e, i) => (
         <div key={`${e.uid}-${i}`} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:12, background:e.uid===currentUid?(darkMode?"#1e3a5f":"#eff6ff"):(darkMode?"#1e293b":"#fff"), border:`1px solid ${e.uid===currentUid?"#3b82f6":(darkMode?"#334155":"#e5e7eb")}` }}>
-          <div style={{ width:32, textAlign:"center", fontWeight:700, fontSize:18, flexShrink:0 }}>
-            {i < 3 ? MEDAL[i] : <span style={{ color:"#6b7280", fontSize:14 }}>#{i+1}</span>}
+          <div style={{ width:32, textAlign:"center", fontWeight:700, fontSize:18, flexShrink:0, display:"flex", justifyContent:"center" }}>
+            {i < 3 ? MEDAL_ICONS[i] : <span style={{ color:"#6b7280", fontSize:14 }}>#{i+1}</span>}
           </div>
           <div style={{ width:38, height:38, borderRadius:"50%", background:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:15, flexShrink:0, overflow:"hidden" }}>
             {e.avatar ? <img src={e.avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : (e.name||"?")[0].toUpperCase()}
@@ -189,7 +194,7 @@ const Tournament = ({ darkMode, showToast }) => {
 
       const xp = Math.max(10, type === "typing" ? Math.floor(score/5) : Math.floor(score/3));
       await giveReward(user.uid, xp, "xp", `Turnir natijasi (${type})`);
-      showToast && showToast(`🏆 +${xp} XP qo'shildi!`, "success");
+      showToast && showToast(`+${xp} XP qo'shildi!`, "success");
     } catch (err) { console.error(err); }
   }, [user, weekKey, myBest, showToast]);
 
@@ -316,8 +321,8 @@ useEffect(() => {
     <div style={{ width:"100%", maxWidth:800, margin:"0 auto", padding:"40px 16px 80px" }}>
       <ScrollReveal direction="up">
         <div style={{ marginBottom:24 }}>
-          <span style={{ display:"inline-block", background:"#eff6ff", color:"#3b82f6", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #bfdbfe" }}>
-            ⚔️ Turnir
+          <span style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#eff6ff", color:"#3b82f6", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #bfdbfe" }}>
+            <LuSwords size={14} /> Turnir
           </span>
           <h2 style={{ fontSize:26, fontWeight:800, margin:"0 0 4px", color:darkMode?"#f1f5f9":"#111" }}>Haftalik Turnir</h2>
           <p style={{ margin:0, fontSize:13, color:"#6b7280" }}>Hafta: {weekKey}</p>
@@ -398,7 +403,9 @@ useEffect(() => {
         disabled={finished} style={{ opacity:0, position:"absolute", pointerEvents:"none", width:1, height:1 }}/>
 
       {!started && !finished && (
-        <p style={{ textAlign:"center", color:"#6b7280", fontSize:14 }}>⌨ Yozishni boshlang — timer avtomatik boshlanadi!</p>
+        <p style={{ textAlign:"center", color:"#6b7280", fontSize:14, display:"flex", itemsCenter: "center", justifyContent:"center", gap:6 }}>
+          <LuKeyboard size={16} /> Yozishni boshlang — timer avtomatik boshlanadi!
+        </p>
       )}
       {finished && (
         <div style={{ textAlign:"center", marginTop:16 }}>
@@ -457,7 +464,7 @@ useEffect(() => {
               <button key={i} onClick={() => handleQuizAnswer(i)} disabled={selected !== null}
                 style={{ padding:"14px 18px", borderRadius:12, background:bg, border:`2px solid ${border}`, color, fontSize:14, fontWeight:500, cursor:selected!==null?"default":"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:12, transition:"all 0.2s" }}>
                 <span style={{ width:28, height:28, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, background:selected!==null&&i===q.answer?"#10b981":selected!==null&&i===selected?"#ef4444":(darkMode?"#334155":"#f3f4f6"), color:selected!==null&&(i===q.answer||i===selected)?"#fff":(darkMode?"#94a3b8":"#6b7280") }}>
-                  {selected!==null&&i===q.answer?"✓":selected!==null&&i===selected?"✗":String.fromCharCode(65+i)}
+                  {selected!==null&&i===q.answer?<LuCheck />:selected!==null&&i===selected?<LuX />:String.fromCharCode(65+i)}
                 </span>
                 {opt}
               </button>
@@ -480,19 +487,19 @@ useEffect(() => {
     const isTyping = tab === "typing";
     const score    = isTyping ? typingWpm : quizScore;
     const myRank   = leaderboard.findIndex((e) => e.uid === user?.uid) + 1;
-    const emoji    = score >= (isTyping?60:80) ? "🏆" : score >= (isTyping?40:60) ? "🎉" : "💪";
+    const ResultIcon = score >= (isTyping?60:80) ? <LuTrophy className="text-amber-500" /> : score >= (isTyping?40:60) ? <LuPartyPopper className="text-indigo-500" /> : <LuActivity className="text-blue-500" />;
 
     return (
       <div style={{ width:"100%", maxWidth:600, margin:"0 auto", padding:"40px 16px 80px", textAlign:"center" }}>
         <ScrollReveal direction="up">
-          <div style={{ fontSize:64, marginBottom:12 }}>{emoji}</div>
+          <div style={{ fontSize:64, marginBottom:12, display:"flex", justifyContent:"center" }}>{ResultIcon}</div>
           <h2 style={{ fontSize:30, fontWeight:800, margin:"0 0 6px", color:darkMode?"#f1f5f9":"#111" }}>
             {isTyping ? `${typingWpm} WPM` : `${quizScore}%`}
           </h2>
           <p style={{ color:"#6b7280", marginBottom:6 }}>{isTyping?"Typing tezligi":"Quiz natijasi"}</p>
           {myRank > 0 && (
-            <p style={{ color:"#f59e0b", fontWeight:700, fontSize:15, marginBottom:24 }}>
-              {myRank<=3?MEDAL[myRank-1]:`#${myRank}`} o'rin
+            <p style={{ color:"#f59e0b", fontWeight:700, fontSize:15, marginBottom:24, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+              {myRank<=3?MEDAL_ICONS[myRank-1]:`#${myRank}`} o'rin
             </p>
           )}
 
@@ -516,7 +523,7 @@ useEffect(() => {
               {questions.map((q,i) => (
                 <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom:i<questions.length-1?`1px solid ${darkMode?"#334155":"#f3f4f6"}`:"none" }}>
                   <span style={{ width:22, height:22, borderRadius:"50%", flexShrink:0, background:answers[i]?.correct?"#d1fae5":"#fee2e2", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:answers[i]?.correct?"#065f46":"#991b1b" }}>
-                    {answers[i]?.correct?"✓":"✗"}
+                    {answers[i]?.correct?<LuCheck size={12}/>:<LuX size={12}/>}
                   </span>
                   <div style={{ flex:1 }}>
                     <p style={{ margin:"0 0 2px", fontSize:13, color:darkMode?"#e2e8f0":"#374151" }}>{q.q}</p>

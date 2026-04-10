@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, getDoc, writeBatch } from "firebase/firestore";
 import { db, rtdb } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
@@ -66,21 +66,31 @@ const displayUserName = user?.displayName || t.user;
     const unsub = onSnapshot(q, (snap) => {
       const now = Date.now();
       const list = [];
+      const expiredDocs = [];
 
       snap.docs.forEach((d) => {
         const data = d.data();
         const created = data.createdAt?.toDate?.()?.getTime?.();
 
         if (created && now - created > MSG_EXPIRE) {
-          deleteDoc(doc(db, "messages", d.id)).catch(() => {});
+          expiredDocs.push(d.ref);
         } else {
           list.push({ id: d.id, ...data });
         }
       });
 
+      if (expiredDocs.length > 0) {
+        const batch = writeBatch(db);
+        expiredDocs.forEach(ref => batch.delete(ref));
+        batch.commit().catch(err => console.error("Batch delete error:", err));
+      }
+
       setMessages(list);
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -508,11 +518,11 @@ const displayUserName = user?.displayName || t.user;
       {/* Input */}
       <div className={`rounded-2xl px-4 py-3 flex flex-col gap-2 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
         {replyTo && (
-          <div className={`flex items-center justify-between px-3 py-2 rounded-xl border-l-2 border-blue-400 ${darkMode ? "bg-slate-700" : "bg-blue-50"}`}>
+            <div className={`flex items-center justify-between px-3 py-2 rounded-xl border-l-2 border-blue-400 ${darkMode ? "bg-slate-700" : "bg-blue-50"}`}>
             <div className="min-w-0">
               <span className="text-xs font-semibold text-blue-400">{replyTo.name}</span>
               <p className={`text-xs truncate mt-0.5 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                {replyTo.type === "image" ? "📷 Rasm" : replyTo.type === "audio" ? "🎙️ Ovozli xabar" : replyTo.text}
+                {replyTo.type === "image" ? <span className="flex items-center gap-1"><LuCamera size={12} /> {t.imageRef}</span> : replyTo.type === "audio" ? <span className="flex items-center gap-1"><LuMic size={12} /> {t.audioRef}</span> : replyTo.text}
               </p>
             </div>
             <button onClick={() => setReplyTo(null)}

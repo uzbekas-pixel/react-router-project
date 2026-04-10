@@ -8,8 +8,9 @@ import {
 } from "firebase/firestore";
 import { giveReward } from "../utils/rewardSystem";
 import {
-  LuGift, LuCopy, LuCheck, LuUsers, LuStar,
-  LuZap, LuShare2, LuTrophy,
+  LuUserPlus, LuUserCheck, LuUserX, LuUsers,
+  LuSearch, LuTrophy, LuFlame, LuStar, LuMessageSquare,
+  LuCheck, LuX, LuUser, LuSprout, LuBook, LuBrain, LuTarget, LuGem, LuCrown, LuBellOff, LuGift, LuCopy, LuZap, LuShare2, LuTicket, LuHistory, LuLock, LuLightbulb, LuClock,
 } from "react-icons/lu";
 
 const REFERRAL_XP = 100;
@@ -75,7 +76,7 @@ const Referral = ({ darkMode, showToast }) => {
     const loadReferred = async () => {
       try {
         const q    = query(collection(db, "referrals"), where("usedCode", "==", referralCode));
-        const snap = await getDocs(q);  // ← static import, dynamic yo'q
+        const snap = await getDocs(q);
         if (!cancelled) {
           setReferredUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
         }
@@ -104,7 +105,6 @@ const Referral = ({ darkMode, showToast }) => {
 
     setApplying(true);
     try {
-      // Kod egasini topish — static getDocs
       const q    = query(collection(db, "referrals"), where("code", "==", code));
       const snap = await getDocs(q);
 
@@ -117,28 +117,23 @@ const Referral = ({ darkMode, showToast }) => {
       const ownerDoc  = snap.docs[0];
       const ownerData = ownerDoc.data();
 
-      // Kod egasiga XP qo'shish
       await giveReward(ownerData.uid, REFERRAL_XP, "xp", "Do'st taklif qilgani uchun");
 
-      // Kod egasining referral totalEarned yangilash
       await updateDoc(doc(db, "referrals", ownerData.uid), {
         totalEarned: increment(REFERRAL_XP),
       });
 
-      // O'ziga XP qo'shish
       await giveReward(user.uid, REFERRED_XP, "xp", "Taklif orqali qo'shilgani uchun");
 
-      // O'z referral doc yangilash
       await updateDoc(doc(db, "referrals", user.uid), {
         usedCode: code,
         usedAt:   serverTimestamp(),
       });
 
-      // Kod egasiga bildirishnoma yuborish
       await setDoc(
         doc(db, "users", ownerData.uid, "notifications", `ref_${Date.now()}`),
         {
-          title:     "Referral bonus! 🎉",
+          title:     "Referral bonus!",
           message:   `Kimdir sizning kodingizni ishlatdi! +${REFERRAL_XP} XP qo'shildi.`,
           type:      "success",
           read:      false,
@@ -148,7 +143,7 @@ const Referral = ({ darkMode, showToast }) => {
 
       setAlreadyUsed(true);
       setInputCode("");
-      showToast?.(`🎉 +${REFERRED_XP} XP qo'shildi! Kod egasi ham +${REFERRAL_XP} XP oldi!`, "success");
+      showToast?.(`+${REFERRED_XP} XP qo'shildi! Kod egasi ham +${REFERRAL_XP} XP oldi!`, "success");
 
     } catch (err) {
       console.error("applyCode error:", err);
@@ -161,12 +156,12 @@ const Referral = ({ darkMode, showToast }) => {
   const copyCode = () => {
     navigator.clipboard.writeText(referralCode).catch(() => {});
     setCopied(true);
-    showToast?.("Kod nusxalandi! 📋", "success");
+    showToast?.("Kod nusxalandi!", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareCode = () => {
-    const text = `Uzbekas Pixel platformasiga qo'shiling!\nMening kodim: ${referralCode}\n+${REFERRED_XP} XP bonus olasiz 🎁\nhttps://uzbekas.vercel.app`;
+    const text = `Uzbekas Pixel platformasiga qo'shiling!\nMening kodim: ${referralCode}\n+${REFERRED_XP} XP bonus olasiz\nhttps://uzbekas.vercel.app`;
     if (navigator.share) {
       navigator.share({ title: "Uzbekas Pixel", text }).catch(() => {});
     } else {
@@ -186,9 +181,7 @@ const Referral = ({ darkMode, showToast }) => {
     <div style={{ width:"100%", maxWidth:700, margin:"0 auto", padding:"40px 16px 80px" }}>
       <ScrollReveal direction="up">
         <div style={{ marginBottom:28 }}>
-          <span style={{ display:"inline-block", background:"#eff6ff", color:"#3b82f6", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #bfdbfe" }}>
-            🎁 Referral
-          </span>
+            <LuGift size={14} className="inline mr-2" /> Referral
           <h2 style={{ fontSize:26, fontWeight:800, margin:"0 0 6px", color:darkMode?"#f1f5f9":"#111" }}>
             Do'st Taklif Qiling
           </h2>
@@ -239,7 +232,7 @@ const Referral = ({ darkMode, showToast }) => {
             {[
               { step:"1", text:"Kodingizni do'stingizga yuboring" },
               { step:"2", text:`Do'stingiz ro'yxatdan o'tib kodni kiritadi` },
-              { step:"3", text:`Ikkalingiz +XP olasiz! 🎉` },
+              { step:"3", text:`Ikkalingiz +XP olasiz!` },
             ].map((s,i) => (
               <div key={i} style={{ display:"flex", alignItems:"center", gap:8, flex:1, minWidth:140 }}>
                 <div style={{ width:24, height:24, borderRadius:"50%", background:"#3b82f6", color:"#fff", fontSize:11, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>

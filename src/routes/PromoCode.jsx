@@ -6,40 +6,44 @@ import {
  updateDoc, serverTimestamp, increment,
 } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
+import { 
+  LuLightbulb, LuStar, LuGem, LuRocket, LuCrown, 
+  LuTicket, LuGift, LuHistory, LuLock, LuCheck, LuClock 
+} from "react-icons/lu";
 
 const GIFTS = [
   { 
     id: "g1", 
     title: "Quiz yordamchisi (10 ta)", 
-    icon: "💡", 
+    icon: <LuLightbulb className="text-yellow-400" />, 
     desc: "Quiz ishlash jarayonida to'g'ri javobni avtomatik topib beruvchi 10 ta bepul yordam imkoniyati.", 
     xpRequired: 1000 
   },
   { 
     id: "g2", 
     title: "1 Oylik Pro", 
-    icon: "⭐", 
+    icon: <LuStar className="text-blue-400" />, 
     desc: "Platformaning barcha 'Pro' imkoniyatlaridan 1 oy davomida bepul foydalanish huquqi.", 
     xpRequired: 2000 
   },
   { 
     id: "g3", 
     title: "1 Oylik Premium", 
-    icon: "💎", 
+    icon: <LuGem className="text-purple-400" />, 
     desc: "Platformaning barcha 'Premium' imkoniyatlaridan 1 oy davomida bepul foydalanish huquqi.", 
     xpRequired: 3000 
   },
   { 
     id: "g4", 
     title: "1 Yillik Pro", 
-    icon: "🚀", 
+    icon: <LuRocket className="text-blue-500" />, 
     desc: "Platformaning barcha 'Pro' imkoniyatlaridan 1 yil davomida bepul foydalanish huquqi.", 
     xpRequired: 5000 
   },
   { 
     id: "g5", 
     title: "1 Yillik Premium", 
-    icon: "👑", 
+    icon: <LuCrown className="text-yellow-500" />, 
     desc: "Eng yuqori daraja! Platformaning barcha 'Premium' imkoniyatlaridan to'liq 1 yil bepul foydalaning.", 
     xpRequired: 8000 
   }
@@ -109,7 +113,7 @@ const PromoCode = ({ darkMode, showToast }) => {
       const usedRef  = doc(db, "users", user.uid, "usedCodes", upperCode);
       const usedSnap = await getDoc(usedRef);
       if (usedSnap.exists()) {
-        setResult({ success: false, message: "❌ Siz bu promo kodni allaqachon ishlatgansiz!" });
+        setResult({ success: false, message: "Siz bu promo kodni allaqachon ishlatgansiz!" });
         setLoading(false);
         return;
       }
@@ -119,7 +123,7 @@ const PromoCode = ({ darkMode, showToast }) => {
       const promoSnap = await getDoc(promoRef);
 
       if (!promoSnap.exists()) {
-        setResult({ success: false, message: "❌ Promo kod topilmadi!" });
+        setResult({ success: false, message: "Promo kod topilmadi!" });
         setLoading(false);
         return;
       }
@@ -127,13 +131,13 @@ const PromoCode = ({ darkMode, showToast }) => {
       const promo = promoSnap.data();
 
       if (!promo.valid) {
-        setResult({ success: false, message: "❌ Bu promo kod o'chirilgan!" });
+        setResult({ success: false, message: "Bu promo kod o'chirilgan!" });
         setLoading(false);
         return;
       }
 
       if (promo.uses >= promo.maxUses) {
-        setResult({ success: false, message: "❌ Bu promo koddan foydalanish chegarasi tugagan!" });
+        setResult({ success: false, message: "Bu promo koddan foydalanish chegarasi tugagan!" });
         setLoading(false);
         return;
       }
@@ -154,7 +158,7 @@ const PromoCode = ({ darkMode, showToast }) => {
 
       setResult({
         success:  true,
-        message:  "✅ Promo kod qabul qilindi!",
+        message:  "Promo kod qabul qilindi!",
         discount: discountText,
         course:   promo.course === "all" ? "Barcha kurslar" : promo.course,
       });
@@ -167,12 +171,12 @@ const PromoCode = ({ darkMode, showToast }) => {
         status:   "Ishlatildi",
       }, ...prev]);
 
-      showToast?.(`🎉 ${discountText} chegirma qo'shildi!`, "success");
+      showToast?.(`${discountText} chegirma qo'shildi!`, "success");
       setCode("");
 
     } catch (err) {
       console.error("PromoCode apply error:", err);
-      setResult({ success: false, message: "❌ Xatolik yuz berdi. Qayta urinib ko'ring." });
+      setResult({ success: false, message: "Xatolik yuz berdi. Qayta urinib ko'ring." });
     }
     setLoading(false);
   };
@@ -200,7 +204,7 @@ const PromoCode = ({ darkMode, showToast }) => {
       }
 
       setClaimedGifts((prev) => [...prev, key]);
-      showToast?.(`🎁 "${gift.title}" sovg'asi qabul qilindi!`, "success");
+      showToast?.(`"${gift.title}" sovg'asi qabul qilindi!`, "success");
     } catch (err) {
       console.error("claimGift error:", err);
       showToast?.("Xatolik yuz berdi", "error");
@@ -229,7 +233,7 @@ const PromoCode = ({ darkMode, showToast }) => {
           <div>
             <p style={{ margin:0, fontSize:13, color:"#6b7280" }}>Mening XP ballarim</p>
             <p style={{ margin:"4px 0 0", fontSize:28, fontWeight:800, color:"#f59e0b" }}>
-              {dataLoading ? "..." : myXP.toLocaleString()} ⭐
+              {dataLoading ? "..." : myXP.toLocaleString()} <LuStar className="inline text-yellow-500 mb-1" />
             </p>
           </div>
           <div style={{ textAlign:"right" }}>
@@ -243,9 +247,9 @@ const PromoCode = ({ darkMode, showToast }) => {
         {/* Tabs */}
         <div style={{ display:"flex", gap:4, marginBottom:24, background:darkMode?"#1e293b":"#f1f5f9", borderRadius:12, padding:4 }}>
           {[
-            { id:"promo",   label:"🎟️ Promo Kod" },
-            { id:"gifts",   label:"🎁 Sovg'alar"  },
-            { id:"history", label:"📋 Tarix"       },
+            { id:"promo",   label: <><LuTicket className="inline mr-1" /> Promo Kod</> },
+            { id:"gifts",   label: <><LuGift className="inline mr-1" /> Sovg'alar</>  },
+            { id:"history", label: <><LuHistory className="inline mr-1" /> Tarix</>       },
           ].map((t) => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ flex:1, padding:"9px 0", borderRadius:10, border:"none", cursor:"pointer", background:activeTab===t.id?"#3b82f6":"transparent", color:activeTab===t.id?"#fff":(darkMode?"#94a3b8":"#374151"), fontSize:12, fontWeight:600, transition:"all 0.2s" }}>
               {t.label}
@@ -269,7 +273,7 @@ const PromoCode = ({ darkMode, showToast }) => {
               />
               <button onClick={handleApply} disabled={loading || !code.trim() || !user}
                 style={{ padding:"12px 20px", borderRadius:12, background:loading||!code.trim()?"#94a3b8":"#3b82f6", color:"#fff", border:"none", cursor:loading||!code.trim()?"default":"pointer", fontWeight:700, fontSize:14, whiteSpace:"nowrap", flexShrink:0 }}>
-                {loading ? "⏳" : "Tasdiqlash"}
+                {loading ? <LuClock className="animate-spin" /> : "Tasdiqlash"}
               </button>
             </div>
 
@@ -311,7 +315,7 @@ const PromoCode = ({ darkMode, showToast }) => {
               const pct      = Math.min(100, Math.round((myXP / gift.xpRequired) * 100));
               return (
                 <div key={gift.id} style={{ background:darkMode?"#1e293b":"#fff", border:`1px solid ${claimed?"#10b981":(darkMode?"#334155":"#e5e7eb")}`, borderRadius:14, padding:"20px 16px", textAlign:"center", opacity:claimed?0.75:1, position:"relative" }}>
-                  {claimed && <span style={{ position:"absolute", top:10, right:10, fontSize:16 }}>✅</span>}
+                  {claimed && <span style={{ position:"absolute", top:10, right:10, fontSize:16 }}><LuCheck className="text-emerald-500" /></span>}
                   <div style={{ fontSize:36, marginBottom:10 }}>{gift.icon}</div>
                   <p style={{ margin:"0 0 4px", fontWeight:700, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>{gift.title}</p>
                   <p style={{ margin:"0 0 12px", fontSize:11, color:"#6b7280", lineHeight:1.5 }}>{gift.desc}</p>
@@ -323,7 +327,7 @@ const PromoCode = ({ darkMode, showToast }) => {
                   </p>
                   <button onClick={() => claimGift(gift)} disabled={!canClaim || claimed}
                     style={{ width:"100%", padding:"8px 0", borderRadius:8, border:"none", background:claimed?"#d1fae5":canClaim?"#10b981":"#94a3b8", color:claimed?"#065f46":"#fff", fontSize:12, fontWeight:700, cursor:canClaim&&!claimed?"pointer":"default" }}>
-                    {claimed ? "✓ Olindi" : canClaim ? "🎁 Olish" : `🔒 ${(gift.xpRequired - myXP).toLocaleString()} XP kerak`}
+                    {claimed ? "Olindi" : canClaim ? <><LuGift className="inline mr-1" /> Olish</> : <><LuLock className="inline mr-1" /> {(gift.xpRequired - myXP).toLocaleString()} XP kerak</>}
                   </button>
                 </div>
               );
@@ -339,14 +343,14 @@ const PromoCode = ({ darkMode, showToast }) => {
             <div style={{ textAlign:"center", padding:"40px 0", color:"#6b7280" }}>Yuklanmoqda...</div>
           ) : history.length === 0 ? (
             <div style={{ textAlign:"center", padding:"48px 0" }}>
-              <div style={{ fontSize:36, marginBottom:10 }}>🎟️</div>
+              <LuTicket className="text-slate-400 mx-auto mb-4" size={48} />
               <p style={{ color:"#6b7280" }}>Hali promo kod ishlatilmagan</p>
             </div>
           ) : (
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
               {history.map((h, i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 18px", borderRadius:12, background:darkMode?"#1e293b":"#fff", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-                  <span style={{ fontSize:20 }}>🎟️</span>
+                  <LuTicket className="text-blue-500" />
                   <div style={{ flex:1 }}>
                     <p style={{ margin:0, fontWeight:700, fontSize:14, color:darkMode?"#f1f5f9":"#111", fontFamily:"monospace" }}>{h.code}</p>
                     <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>{h.course} · {h.date}</p>

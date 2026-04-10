@@ -291,7 +291,7 @@ const Admin = ({ darkMode, showToast }) => {
 
       if (instructorId) {
         await setDoc(doc(db, "users", instructorId, "notifications", `course_appr_${Date.now()}`), {
-          title: "Kurs tasdiqlandi! 🎉",
+          title: "Kurs tasdiqlandi!",
           message: `Siz yaratgan "${title}" darsi tasdiqlandi.`,
           type: "success", read: false, createdAt: serverTimestamp(),
         });
@@ -310,7 +310,7 @@ const Admin = ({ darkMode, showToast }) => {
 
       if (instructorId) {
         await setDoc(doc(db, "users", instructorId, "notifications", `course_rej_${Date.now()}`), {
-          title: "Kurs rad etildi ❌",
+          title: "Kurs rad etildi",
           message: `"${title}" darsi rad etildi. Sababi: ${reason}`,
           type: "warning", read: false, createdAt: serverTimestamp(),
         });
@@ -325,7 +325,7 @@ const Admin = ({ darkMode, showToast }) => {
       await updateDoc(doc(db, "mentorApplications", appId), { status: "approved" });
       await setDoc(doc(db, "users", userId), { isMentor: true }, { merge: true });
       await setDoc(doc(db, "users", userId, "notifications", `mentor_appr_${Date.now()}`), {
-        title: "Mentorlik tasdiqlandi! 🎉",
+        title: "Mentorlik tasdiqlandi!",
         message: "Tabriklaymiz! Sizning mentorlik arizangiz qabul qilindi.",
         type: "success", read: false, createdAt: serverTimestamp(),
       });
@@ -342,7 +342,7 @@ const Admin = ({ darkMode, showToast }) => {
     try {
       await updateDoc(doc(db, "mentorApplications", appId), { status: "rejected", rejectReason: reason });
       await setDoc(doc(db, "users", userId, "notifications", `mentor_rej_${Date.now()}`), {
-        title: "Mentorlik arizasi rad etildi ❌",
+        title: "Mentorlik arizasi rad etildi",
         message: `Afsuski arizangiz rad etildi. Sababi: ${reason}`,
         type: "warning", read: false, createdAt: serverTimestamp(),
       });
@@ -364,7 +364,7 @@ const Admin = ({ darkMode, showToast }) => {
         course: promoForm.course, maxUses: Number(promoForm.maxUses),
         uses: 0, valid: true, createdAt: serverTimestamp(),
       });
-      showToast(`✅ "${code}" promo kodi qo'shildi!`, "success");
+      showToast(`"${code}" promo kodi qo'shildi!`, "success");
       setShowPromoForm(false);
       setPromoForm({ code: "", discount: "", type: "percent", course: "all", maxUses: "100" });
       fetchPromoCodes();
@@ -427,7 +427,7 @@ const Admin = ({ darkMode, showToast }) => {
           targetId:   notifForm.userId,
           targetName: targetUser?.displayName || targetUser?.email || "—",
         });
-        showToast(`✅ ${targetUser?.displayName || "Foydalanuvchi"}${t.sentPrefix || ""} ${t.notificationSentCount}`, "success");
+        showToast(`${targetUser?.displayName || "Foydalanuvchi"}${t.sentPrefix || ""} ${t.notificationSentCount}`, "success");
       }
       setNotifForm({ title: "", message: "", type: "info", target: "all", userId: "", link: "" });
       fetchNotifHistory();
@@ -693,13 +693,13 @@ const Admin = ({ darkMode, showToast }) => {
                    <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => handleApproveCourse(course.id, course.instructorId, course.title)}
                       style={{ padding: "8px 14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                      ✓ Tasdiqlash
+                      <LuCheck /> Tasdiqlash
                     </button>
                     
                     {course.status !== "rejected" && (
                       <button onClick={() => handleRejectCourse(course.id, course.instructorId, course.title)}
                         style={{ padding: "8px 14px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                        ✕ Rad etish
+                        <LuX /> Rad etish
                       </button>
                     )}
                   </div>

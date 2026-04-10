@@ -9,22 +9,22 @@ import {
 import {
   LuUserPlus, LuUserCheck, LuUserX, LuUsers,
   LuSearch, LuTrophy, LuFlame, LuStar, LuMessageSquare,
-  LuCheck, LuX, LuUser,
+  LuCheck, LuX, LuUser, LuSprout, LuBook, LuBrain, LuTarget, LuGem, LuCrown, LuBellOff, LuZap,
 } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import { getNameStyleByKey } from "../constants/shopConstants";
 
 const LEVELS = [
-  { level: 1, name: "Yangi boshlovchi", minXP: 0,     color: "#6b7280", badge: "🌱" },
-  { level: 2, name: "O'quvchi",         minXP: 100,   color: "#10b981", badge: "📚" },
-  { level: 3, name: "Izlanuvchi",       minXP: 300,   color: "#3b82f6", badge: "🔍" },
-  { level: 4, name: "Bilimdon",         minXP: 600,   color: "#8b5cf6", badge: "🧠" },
-  { level: 5, name: "Mahir",            minXP: 1000,  color: "#f59e0b", badge: "⚡" },
-  { level: 6, name: "Ekspert",          minXP: 1500,  color: "#ef4444", badge: "🎯" },
-  { level: 7, name: "Usta",             minXP: 2500,  color: "#06b6d4", badge: "🏆" },
-  { level: 8, name: "Professional",     minXP: 4000,  color: "#f97316", badge: "💎" },
-  { level: 9, name: "Champion",         minXP: 6000,  color: "#ec4899", badge: "👑" },
-  { level: 10,name: "Legenda",          minXP: 10000, color: "#d97706", badge: "🌟" },
+  { level: 1, name: "Yangi boshlovchi", minXP: 0,     color: "#6b7280", badge: <LuSprout size={14} /> },
+  { level: 2, name: "O'quvchi",         minXP: 100,   color: "#10b981", badge: <LuBook size={14} /> },
+  { level: 3, name: "Izlanuvchi",       minXP: 300,   color: "#3b82f6", badge: <LuSearch size={14} /> },
+  { level: 4, name: "Bilimdon",         minXP: 600,   color: "#8b5cf6", badge: <LuBrain size={14} /> },
+  { level: 5, name: "Mahir",            minXP: 1000,  color: "#f59e0b", badge: <LuZap size={14} /> },
+  { level: 6, name: "Ekspert",          minXP: 1500,  color: "#ef4444", badge: <LuTarget size={14} /> },
+  { level: 7, name: "Usta",             minXP: 2500,  color: "#06b6d4", badge: <LuTrophy size={14} /> },
+  { level: 8, name: "Professional",     minXP: 4000,  color: "#f97316", badge: <LuGem size={14} /> },
+  { level: 9, name: "Champion",         minXP: 6000,  color: "#ec4899", badge: <LuCrown size={14} /> },
+  { level: 10,name: "Legenda",          minXP: 10000, color: "#d97706", badge: <LuStar size={14} /> },
 ];
 
 const getLevel = (xp = 0) => LEVELS.slice().reverse().find((l) => xp >= l.minXP) || LEVELS[0];
@@ -171,7 +171,7 @@ const Friends = ({ darkMode, showToast }) => {
         status:   "pending",
         createdAt: serverTimestamp(),
       });
-      showToast && showToast(`${toUser.displayName || toUser.email}ga so'rov yuborildi! 📨`, "success");
+      showToast && showToast(`${toUser.displayName || toUser.email}ga so'rov yuborildi!`, "success");
     } catch (err) {
       console.error(err);
       showToast && showToast("Xatolik yuz berdi!", "error");
@@ -195,7 +195,7 @@ const Friends = ({ darkMode, showToast }) => {
         addedAt:  serverTimestamp(),
       });
       await deleteDoc(doc(db, "friendRequests", reqId));
-      showToast && showToast("Do'st qo'shildi! 🎉", "success");
+      showToast && showToast("Do'st qo'shildi!", "success");
     } catch (err) {
       console.error(err);
     }
@@ -268,7 +268,7 @@ const Friends = ({ darkMode, showToast }) => {
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
           <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
-            👥 Ijtimoiy
+            <LuUsers size={14} className="inline mr-2" /> Ijtimoiy
           </span>
           <h2 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: darkMode ? "#f1f5f9" : "#111" }}>
             Do'stlar
@@ -303,7 +303,7 @@ const Friends = ({ darkMode, showToast }) => {
             <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>Yuklanmoqda...</div>
           ) : friendsList.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>👥</div>
+              <LuUsers size={48} className="mx-auto mb-4 opacity-20" />
               <p style={{ color: darkMode ? "#94a3b8" : "#6b7280", marginBottom: 16 }}>Hali do'stlar yo'q</p>
               <button onClick={() => setTab("search")} style={{ padding: "10px 24px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 Do'st qidirish
@@ -331,7 +331,7 @@ const Friends = ({ darkMode, showToast }) => {
             {receivedUsers.length > 0 && (
               <div>
                 <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: darkMode ? "#94a3b8" : "#6b7280" }}>
-                  📨 Kelgan so'rovlar ({receivedUsers.length})
+                  Kelgan so'rovlar ({receivedUsers.length})
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {receivedUsers.map((u) => (
@@ -364,7 +364,7 @@ const Friends = ({ darkMode, showToast }) => {
 
             {receivedUsers.length === 0 && requests.sent.length === 0 && (
               <div style={{ textAlign: "center", padding: "60px 0" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
+                <LuBellOff size={48} className="mx-auto mb-4 opacity-20" />
                 <p style={{ color: darkMode ? "#94a3b8" : "#6b7280" }}>Hali so'rovlar yo'q</p>
               </div>
             )}

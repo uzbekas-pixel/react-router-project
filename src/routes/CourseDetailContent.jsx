@@ -2,6 +2,11 @@
 // CourseDetailContent.jsx  —  Uzbekas Pixel  |  AI Slayd Tizimi  v4 (Kengaytirilgan)
 // generateLessonContent(lesson, courseId, category) → Slide[]
 // ═══════════════════════════════════════════════════════════════════════════════
+import { 
+  LuGlobe, LuLightbulb, LuWrench, LuRocket, LuTarget, LuInfo, LuClipboard, LuPalette, LuZap, LuDiamond,
+ LuCode, LuLayers, LuMousePointer, LuImage, LuBookOpen, LuVideo,
+  LuAtom, LuMinus, LuPlus, LuFlame, LuEye, LuBook, LuDollarSign, LuSmartphone, LuMonitor, LuSparkles, LuGift, LuTrophy, LuStar, LuSearch, LuShield, LuSettings, LuFolder, LuSave, LuPlug, LuBell, LuCalendar, LuTrendingUp, LuMapPin, LuLink, LuHammer, LuPackage, LuKey, LuMail, LuGithub, LuSend, LuGraduationCap, LuSmile, LuActivity
+} from "react-icons/lu";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HTML KURSI  (courseId: 1)
@@ -14,7 +19,7 @@ const htmlLessons = {
       avatarText: "Salom! Men Uzbekas AI. Bugun HTML — barcha veb saytlarning poydevori bilan tanishamiz. Tayyor bo'lsangiz, boshlaylik!",
       content: [
         { kind: "paragraph", html: "<strong>HTML</strong> (HyperText Markup Language) — veb sahifalar yaratish uchun ishlatiladigan belgilash tili. Brauzer HTML kodini o'qib, uni ko'rinadigan sahifaga aylantiradi." },
-        { kind: "highlight", icon: "🌐", label: "Qiziqarli fakt", text: "Dunyadagi barcha veb saytlar — Google, YouTube, Instagram — HTML asosida qurilgan. Siz ham bugun shu yo'lni boshlayapsiz!" },
+        { kind: "highlight", icon: <LuGlobe />, label: "Qiziqarli fakt", text: "Dunyadagi barcha veb saytlar — Google, YouTube, Instagram — HTML asosida qurilgan. Siz ham bugun shu yo'lni boshlayapsiz!" },
         { kind: "points", items: [
           "HTML 1991-yilda Tim Berners-Lee tomonidan yaratilgan",
           "Hozirda HTML5 — eng so'nggi va kuchli versiya",
@@ -43,7 +48,7 @@ const htmlLessons = {
 <!-- TEG ANATOMIYASI -->
 <a href="https://uzbekas.uz" target="_blank">Havola matni</a>
 <!--  ^teg nomi  ^atribut nomi  ^atribut qiymati  -->` },
-        { kind: "highlight", icon: "💡", label: "Eslatma", text: "Yopilish tegida teg nomidan oldin / belgisi yoziladi: </p>, </h1>, </strong>" },
+        { kind: "highlight", icon: <LuLightbulb />, label: "Eslatma", text: "Yopilish tegida teg nomidan oldin / belgisi yoziladi: </p>, </h1>, </strong>" },
       ],
     },
     {
@@ -84,7 +89,7 @@ const htmlLessons = {
       title: "Ishchi muhitni tayyorlash",
       avatarText: "Professional dasturchi bo'lish uchun to'g'ri muhit kerak. VS Code — eng yaxshi tanlov!",
       content: [
-        { kind: "highlight", icon: "🛠️", label: "Kerakli vositalar", text: "1. VS Code (code.visualstudio.com) — bepul kod muharriri | 2. Live Server extension — saqlashda brauzer avtomatik yangilanadi" },
+        { kind: "highlight", icon: <LuWrench />, label: "Kerakli vositalar", text: "1. VS Code (code.visualstudio.com) — bepul kod muharriri | 2. Live Server extension — saqlashda brauzer avtomatik yangilanadi" },
         { kind: "points", items: [
           "VS Code yuklab o'rnating: code.visualstudio.com",
           "Extensions (Ctrl+Shift+X) → 'Live Server' → Install",
@@ -122,7 +127,7 @@ const htmlLessons = {
           "Har sahifa: <!DOCTYPE html> → <html> → <head> + <body>",
           "VS Code + Live Server = professional ish muhiti",
         ]},
-        { kind: "highlight", icon: "🚀", label: "Keyingi dars", text: "Shaxsiy vizitka sahifasini noldan yaratamiz — har bir teg amalda!" },
+        { kind: "highlight", icon: <LuRocket />, label: "Keyingi dars", text: "Shaxsiy vizitka sahifasini noldan yaratamiz — har bir teg amalda!" },
       ],
     },
   ],
@@ -135,7 +140,7 @@ const htmlLessons = {
       avatarText: "Bugun faqat kod yozamiz! Shaxsiy vizitka sahifasi yaratamiz — ism, ta'lim, maqsadlar. Tayyor bo'ling!",
       content: [
         { kind: "paragraph", html: "Nazariyadan amaliyotga! Bugun <strong>shaxsiy vizitka sahifasi</strong> yaratamiz. Bu loyiha barcha asosiy HTML teglarni ishlatadi." },
-        { kind: "highlight", icon: "🎯", label: "Maqsad", text: "Dars oxirida sizda brauzerda ochiladigan, to'liq formatlangan shaxsiy sahifangiz bo'ladi!" },
+        { kind: "highlight", icon: <LuTarget />, label: "Maqsad", text: "Dars oxirida sizda brauzerda ochiladigan, to'liq formatlangan shaxsiy sahifangiz bo'ladi!" },
       ],
     },
     {
@@ -170,7 +175,7 @@ const htmlLessons = {
   <h3>Ko'nikmalarim</h3>
 
 </body>` },
-        { kind: "highlight", icon: "⚠️", label: "Qoida", text: "h1 tegi sahifada BITTA bo'lishi kerak — bu SEO uchun juda muhim! h2-h6 esa bir nechtadan bo'lishi mumkin." },
+        { kind: "highlight", icon: <LuInfo />, label: "Qoida", text: "h1 tegi sahifada BITTA bo'lishi kerak — bu SEO uchun juda muhim! h2-h6 esa bir nechtadan bo'lishi mumkin." },
       ],
     },
     {
@@ -326,7 +331,7 @@ const htmlLessons = {
       title: "HTML asosiy teglar — To'liq qo'llanma",
       avatarText: "Bugun eng muhim va ko'p ishlatiladigan teglarni bir joyda o'rganamiz. Bu darsdan keyin istalgan sahifani qura olasiz!",
       content: [
-        { kind: "highlight", icon: "📋", label: "Teg toifalari", text: "Matn teglari · Tuzilma teglari · Jadval teglari · Forma teglari · Semantik teglar (HTML5)" },
+        { kind: "highlight", icon: <LuClipboard />, label: "Teg toifalari", text: "Matn teglari · Tuzilma teglari · Jadval teglari · Forma teglari · Semantik teglar (HTML5)" },
         { kind: "points", items: [
           "HTML da 100+ teg bor, lekin kundalik 30 ta ishlatingiz",
           "Block element: to'liq qatorni egallaydi (div, p, h1...)",
@@ -516,7 +521,7 @@ const cssLessons = {
       avatarText: "HTML skelet bo'lsa, CSS uning kiyimi! Bugun CSS ning asoslarini o'rganamiz — ranglar, shriftlar, o'lchamlar.",
       content: [
         { kind: "paragraph", html: "<strong>CSS</strong> (Cascading Style Sheets) — HTML elementlariga ko'rinish beruvchi til. Ranglar, shriftlar, joylashuv, animatsiyalar — barchasi CSS bilan." },
-        { kind: "highlight", icon: "🎨", label: "CSS imkoniyatlari", text: "Rang · Shrift · O'lcham · Joylashtirish (Flexbox, Grid) · Animatsiya · Responsive dizayn · Shadow · Gradient" },
+        { kind: "highlight", icon: <LuPalette />, label: "CSS imkoniyatlari", text: "Rang · Shrift · O'lcham · Joylashtirish (Flexbox, Grid) · Animatsiya · Responsive dizayn · Shadow · Gradient" },
         { kind: "points", items: [
           "CSS 1996-yilda W3C tomonidan standartlashtirilgan",
           "CSS3 — animatsiyalar, flexbox, grid, custom properties",
@@ -613,7 +618,7 @@ html { font-size: 16px; }  /* rem asosi */
   /* min: 1.2rem, maqbul: 3vw, max: 2.5rem */
   /* Ekran o'lchamiga qarab avtomatik moslashadi! */
 }` },
-        { kind: "highlight", icon: "💡", label: "Tavsiya", text: "Font size uchun rem, margin/padding uchun rem yoki px, layout uchun % yoki fr ishlatish — zamonaviy standart." },
+        { kind: "highlight", icon: <LuLightbulb />, label: "Tavsiya", text: "Font size uchun rem, margin/padding uchun rem yoki px, layout uchun % yoki fr ishlatish — zamonaviy standart." },
       ],
     },
     {
@@ -697,7 +702,7 @@ html { font-size: 16px; }  /* rem asosi */
       avatarText: "Selektor noto'g'ri bo'lsa, stil hech qayerga tushmaydi! Bu dars CSS ning eng muhim qismi.",
       content: [
         { kind: "paragraph", html: "<strong>Selektor</strong> — CSS ga qaysi HTML elementga stil berishini ko'rsatuvchi pattern. To'g'ri selektor = kam kod + yuqori samaradorlik." },
-        { kind: "highlight", icon: "🎯", label: "Selektor turlari", text: "Element · Class · ID · Universal · Attribute · Pseudo-class · Pseudo-element · Kombinatsiyalar" },
+        { kind: "highlight", icon: <LuTarget />, label: "Selektor turlari", text: "Element · Class · ID · Universal · Attribute · Pseudo-class · Pseudo-element · Kombinatsiyalar" },
       ],
     },
     {
@@ -907,7 +912,7 @@ const jsLessons = {
       avatarText: "HTML skelet, CSS kiyim, JavaScript esa RUH! Bugun veb sahifalarni jonlantiruvchi til bilan tanishamiz.",
       content: [
         { kind: "paragraph", html: "<strong>JavaScript</strong> (JS) — 1995-yilda yaratilgan, hozirda <em>dunyodagi eng mashhur dasturlash tili</em> (#1 GitHub statistikasi). Brauzerda, serverde (Node.js), mobil (React Native) va hatto robotiкada ishlaydi." },
-        { kind: "highlight", icon: "⚡", label: "JS bilan nima qilish mumkin?", text: "DOM boshqarish · Forma validatsiyasi · API so'rovlar · Real-time chat · O'yinlar · Animatsiyalar · Mobile app · Server (Node.js)" },
+        { kind: "highlight", icon: <LuZap />, label: "JS bilan nima qilish mumkin?", text: "DOM boshqarish · Forma validatsiyasi · API so'rovlar · Real-time chat · O'yinlar · Animatsiyalar · Mobile app · Server (Node.js)" },
         { kind: "points", items: [
           "Interpreted til — compile qilmasdan brauzerda ishlaydi",
           "Dinamik tiplar — o'zgaruvchi turini e'lon qilmasdan",
@@ -1074,7 +1079,7 @@ Array.isArray({a: 1})   // false` },
       avatarText: "O'zgaruvchilar — dasturlashning eng asosiy tushunchasi! Ularni bilmasdan dastur yozib bo'lmaydi.",
       content: [
         { kind: "paragraph", html: "<strong>O'zgaruvchi</strong> — ma'lumotni saqlash uchun kompyuter xotirasida nom berilgan joy. JavaScript da uch kalit so'z bor: <code>let</code>, <code>const</code>, <code>var</code>." },
-        { kind: "highlight", icon: "📦", label: "Asosiy qoida", text: "const — o'zgarmaydigan (default tanlov) | let — o'zgaradigan | var — ISHLATMANG (ES6 dan oldin)" },
+        { kind: "highlight", icon: <LuDiamond />, label: "Asosiy qoida", text: "const — o'zgarmaydigan (default tanlov) | let — o'zgaradigan | var — ISHLATMANG (ES6 dan oldin)" },
       ],
     },
     {
@@ -1242,7 +1247,7 @@ kurslar.includes("CSS") // true` },
       avatarText: "Funksiyalar — dasturlashning eng kuchli vositasi! DRY prinsipi: Don't Repeat Yourself — bir marta yoz, ko'p marta ishlat!",
       content: [
         { kind: "paragraph", html: "<strong>Funksiya</strong> — ma'lum bir vazifani bajaradigan, nomlangan kod bloki. Funksiyani bir marta yozib, istalgan joyda chaqirish mumkin." },
-        { kind: "highlight", icon: "🔧", label: "DRY Prinsipi", text: "Don't Repeat Yourself — bir xil kodni ikki marta yozma. Funksiya qil, qayta ishlat!" },
+        { kind: "highlight", icon: <LuSmartphone />, label: "DRY Prinsipi", text: "Don't Repeat Yourself — bir xil kodni ikki marta yozma. Funksiya qil, qayta ishlat!" },
         { kind: "points", items: [
           "Single Responsibility — bitta funksiya bitta vazifani bajarsın",
           "Yaxshi funksiya 5-20 qator bo'ladi",
@@ -1441,7 +1446,7 @@ const reactLessons = {
       avatarText: "React — dunyodagi eng mashhur frontend kutubxona! Meta (Facebook) tomonidan yaratilgan va milyonlab dasturchilar ishlatadi.",
       content: [
         { kind: "paragraph", html: "<strong>React.js</strong> — foydalanuvchi interfeyslari (UI) yaratish uchun JavaScript kutubxonasi. 2013-yilda Facebook tomonidan ochiq-manbali qilingan." },
-        { kind: "highlight", icon: "⚛️", label: "Nima uchun React?", text: "Component-based · Virtual DOM (tez) · JSX · Dev Tools · Ulkan ekotizim · Ko'p ish o'rinlari" },
+        { kind: "highlight", icon: <LuAtom />, label: "Nima uchun React?", text: "Component-based · Virtual DOM (tez) · JSX · Dev Tools · Ulkan ekotizim · Ko'p ish o'rinlari" },
         { kind: "points", items: [
           "Meta, Netflix, Airbnb, Uber, Twitter — React ishlatadi",
           "Virtual DOM — faqat o'zgargan qismni yangilaydi (2-10x tez!)",
@@ -1566,7 +1571,7 @@ export default App;` },
         { kind: "code", lang: "jsx", code: `// ── PROPS MISOLI ──
 
 // 1. Bola komponent — props qabul qiladi
-function KursKarta({ nomi, narx, daraja, emoji = "📚" }) {
+function KursKarta({ nomi, narx, daraja, emoji = <LuBook /> }) {
   return (
     <div style={{
       border: "1px solid #e2e8f0",
@@ -1586,10 +1591,10 @@ function KursKarta({ nomi, narx, daraja, emoji = "📚" }) {
 // 2. Ota komponent — props uzatadi
 function App() {
   const kurslar = [
-    { id: 1, nomi: "HTML Asoslar",     narx: 0,       daraja: "Boshlang'ich", emoji: "🌐" },
-    { id: 2, nomi: "CSS & Flexbox",    narx: 49000,   daraja: "O'rta",        emoji: "🎨" },
-    { id: 3, nomi: "JavaScript",       narx: 89000,   daraja: "Barcha daraja",emoji: "⚡" },
-    { id: 4, nomi: "React.js",         narx: 120000,  daraja: "O'rta-Yuqori", emoji: "⚛️" },
+    { id: 1, nomi: "HTML Asoslar",     narx: 0,       daraja: "Boshlang'ich", emoji: <LuGlobe /> },
+    { id: 2, nomi: "CSS & Flexbox",    narx: 49000,   daraja: "O'rta",        emoji: <LuPalette /> },
+    { id: 3, nomi: "JavaScript",       narx: 89000,   daraja: "Barcha daraja",emoji: <LuZap /> },
+    { id: 4, nomi: "React.js",         narx: 120000,  daraja: "O'rta-Yuqori", emoji: <LuAtom /> },
   ];
 
   return (
@@ -1941,7 +1946,7 @@ const russianLessons = {
       avatarText: "O'zbek tili alifbosiga (lotincha) qanday harflar o'xshash, qaysilari esa butunlay boshqacha? Keling ko'rib chiqamiz.",
       content: [
         { kind: "highlight", icon: "🗣️", label: "Lotincha o'xshash", text: "A(A), O(O), M(M), T(T), K(K) — bu harflar qanday yozilsa shunday o'qiladi." },
-        { kind: "highlight", icon: "⚠️", label: "Aldamchi harflar", text: "В = V (B emas), Н = N (H emas), Р = R (P emas), С = S (C emas), Х = X (H emas)." },
+        { kind: "highlight", icon: <LuInfo />, label: "Aldamchi harflar", text: "В = V (B emas), Н = N (H emas), Р = R (P emas), С = S (C emas), Х = X (H emas)." },
         { kind: "practices", items: [
           "РЕСТОРАН — Restoran deb o'qiladi",
           "ВОДА (suv) — Voda deb o'qiladi",

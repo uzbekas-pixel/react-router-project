@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { 
   LuDownload, LuUser, LuMail, LuPhone, LuBriefcase, 
-  LuGraduationCap, LuAward, LuGlobe, LuMapPin 
+  LuGraduationCap, LuAward, LuGlobe, LuMapPin, LuShield, LuCrown 
 } from "react-icons/lu";
 
 const ResumeBuilder = ({ darkMode, showToast }) => {
@@ -48,7 +48,7 @@ const ResumeBuilder = ({ darkMode, showToast }) => {
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save(`${userData?.displayName || "Resume"}_UzbekasPixel.pdf`);
-    showToast("Rezyume yuklab olindi! 🎉", "success");
+    showToast("Rezyume yuklab olindi!", "success");
   };
 
   if (loading) return <div className="p-20 text-center">Yuklanmoqda...</div>;
@@ -108,13 +108,13 @@ const ResumeBuilder = ({ darkMode, showToast }) => {
               </h3>
               <div className="space-y-2">
                 {userData?.isSupport && (
-                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-blue-800 font-bold text-xs">
-                    🛡️ Rasmiy Support
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-blue-800 font-bold text-xs flex items-center gap-2">
+                    <LuShield size={14} /> Rasmiy Support
                   </div>
                 )}
                 {userData?.isMentor && (
-                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 text-purple-800 font-bold text-xs">
-                    👑 Top Mentor
+                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 text-purple-800 font-bold text-xs flex items-center gap-2">
+                    <LuCrown size={14} /> Top Mentor
                   </div>
                 )}
               </div>

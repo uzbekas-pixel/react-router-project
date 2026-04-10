@@ -311,6 +311,9 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             >
               {lang === "en" ? "UZ" : "EN"}
             </button>
+            <NavLink to="/leaderboard" onClick={onNavClick} className="text-slate-400 hover:text-yellow-400 transition-colors">
+    <LuTrophy size={20} />
+  </NavLink>
 
             <button onClick={() => setDarkMode(!darkMode)} className="text-slate-400">
               {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}

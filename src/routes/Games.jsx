@@ -11,6 +11,8 @@ import MemoryCard from "../components/games/MemoryCard";
 import MarioGame from "../components/games/MarioGame";
 import { useLang } from "../context/useLang";
 import { LuArrowLeft, LuGamepad2, LuKeyboard, LuUsers } from "react-icons/lu";
+import { useAuth } from "../context/useAuth";
+import { completeRealTask } from "../utils/taskManager";
 
 const BackButton = ({ onClick, darkMode, t }) => (
   <button onClick={onClick}
@@ -178,22 +180,16 @@ const MemorySVG = () => {
   );
 };
 
-// ── Mario SVG ─────────────────────────────────────────────────────────────────
 const MarioSVG = () => (
   <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
-    {/* Sky */}
     <rect width="200" height="130" fill="#5c94fc"/>
-    {/* Clouds */}
     <ellipse cx="40" cy="25" rx="22" ry="10" fill="white" opacity="0.9"/>
     <ellipse cx="55" cy="20" rx="16" ry="9" fill="white" opacity="0.9"/>
     <ellipse cx="150" cy="30" rx="18" ry="8" fill="white" opacity="0.8"/>
-    {/* Ground */}
     <rect x="0" y="100" width="200" height="30" fill="#8b4513"/>
     <rect x="0" y="100" width="200" height="10" fill="#4caf50"/>
-    {/* Pipe */}
     <rect x="150" y="68" width="30" height="32" fill="#4caf50"/>
     <rect x="146" y="65" width="38" height="12" rx="2" fill="#388e3c"/>
-    {/* Brick blocks */}
     <rect x="60" y="68" width="22" height="20" rx="2" fill="#c84b00"/>
     <line x1="60" y1="78" x2="82" y2="78" stroke="#a03800" strokeWidth="1.5"/>
     <line x1="71" y1="68" x2="71" y2="88" stroke="#a03800" strokeWidth="1.5"/>
@@ -201,10 +197,8 @@ const MarioSVG = () => (
     <text x="97" y="83" textAnchor="middle" fontSize="13" fontWeight="800" fill="white">?</text>
     <rect x="112" y="68" width="22" height="20" rx="2" fill="#c84b00"/>
     <line x1="112" y1="78" x2="134" y2="78" stroke="#a03800" strokeWidth="1.5"/>
-    {/* Coin */}
     <circle cx="97" cy="52" r="7" fill="#ffd700"/>
     <circle cx="97" cy="52" r="4" fill="#fff8dc" opacity="0.5"/>
-    {/* Goomba */}
     <ellipse cx="38" cy="90" rx="13" ry="11" fill="#8b4513"/>
     <rect x="28" y="95" width="8" height="6" rx="2" fill="#5d2e0c"/>
     <rect x="42" y="95" width="8" height="6" rx="2" fill="#5d2e0c"/>
@@ -214,24 +208,15 @@ const MarioSVG = () => (
     <circle cx="43" cy="88" r="3" fill="white"/>
     <circle cx="36" cy="89" r="1.5" fill="#000"/>
     <circle cx="44" cy="89" r="1.5" fill="#000"/>
-    {/* Mario */}
-    {/* Hat */}
     <rect x="100" y="58" width="20" height="7" rx="2" fill="#ff0000"/>
     <rect x="97" y="64" width="26" height="4" rx="1" fill="#ff0000"/>
-    {/* Face */}
     <rect x="100" y="68" width="20" height="10" rx="1" fill="#ffcc99"/>
-    {/* Eye */}
     <rect x="114" y="70" width="4" height="4" rx="1" fill="#000"/>
-    {/* Mustache */}
     <rect x="104" y="75" width="14" height="3" rx="1" fill="#ff0000"/>
-    {/* Body */}
     <rect x="98" y="78" width="22" height="10" rx="2" fill="#ff0000"/>
-    {/* Pants */}
     <rect x="96" y="88" width="26" height="7" rx="1" fill="#0000cc"/>
-    {/* Shoes */}
     <rect x="96" y="95" width="10" height="5" rx="2" fill="#4a2800"/>
     <rect x="112" y="95" width="10" height="5" rx="2" fill="#4a2800"/>
-    {/* Score */}
     <rect x="2" y="2" width="80" height="14" rx="4" fill="rgba(0,0,0,0.3)"/>
     <text x="8" y="13" fontSize="8" fill="white" fontWeight="700">⭐ 5400  🪙×8  ❤️×3</text>
   </svg>
@@ -291,6 +276,10 @@ const GameCard = ({ game, onClick, t }) => {
 
 const Games = ({ darkMode, showToast }) => {
   const { t } = useLang();
+  
+  // 👇 YANGI QO'SHILDI: User'ni olamiz
+  const { user } = useAuth(); 
+  
   const [screen, setScreen] = useState("home");
   const [tab, setTab] = useState("typing");
 
@@ -305,6 +294,14 @@ const Games = ({ darkMode, showToast }) => {
     { id:"mario",     icon:"🍄", title:"Super Mario",  desc:"Yugur, sakra, g'alaba qozon!" },
   ];
 
+  // 👇 YANGI QO'SHILDI: O'yinga kirganda vazifani belgilaydigan maxsus funksiya
+  const handleGameSelect = async (gameId) => {
+     setScreen(gameId); 
+     if (user) {
+         await completeRealTask(user.uid, "game", showToast);
+     }
+  };
+
   if (screen==="snake")     return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><SnakeGame darkMode={darkMode}/></div></div>;
   if (screen==="flappy")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><FlappyBird darkMode={darkMode}/></div></div>;
   if (screen==="tictactoe") return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><TicTacToe darkMode={darkMode}/></div></div>;
@@ -312,8 +309,6 @@ const Games = ({ darkMode, showToast }) => {
   if (screen==="2048")      return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><Game2048 darkMode={darkMode}/></div></div>;
   if (screen==="wordle")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><Wordle darkMode={darkMode}/></div></div>;
   if (screen==="memory")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MemoryCard darkMode={darkMode}/></div></div>;
-
-  // ← Mario qo'shildi
   if (screen==="mario")     return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MarioGame darkMode={darkMode}/></div></div>;
 
   return (
@@ -349,7 +344,8 @@ const Games = ({ darkMode, showToast }) => {
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:14 }}>
         {GAMES.map(game => (
-          <GameCard key={game.id} game={game} onClick={() => setScreen(game.id)} t={t}/>
+          // 👇 YANGI QO'SHILDI: handleGameSelect orqali ulaymiz
+          <GameCard key={game.id} game={game} onClick={() => handleGameSelect(game.id)} t={t}/>
         ))}
       </div>
     </div>

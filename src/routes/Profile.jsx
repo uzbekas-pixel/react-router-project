@@ -20,7 +20,10 @@ import {
   LuBadgeCheck,
   LuTrophy,
   LuGem,
-  LuX
+  LuX,
+  LuClock,
+  LuPartyPopper,
+  LuInfo,
 } from "react-icons/lu";
 import { MdOutlineEdit } from "react-icons/md";
 
@@ -398,20 +401,20 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
             </h3>
             
             {applicationStatus === "pending" ? (
-              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner">
-                ⏳ Arizangiz qabul qilingan va ko'rib chiqilmoqda. Tez orada siz bilan bog'lanamiz!
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
+                <LuClock className="shrink-0" /> {t.mentorPending || "Arizangiz qabul qilingan va ko'rib chiqilmoqda. Tez orada siz bilan bog'lanamiz!"}
               </div>
             ) : applicationStatus === "approved" ? (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner">
-                🎉 Tabriklaymiz! Siz rasmiy Mentorsiz! Endi platformada o'z darslaringizni bera olasiz.
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
+                <LuPartyPopper className="shrink-0" /> {t.mentorApproved || "Tabriklaymiz! Siz rasmiy Mentorsiz! Endi platformada o'z darslaringizni bera olasiz."}
               </div>
             ) : applicationStatus === "rejected" ? (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner mb-6">
-                ❌ Afsuski arizangiz rad etildi. Tajribangizni oshirib, yana urinib ko'ring.
+              <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner mb-6 flex items-center gap-3">
+                <LuX className="shrink-0" /> {t.mentorRejected || "Afsuski arizangiz rad etildi. Tajribangizni oshirib, yana urinib ko'ring."}
               </div>
             ) : !isSupport ? (
-               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner">
-                ℹ️ Ariza berish uchun avval darslarni tugatib, <b>"Support"</b> unvonini olishingiz kerak.
+               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
+                <LuInfo className="shrink-0" /> <span>Ariza berish uchun avval darslarni tugatib, <b>"Support"</b> unvonini olishingiz kerak.</span>
               </div>
             ) : null}
 

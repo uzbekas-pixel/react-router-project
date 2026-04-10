@@ -6,23 +6,7 @@ import { giveReward } from "../utils/rewardSystem";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
 import {
-  LuBrain, 
-  LuTrophy, 
-  LuRefreshCw, 
-  LuChevronRight, 
-  LuFlame, 
-  LuGlobe, 
-  LuPalette, 
-  LuZap, 
-  LuAtom, 
-  LuLanguages, 
-LuInfo,
-  LuTimer,
- LuCheck,
-  LuSettings, 
-LuX
-,
-  LuTarget
+  LuBrain, LuTrophy, LuRefreshCw, LuChevronRight, LuFlame, LuGlobe, LuPalette, LuZap, LuAtom, LuLanguages, LuInfo, LuTimer, LuCheck, LuSettings, LuX, LuTarget, LuPartyPopper, LuBook, LuActivity, LuLightbulb, LuSmile, LuStar, LuBot, LuDollarSign
 } from "react-icons/lu";
 import { completeRealTask } from "../utils/taskManager";
 
@@ -493,7 +477,7 @@ const Quiz = ({ darkMode, showToast }) => {
 
       await setDoc(doc(db, "users", user.uid), { quizAvg: newAvg }, { merge: true });
       await giveReward(user.uid, xpGained, "xp", "Quiz muvaffaqiyatli yakunlandi");
-      showToast?.(`+${xpGained} XP! ✅`, "success");
+      showToast?.(`+${xpGained} XP!`, "success");
       completeRealTask(user.uid, "quiz");
     } catch (err) { console.error(err); }
     finally { savingRef.current = false; }
@@ -819,7 +803,7 @@ const Quiz = ({ darkMode, showToast }) => {
 
   if (screen === "result" && resultData) {
     const { score, pct, answers: ans, questions: qs } = resultData;
-    const emoji = pct === 100 ? "🏆" : pct >= 80 ? "🎉" : pct >= 60 ? "👍" : pct >= 40 ? "📚" : "💪";
+    const resultIcon = pct === 100 ? <LuTrophy className="text-amber-500" /> : pct >= 80 ? <LuPartyPopper className="text-indigo-500" /> : pct >= 60 ? <LuSmile className="text-emerald-500" /> : pct >= 40 ? <LuBook className="text-blue-500" /> : <LuActivity className="text-slate-500" />;
     const msg = pct === 100 ? t.allCorrect : pct >= 80 ? t.scoreGreat : pct >= 60 ? t.scoreGood : t.scoreStudy;
     const hs = stats.highScores?.[category] || 0;
     const isNewHS = score > hs;
@@ -828,7 +812,7 @@ const Quiz = ({ darkMode, showToast }) => {
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 lg:py-24">
         <ScrollReveal direction="up">
           <div className="text-center mb-16">
-            <div className="text-8xl mb-8 transform hover:scale-110 transition-transform duration-500 cursor-default inline-block">{emoji}</div>
+            <div className="text-8xl mb-8 transform hover:scale-110 transition-transform duration-500 cursor-default flex justify-center">{resultIcon}</div>
             {isNewHS && (
               <div className="mb-6 inline-flex px-6 py-2 rounded-full bg-amber-500/10 text-amber-500 text-xs font-black uppercase tracking-[0.2em] border border-amber-500/20 animate-pulse">
                 <LuTrophy className="inline mr-2" /> {t.newRecord}
@@ -877,8 +861,8 @@ const Quiz = ({ darkMode, showToast }) => {
                           {t.correctAnswerLabel}: {a.correct_ans}
                         </div>
                       )}
-                      {a.timeout && <div className="mb-4 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-500 text-xs font-bold">⏱ {t.timeOutLabel}</div>}
-                      {a.explanation && <p className="text-sm text-slate-500 leading-relaxed italic">💡 {a.explanation}</p>}
+                      {a.timeout && <div className="mb-4 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-500 text-xs font-bold flex items-center gap-2"><LuTimer size={14} /> {t.timeOutLabel}</div>}
+                      {a.explanation && <p className="text-sm text-slate-500 leading-relaxed italic flex items-center gap-2"><LuLightbulb size={14} className="text-amber-500" /> {a.explanation}</p>}
                     </div>
                   </div>
                 </div>
