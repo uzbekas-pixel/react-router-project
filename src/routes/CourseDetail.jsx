@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   LuPlay, LuCheck, LuStar, LuBot, LuMessageSquare, LuX, LuChevronRight, LuSend, LuTrash2, LuSmile,
-  LuPartyPopper, LuUsers, LuArrowRight, LuLock, LuSmartphone, LuInfinity, LuAward, LuRotateCcw
+  LuPartyPopper, LuUsers, LuArrowRight, LuArrowLeft, LuLock, LuSmartphone, LuInfinity, LuAward, LuRotateCcw,
+  LuCreditCard, LuBookOpen, LuZap
 } from "react-icons/lu";
-import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
 import {
@@ -12,13 +13,32 @@ import {
   increment, getDocs, where, arrayUnion
 } from "firebase/firestore";
 import { giveReward } from "../utils/rewardSystem";
+import CourseDetailContent from "./CourseDetailContent";
 import { db } from "../firebase/config";
-import { generateLessonContent } from "./CourseDetailContent";
 import { completeRealTask } from "../utils/taskManager"; 
 
-// ─────────────────────────────────────────────────────────────────────────────
+// MODERN CSS
+const MODERN_CSS = `
+  @keyframes slide-up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+  @keyframes scale-in { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  .animate-slide-up { animation: slide-up 0.4s ease-out both; }
+  .animate-scale-in { animation: scale-in 0.3s ease-out both; }
+`;
+
+const catGradients = {
+  HTML: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)",
+  CSS: "linear-gradient(135deg, #4ecdc4 0%, #44a3aa 100%)",
+  JavaScript: "linear-gradient(135deg, #ffe66d 0%, #f7b731 100%)",
+  React: "linear-gradient(135deg, #45b7d1 0%, #2d98da 100%)",
+  English: "linear-gradient(135deg, #96ceb4 0%, #5f9ea0 100%)",
+  Russian: "linear-gradient(135deg, #feca57 0%, #e1b12c 100%)",
+  French: "linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%)"
+};
+
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 // COURSES DATA
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 const coursesData = {
   1: {
     id: 1, category: "HTML", title: "HTML Asoslar", color: "#e44d26", thumbnail: "https://placehold.co/800x400/e44d26/ffffff?text=HTML",
@@ -83,7 +103,7 @@ const coursesData = {
     rating: 4.5, students: 4500, price: 65000,
     sections: [
       { title: "Kirish", lessons: [{ id: 1, title: "Rus alifbosi", free: true }, { id: 2, title: "Talaffuz", free: true }, { id: 3, title: "Salomlashish", free: false }] },
-      { title: "Grammatika", lessons: [{ id: 4, title: "Ot va sifat", free: false }, { id: 5, title: "Падежlar", free: false }, { id: 6, title: "Fe'llar", free: false }, { id: 7, title: "Sonlar", free: false }] },
+      { title: "Grammatika", lessons: [{ id: 4, title: "Ot va sifat", free: false }, { id: 5, title: "Padejlar (Падежlar)", free: false }, { id: 6, title: "Fe'llar", free: false }, { id: 7, title: "Sonlar", free: false }] },
       { title: "Suhbat", lessons: [{ id: 8, title: "Tanishish", free: false }, { id: 9, title: "Yo'l so'rash", free: false }, { id: 10, title: "Do'konda", free: false }, { id: 11, title: "Mehmonxona", free: false }] },
       { title: "Biznes", lessons: [{ id: 12, title: "Ish muloqoti", free: false }, { id: 13, title: "Hujjatlar", free: false }, { id: 14, title: "TORFL", free: false }] },
     ],
@@ -111,9 +131,9 @@ const coursesData = {
   },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
 // STARS
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
 const Stars = ({ rating, interactive = false, onChange }) => (
   <div style={{ display: "flex", gap: 3 }}>
     {[1, 2, 3, 4, 5].map((s) => (
@@ -123,10 +143,11 @@ const Stars = ({ rating, interactive = false, onChange }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
 // REVIEWS
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
 const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) => {
+  const { t } = useLang();
   const { user } = useAuth();
   const [allReviews, setAllReviews] = useState([]);
   const [newReview,  setNewReview]  = useState({ rating: 5, text: "" });
@@ -153,7 +174,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
         );
         const existingSnap = await getDocs(existingQ);
         if (!existingSnap.empty) {
-          showToast?.("Siz allaqachon sharh yozdingiz!", "error");
+          showToast?.(t.alreadyReviewed, "error");
           setLoading(false);
           return;
         }
@@ -162,7 +183,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
           avatar: user.photoURL || null, rating: newReview.rating,
           text: newReview.text, createdAt: serverTimestamp(),
         });
-        await giveReward(user.uid, 5, "xp", "Kursga sharh qoldirildi");
+        await giveReward(user.uid, 5, "xp", t.reviewReward);
         setSubmitted(true);
         setNewReview({ rating: 5, text: "" });
         if (isModal && onFinish) setTimeout(() => onFinish(), 1500);
@@ -184,7 +205,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 40, fontWeight: 800, color: "#f59e0b" }}>{avg}</div>
             <Stars rating={Math.round(Number(avg))} />
-            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{allReviews.length} ta sharh</div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{allReviews.length} {t.courseReviewsCount}</div>
           </div>
           <div style={{ flex: 1 }}>
             {[5, 4, 3, 2, 1].map((star) => {
@@ -207,32 +228,46 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
 
       {!user ? (
         <div style={{ marginBottom: 20, padding: "12px 16px", background: darkMode ? "#1e293b" : "#f8fafc", borderRadius: 10, fontSize: 13, color: "#6b7280", textAlign: "center" }}>
-          Sharh yozish uchun <a href="/login" style={{ color: "#3b82f6", fontWeight: 600 }}>tizimga kiring</a>
-        </div>
-      ) : submitted ? (
-        <div style={{ marginBottom: 20, padding: "12px 16px", background: "#d1fae5", borderRadius: 10, fontSize: 13, color: "#065f46", fontWeight: 600 }}>
-          <LuCheck className="inline mr-2" /> Sharhingiz qabul qilindi! +5 XP qo'shildi <LuPartyPopper className="inline ml-1" />
+          {t.courseLoginToReview} <a href="/login" style={{ color: "#3b82f6", fontWeight: 600 }}>{t.login}</a>
         </div>
       ) : (
-        <div style={{ marginBottom: isModal ? 0 : 20, padding: "16px 20px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-          <p style={{ margin: "0 0 10px", fontWeight: 600, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>
-            {isModal ? "Darsga baho bering" : "Sharh yozing"}
-          </p>
-          <Stars rating={newReview.rating} interactive onChange={(r) => setNewReview({ ...newReview, rating: r })} />
-          <textarea rows={3} placeholder="Kurs haqida fikringiz..." value={newReview.text}
-            onChange={(e) => setNewReview({ ...newReview, text: e.target.value })}
-            style={{ width: "100%", marginTop: 10, padding: "10px 12px", borderRadius: 8, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, background: darkMode ? "#0f172a" : "#f8fafc", color: darkMode ? "#f1f5f9" : "#111", fontSize: 13, resize: "none", outline: "none", boxSizing: "border-box" }}
-          />
-          <button onClick={handleSubmit} disabled={loading || !newReview.text.trim()}
-            style={{ marginTop: 8, padding: "8px 20px", background: loading ? "#93c5fd" : "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: loading || !newReview.text.trim() ? "default" : "pointer", opacity: !newReview.text.trim() ? 0.6 : 1 }}>
-            {loading ? "⏳..." : <><LuSend className="inline mr-1" /> Yuborish</>}
-          </button>
+        <div style={{ marginBottom: isModal ? 0 : 20, padding: "20px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 16, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
+          {submitted ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#fff" }}>
+                <LuCheck size={32} />
+              </div>
+              <p style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111" }}>{t.courseReviewSuccess}</p>
+              <button onClick={() => { setSubmitted(false); setNewReview({ rating: 5, text: "" }); }} style={{ padding: "10px 20px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                {t.writeAnotherReview}
+              </button>
+            </div>
+          ) : (
+            <>
+              <p style={{ margin: "0 0 12px", fontWeight: 600, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111", textAlign: "center" }}>
+                {isModal ? t.courseRateLesson : t.courseWriteReview}
+              </p>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                <Stars rating={newReview.rating} interactive onChange={(r) => setNewReview({ ...newReview, rating: r })} />
+              </div>
+              <textarea rows={3} placeholder={t.courseReviewPlaceholder} value={newReview.text}
+                onChange={(e) => setNewReview({ ...newReview, text: e.target.value })}
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `2px solid ${darkMode ? "#334155" : "#e5e7eb"}`, background: darkMode ? "#0f172a" : "#f8fafc", color: darkMode ? "#f1f5f9" : "#111", fontSize: 14, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 16 }}
+              />
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <button onClick={handleSubmit} disabled={loading || !newReview.text.trim()}
+                  style={{ padding: "12px 32px", background: loading ? "#93c5fd" : "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: loading || !newReview.text.trim() ? "default" : "pointer", opacity: !newReview.text.trim() ? 0.6 : 1, display: "flex", alignItems: "center", gap: 10 }}>
+                  {loading ? t.sending : <><LuSend size={18} /> {t.courseSend}</>}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {!isModal && (
         allReviews.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 13, padding: "20px 0" }}>Hali sharhlar yo'q. Birinchi bo'ling! <LuStar className="inline" /></p>
+          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 13, padding: "20px 0" }}>{t.courseNoReviews} <LuStar className="inline" /></p>
         ) : (
           allReviews.map((r) => (
             <div key={r.id} style={{ marginBottom: 14, padding: "14px 16px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#f3f4f6"}` }}>
@@ -242,7 +277,7 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
                 </div>
                 <div>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: darkMode ? "#f1f5f9" : "#111" }}>{r.name}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{r.createdAt?.toDate?.()?.toLocaleDateString("uz") || "Hozirgina"}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{r.createdAt?.toDate?.()?.toLocaleDateString("uz") || t.courseJustNow}</p>
                 </div>
                 <div style={{ marginLeft: "auto" }}><Stars rating={r.rating} /></div>
               </div>
@@ -255,26 +290,29 @@ const Reviews = ({ darkMode, courseId, isModal = false, onFinish, showToast }) =
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
 // RATING MODAL
-// ─────────────────────────────────────────────────────────────────────────────
-const RatingModal = ({ courseId, onClose, darkMode }) => (
-  <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
-    <div style={{ width: "100%", maxWidth: 420, background: darkMode ? "#1e293b" : "#fff", borderRadius: 24, padding: 30, textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)" }}>
-      <div style={{ fontSize: 60, marginBottom: 10 }}><LuStar className="text-amber-500" /></div>
-      <h2 style={{ color: darkMode ? "#fff" : "#111", fontSize: 22, fontWeight: 800, margin: "0 0 8px" }}>Dars qanday bo'ldi?</h2>
-      <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>Fikringiz biz uchun muhim! Kursni baholang va XP yutib oling.</p>
-      <Reviews courseId={courseId} darkMode={darkMode} isModal={true} onFinish={onClose} showToast={undefined} />
-      <button onClick={onClose} style={{ marginTop: 16, background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Keyinroq qoldirish</button>
+// ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ”Ђ
+const RatingModal = ({ courseId, onClose, darkMode }) => {
+  const { t } = useLang();
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
+      <div style={{ width: "100%", maxWidth: 420, background: darkMode ? "#1e293b" : "#fff", borderRadius: 24, padding: 30, textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)" }}>
+        <div style={{ fontSize: 60, marginBottom: 10 }}><LuStar className="text-amber-500" /></div>
+        <h2 style={{ color: darkMode ? "#fff" : "#111", fontSize: 22, fontWeight: 800, margin: "0 0 8px" }}>{t.courseHowWasLesson}</h2>
+        <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>{t.courseRateAndWin}</p>
+        <Reviews courseId={courseId} darkMode={darkMode} isModal={true} onFinish={onClose} showToast={undefined} />
+        <button onClick={onClose} style={{ marginTop: 16, background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>{t.courseLater}</button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// AI LESSON MODAL — Comprehensive AI-Tutor Engine (v2)
-// ═══════════════════════════════════════════════════════════════════════════════
+// •ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ
+// AI LESSON MODAL —” Comprehensive AI-Tutor Engine (v2)
+// •ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ•ђ
 
-/* ─── CSS injected once ─── */
+/* ”Ђ”Ђ”Ђ CSS injected once ”Ђ”Ђ”Ђ */
 const AI_MODAL_CSS = `
   @keyframes ai-breathe   { 0%,100%{transform:scale(1)}    50%{transform:scale(1.06)} }
   @keyframes ai-pulse     { 0%,100%{opacity:1}              50%{opacity:.45} }
@@ -302,7 +340,7 @@ const AI_MODAL_CSS = `
   .ai-nav-btn { transition:all .18s ease; }
 `;
 
-/* ─── Typewriter hook ─── */
+/* ”Ђ”Ђ”Ђ Typewriter hook ”Ђ”Ђ”Ђ */
 const useTypewriter = (text, speed = 30) => {
   const [out, setOut] = useState("");
   const [done, setDone] = useState(false);
@@ -319,7 +357,7 @@ const useTypewriter = (text, speed = 30) => {
   return { out, done };
 };
 
-/* ─── Syntax-highlight tokens (no external lib) ─── */
+/* ”Ђ”Ђ”Ђ Syntax-highlight tokens (no external lib) ”Ђ”Ђ”Ђ */
 const syntaxColor = (line) => {
   const keywords = /\b(const|let|var|function|return|import|export|default|from|if|else|for|while|class|extends|new|this|async|await|try|catch|null|undefined|true|false|typeof|of|in)\b/g;
   const strings  = /(["'`])(?:(?!\1)[^\\]|\\.)*\1/g;
@@ -334,13 +372,10 @@ const syntaxColor = (line) => {
   h = h.replace(strings,  m => `<span style="color:#ce9178">${m}</span>`);
   h = h.replace(keywords, m => `<span style="color:#569cd6;font-weight:600">${m}</span>`);
   h = h.replace(numbers,  m => `<span style="color:#b5cea8">${m}</span>`);
-  h = h.replace(tags,     m => `<span style="color:#4ec9b0">${m}</span>`);
-  h = h.replace(attrs,    m => `<span style="color:#9cdcfe">${m}</span>`);
   return h;
 };
-
-/* ─── Code Block ─── */
 const CodeBlock = ({ code, lang = "js", accent }) => {
+  const { t } = useLang();
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1800); };
   const ext = { js: "script.js", jsx: "App.jsx", html: "index.html", css: "styles.css", ts: "main.ts" }[lang] || "code.txt";
@@ -350,7 +385,7 @@ const CodeBlock = ({ code, lang = "js", accent }) => {
         {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c }} />)}
         <span style={{ marginLeft: 8, fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{ext}</span>
         <button onClick={copy} style={{ marginLeft: "auto", padding: "3px 10px", borderRadius: 6, border: `1px solid ${accent}55`, background: "transparent", color: copied ? "#4ade80" : accent, fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "all .2s" }}>
-          {copied ? "✓ Nusxalandi" : "Nusxalash"}
+          {copied ? `њ“ ${t.courseCopied}` : t.courseCopy}
         </button>
       </div>
       <pre className="ai-code-block ai-scroll" style={{ margin: 0, padding: "18px 20px", background: "#0d1117", color: "#d4d4d4", fontSize: 12.5, lineHeight: 1.8, overflowX: "auto", maxHeight: 280 }}>
@@ -365,8 +400,9 @@ const CodeBlock = ({ code, lang = "js", accent }) => {
   );
 };
 
-/* ─── Mini Quiz ─── */
+/* ”Ђ”Ђ”Ђ Mini Quiz ”Ђ”Ђ”Ђ */
 const MiniQuiz = ({ quiz, accent, darkMode }) => {
+  const { t } = useLang();
   const [sel, setSel]   = useState(null);
   const [show, setShow] = useState(false);
   const text  = darkMode ? "#f1f5f9" : "#111827";
@@ -375,7 +411,7 @@ const MiniQuiz = ({ quiz, accent, darkMode }) => {
   return (
     <div style={{ marginTop: 4 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: text, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ padding: "3px 10px", borderRadius: 20, background: `${accent}22`, color: accent, fontSize: 11 }}>SAVOL</span>
+        <span style={{ padding: "3px 10px", borderRadius: 20, background: `${accent}22`, color: accent, fontSize: 11 }}>{t.courseQuestion}</span>
         {quiz.q}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
@@ -391,7 +427,7 @@ const MiniQuiz = ({ quiz, accent, darkMode }) => {
             <button key={i} className="ai-quiz-opt" disabled={show} onClick={() => setSel(i)}
               style={{ "--ac": accent, padding: "11px 16px", borderRadius: 11, border: `1.5px solid ${border}`, background: bg, color, fontSize: 13, fontWeight: 500, cursor: show ? "default" : "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all .2s" }}>
               <span style={{ width: 22, height: 22, borderRadius: "50%", background: `${border}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
-                {show && isCorrect ? "✓" : show && isSelected && !isCorrect ? "✗" : String.fromCharCode(65 + i)}
+                {show && isCorrect ? <LuCheck size={12} /> : show && isSelected && !isCorrect ? <LuX size={12} /> : String.fromCharCode(65 + i)}
               </span>
               {opt}
             </button>
@@ -400,20 +436,21 @@ const MiniQuiz = ({ quiz, accent, darkMode }) => {
       </div>
       {sel !== null && !show && (
         <button onClick={() => setShow(true)} style={{ marginTop: 12, padding: "9px 22px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-          Javobni ko'rish
+          {t.showAnswerBtn}
         </button>
       )}
       {show && (
         <div className="ai-fade-up" style={{ marginTop: 12, padding: "12px 16px", borderRadius: 11, background: darkMode ? "rgba(16,185,129,.12)" : "#f0fdf4", border: "1px solid #4ade8055", fontSize: 13, color: darkMode ? "#86efac" : "#166534", lineHeight: 1.7 }}>
-          💡 <strong>Izoh:</strong> {quiz.explanation}
+          💡 <strong>{t.explanationLabel}:</strong> {quiz.explanation}
         </div>
       )}
     </div>
   );
 };
 
-/* ─── AI Chat Panel ─── */
+/* ”Ђ”Ђ”Ђ AI Chat Panel ”Ђ”Ђ”Ђ */
 const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => {
+  const { t } = useLang();
   const [q, setQ]         = useState("");
   const [msgs, setMsgs]   = useState([]);
   const [loading, setLoading] = useState(false);
@@ -458,10 +495,10 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
       const data = await res.json();
       const reply =
         data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") ||
-        "Kechirasiz, javob ololmadim.";
+        t.aiError;
       setMsgs([...newMsgs, { role: "assistant", content: reply }]);
     } catch {
-      setMsgs([...newMsgs, { role: "assistant", content: "❌ Tarmoq xatosi. Iltimos qayta urinib ko'ring." }]);
+      setMsgs([...newMsgs, { role: "assistant", content: t.networkError }]);
     }
     setLoading(false);
   };
@@ -473,15 +510,15 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderBottom: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, flexShrink: 0 }}>
         <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${accent},${accent}88)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, animation: "ai-breathe 2.5s ease-in-out infinite" }}><LuBot /></div>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: accent }}>Uzbekas AI</div>
-          <div style={{ fontSize: 10, color: "#6b7280" }}>Mavzu: {slideTitle}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: accent }}>{t.aiTutorName}</div>
+          <div style={{ fontSize: 10, color: "#6b7280" }}>{t.aiTopic}: {slideTitle}</div>
         </div>
         <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 18, color: "#94a3b8", cursor: "pointer" }}><LuX /></button>
       </div>
       <div className="ai-scroll" style={{ flex: 1, overflowY: "auto", padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.length === 0 && (
           <div style={{ textAlign: "center", color: "#6b7280", fontSize: 13, paddingTop: 20 }}>
-            💬 Bu slayd haqida savol bering...
+            <LuMessageSquare style={{ display: 'inline', marginRight: 6 }} /> {t.courseChatEmpty}
           </div>
         )}
         {msgs.map((m, i) => (
@@ -500,21 +537,21 @@ const AIChatPanel = ({ lessonTitle, slideTitle, accent, darkMode, onClose }) => 
       </div>
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${darkMode ? "#1e293b" : "#e2e8f0"}`, display: "flex", gap: 8, flexShrink: 0 }}>
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && ask()}
-          placeholder="Savolingizni yozing... (Enter = yuborish)"
+          placeholder={t.courseAskQuestion}
           style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: `1.5px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#0f172a" : "#f8fafc", color: text, fontSize: 13, outline: "none" }} />
         <button onClick={ask} disabled={!q.trim() || loading}
           style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: q.trim() && !loading ? accent : "#94a3b8", color: "#fff", fontSize: 13, fontWeight: 700, cursor: q.trim() && !loading ? "pointer" : "default", transition: "background .2s" }}>
-          <LuSend />
+          {loading ? <><LuRotateCcw className="inline animate-spin" /> {t.checking}...</> : <><LuSend className="inline" /> {t.send}</>}
         </button>
       </div>
     </div>
   );
 };
 
-/* ─── Slide Content Renderer ─── */
+/* ”Ђ—Ђ—Ђ Slide Content Renderer ”Ђ—Ђ—Ђ */
 const SlideContent = ({ content, accent, darkMode }) => {
   const text = darkMode ? "#e2e8f0" : "#1e293b";
-  const sub  = darkMode ? "#94a3b8" : "#64748b";
+  const sub  = darkMode ? "#94a3b8"  : "#64748b";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {content.map((block, i) => {
@@ -563,14 +600,14 @@ const SlideContent = ({ content, accent, darkMode }) => {
   );
 };
 
-/* ─── Top Progress Bar ─── */
+/* ”Ђ—Ђ—Ђ Top Progress Bar ”Ђ—Ђ—Ђ */
 const TopProgressBar = ({ pct, accent }) => (
   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,.06)", zIndex: 5 }}>
     <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${accent},${accent}cc)`, transition: "width 0.5s cubic-bezier(.22,.68,0,1.2)", boxShadow: `0 0 10px ${accent}99` }} />
   </div>
 );
 
-/* ─── AI Avatar (speaks slide intro via typewriter) ─── */
+/* ”Ђ—Ђ—Ђ AI Avatar (speaks slide intro via typewriter) ”Ђ—Ђ—Ђ */
 const AIAvatar = ({ text, accent, darkMode, done }) => {
   const textColor = darkMode ? "#e2e8f0" : "#1e293b";
   const { out } = useTypewriter(text, 22);
@@ -582,8 +619,8 @@ const AIAvatar = ({ text, accent, darkMode, done }) => {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>Uzbekas AI</span>
-          <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: `${accent}22`, color: accent }}>JONLI</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>{t.aiTutorName}</span>
+          <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: `${accent}22`, color: accent }}>{t.liveLabel}</span>
         </div>
         <div style={{ fontSize: 13.5, color: textColor, lineHeight: 1.65, minHeight: 22 }}>
           {out}{!done && <span className="ai-tw-cursor" style={{ color: accent }}>|</span>}
@@ -593,9 +630,9 @@ const AIAvatar = ({ text, accent, darkMode, done }) => {
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   AILessonModal  ←  MAIN EXPORT
-───────────────────────────────────────────────────────────────────────────── */
+/* ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
+   AILessonModal  †ђ  MAIN EXPORT
+”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ */
 const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, onClose, onComplete, darkMode, courseId, courseCategory }) => {
   const slides   = generateLessonContent(lesson, courseId, courseCategory);
   const accent   = courseColor || "#3b82f6";
@@ -618,13 +655,15 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
   const headerBg = darkMode ? "#060b18"  : "#ffffff";
   const borderC  = darkMode ? "#1e2d45"  : "#e2e8f0";
 
+  const { t } = useLang();
+  
   const avatarLines = {
-    intro:     `Salom! Men Uzbekas AI — sizning shaxsiy o'qituvchingizman. Bugun "${lesson.title}" mavzusidan boshlaymiz. Tayyor bo'lsangiz, keling!`,
-    theory:    `Ajoyib! Endi nazariyani o'rganamiz. Bu qism muhim — diqqat bilan o'qing. Har bir tushunchani tushunish keyingi bosqich uchun poydevor.`,
-    code:      `Kodni ko'rishga tayyor bo'ling! Har bir satrni o'qing, kommentariyalarga e'tibor bering. Keyin o'zingiz ham yozib ko'ring — bu eng yaxshi usul.`,
-    challenge: `Bilimingizni sinash vaqti! Bu savol o'rganganlaringizni mustahkamlaydi. Xavotir olmang — xato ham o'rganish. Javobni tanlang.`,
-    practices: `Ajoyib ish! Endi professional standartlarni o'rganamiz. Bular katta kompaniyalarda qo'llaniladigan qoidalar. Yodda saqlang.`,
-    summary:   `Darsni muvaffaqiyatli yakunladingiz! 🎉 Siz bugun juda ko'p narsa o'rgandingiz. "Tugatdim" tugmasini bosib, XP yutib oling!`,
+    intro:     t.avatarIntro?.replace('{title}', lesson.title) || `Salom! Men Uzbekas AI —” sizning shaxsiy o'qituvchingizman. Bugun "${lesson.title}" mavzusidan boshlaymiz. Tayyor bo'lsangiz, keling!`,
+    theory:    t.avatarTheory || `Ajoyib! Endi nazariyani o'rganamiz. Bu qism muhim —” diqqat bilan o'qing. Har bir tushunchani tushunish keyingi bosqich uchun poydevor.`,
+    code:      t.avatarCode || `Kodni ko'rishga tayyor bo'ling! Har bir satrni o'qing, kommentariyalarga e'tibor bering. Keyin o'zingiz ham yozib ko'ring —” bu eng yaxshi usul.`,
+    challenge: t.avatarChallenge || `Bilimingizni sinash vaqti! Bu savol o'rganganlaringizni mustahkamlaydi. Xavotir olmang —” xato ham o'rganish. Javobni tanlang.`,
+    practices: t.avatarPractices || `Ajoyib ish! Endi professional standartlarni o'rganamiz. Bular katta kompaniyalarda qo'llaniladigan qoidalar. Yodda saqlang.`,
+    summary:   t.avatarSummary || `Darsni muvaffaqiyatli yakunladingiz! Siz bugun juda ko'p narsa o'rgandingiz. "Tugatdim" tugmasini bosib, XP yutib oling!`,
   };
 
   useEffect(() => {
@@ -685,14 +724,14 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
           </div>
           <div style={{ textAlign: "center", flex: 2 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: textMain, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lesson.title}</div>
-            <div style={{ fontSize: 10.5, color: textSub, marginTop: 2 }}>{viewed.size}/{slides.length} slayd ko'rildi • {pct}% bajarildi</div>
+            <div style={{ fontSize: 10.5, color: textSub, marginTop: 2 }}>{viewed.size}/{slides.length} {t.slidesViewed} • {pct}% {t.completedLabel}</div>
           </div>
           <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
             <button onClick={() => setShowChat(v => !v)}
               style={{ padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${accent}`, background: showChat ? accent : "transparent", color: showChat ? "#fff" : accent, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, transition: "all .2s" }}>
-              <LuBot /> AI Chat
+              <LuBot /> {t.aiChat}
             </button>
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280", padding: "0 2px", lineHeight: 1 }}><LuX /></button>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280" }}><LuX /></button>
           </div>
         </div>
         <AIAvatar
@@ -706,10 +745,11 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
           <div key={`slide-${animKey}`} className={slideClass}>
             <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, position: "relative" }}>
               <img src={lesson.thumbnail || "https://placehold.co/800x400/3b82f6/ffffff?text=Lesson"} alt={lesson.title} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
-                <span style={{ background: accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{lesson.category || "AI Dars"}</span>
-                <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{lesson.title}</h1>
-                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}><LuStar className="inline text-amber-400" /> {courseRating || 0} · <LuUsers className="inline text-indigo-400" /> {(courseStudents || 0).toLocaleString()} talaba</p>
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "32px 24px 20px" }}>
+                <span style={{ background: accent, color: "#fff", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20 }}>{lesson.category || t.aiLesson}</span>
+                <h1 style={{ color: "#fff", fontWeight: 900, fontSize: 24, margin: "12px 0 8px" }}>{lesson.title}</h1>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: 0 }}><LuStar className="inline text-amber-400" /> {courseRating || 0} · <LuUsers className="inline text-indigo-400" /> {(courseStudents || 0).toLocaleString()} {t.students}</p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
@@ -721,7 +761,7 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
                   <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 20, background: `${typeBg}22`, color: typeBg, letterSpacing: "0.1em" }}>{slide.label}</span>
                   <span style={{ fontSize: 10, color: textSub }}>{cur + 1} / {slides.length}</span>
                 </div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: textMain, lineHeight: 1.3 }}>{slide.title}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: textMain, lineHeight: 1.3 }}>{slide.title}</div>
               </div>
             </div>
             <SlideContent content={slide.content} accent={accent} darkMode={darkMode} />
@@ -738,21 +778,21 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
             </div>
           )}
         </div>
-        <div style={{ padding: "14px 24px 18px", borderTop: `1px solid ${borderC}`, background: headerBg, flexShrink: 0 }}>
+        <div style={{ padding: "14px 24px", borderTop: `1px solid ${borderC}`, background: headerBg, flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button
               className="ai-nav-btn"
               disabled={cur === 0}
               onClick={() => goTo(cur - 1)}
               style={{ padding: "12px 22px", borderRadius: 13, border: `1.5px solid ${borderC}`, background: "transparent", color: cur === 0 ? "#475569" : textMain, fontSize: 13, fontWeight: 600, cursor: cur === 0 ? "not-allowed" : "pointer", opacity: cur === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 6 }}>
-              ← Oldingi
+              †ђ {t.prev}
             </button>
             {!isLast ? (
               <button
                 className="ai-nav-btn"
                 onClick={() => goTo(cur + 1)}
                 style={{ flex: 1, padding: "12px 22px", borderRadius: 13, border: "none", background: accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: `0 4px 18px ${accent}60` }}>
-                Keyingi slayd <LuArrowRight />
+                {t.nextSlide} <LuArrowRight />
               </button>
             ) : (
               <button
@@ -760,7 +800,7 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
                 disabled={!allDone}
                 onClick={() => { onComplete(lesson.id); onClose(true); }}
                 style={{ flex: 1, padding: "12px 22px", borderRadius: 13, border: "none", background: allDone ? "#10b981" : "#334155", color: "#fff", fontSize: 13, fontWeight: 700, cursor: allDone ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: allDone ? "0 4px 18px rgba(16,185,129,.45)" : "none", transition: "all .3s" }}>
-                {allDone ? "🎉 Tugatdim va XP yutib olaman!" : `Barcha slaydlarni ko'ring (${viewed.size}/${slides.length})`}
+                {allDone ? <><LuPartyPopper /> {t.finishAndEarn}</> : `${t.viewAllSlides} (${viewed.size}/${slides.length})`}
               </button>
             )}
           </div>
@@ -770,9 +810,9 @@ const VideoLessonModal = ({ lesson, courseColor, courseRating, courseStudents, o
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 // FAQ ITEM
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 const FaqItem = ({ faq, darkMode }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -780,7 +820,7 @@ const FaqItem = ({ faq, darkMode }) => {
       <button onClick={() => setOpen(!open)}
         style={{ width: "100%", textAlign: "left", padding: "13px 16px", borderRadius: open ? "10px 10px 0 0" : 10, background: darkMode ? "#1e293b" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
         <span style={{ fontWeight: 600, fontSize: 13, color: darkMode ? "#f1f5f9" : "#111" }}>{faq.q}</span>
-        <span style={{ color: "#6b7280", fontSize: 16 }}>{open ? "−" : "+"}</span>
+        <span style={{ color: "#6b7280", fontSize: 16 }}>{open ? "€’" : "+"}</span>
       </button>
       {open && (
         <div style={{ padding: "12px 16px", background: darkMode ? "#0f172a" : "#fff", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderTop: "none", borderRadius: "0 0 10px 10px", fontSize: 13, color: darkMode ? "#94a3b8" : "#4b5563", lineHeight: 1.7 }}>
@@ -791,9 +831,9 @@ const FaqItem = ({ faq, darkMode }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 // PAYMENT MODAL
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
   const { t } = useLang();
   const [step,    setStep]    = useState(1);
@@ -813,7 +853,7 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, borderRadius: 18, overflow: "hidden", background: darkMode ? "#1e293b" : "#fff", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
           <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: darkMode ? "#f1f5f9" : "#111" }}>
-            {step === 3 ? `✅ ${t.paymentSuccess}` : `💳 ${t.paymentTitle}`}
+            {step === 3 ? <><LuCheck className="inline text-emerald-500" /> {t.paymentSuccess}</> : <><LuCreditCard className="inline" /> {t.paymentTitle}</>}
           </p>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6b7280" }}><LuX /></button>
         </div>
@@ -822,17 +862,17 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
             <>
               <div style={{ padding: "12px 14px", borderRadius: 10, marginBottom: 18, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
                 <p style={{ margin: "0 0 4px", fontWeight: 600, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{course.title}</p>
-                <p style={{ margin: "8px 0 0", fontWeight: 800, fontSize: 20, color: "#3b82f6" }}>{course.price.toLocaleString()} so'm</p>
+                <p style={{ margin: "8px 0 0", fontWeight: 800, fontSize: 20, color: "#3b82f6" }}>{course.price.toLocaleString()} {t.currency}</p>
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-                {[{ id: "card", label: "💳 Karta" }, { id: "payme", label: "🟢 Payme" }, { id: "click", label: "🔵 Click" }].map((m) => (
+                {[{ id: "card", label: t.payCard }, { id: "payme", label: t.payPayme }, { id: "click", label: t.payClick }].map((m) => (
                   <button key={m.id} onClick={() => setMethod(m.id)}
                     style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: `2px solid ${method === m.id ? "#3b82f6" : darkMode ? "#334155" : "#e5e7eb"}`, background: method === m.id ? (darkMode ? "#1e3a5f" : "#eff6ff") : "transparent", color: method === m.id ? "#3b82f6" : darkMode ? "#94a3b8" : "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                     {m.label}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(2)} style={{ width: "100%", padding: "12px 0", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Davom etish <LuArrowRight /></button>
+              <button onClick={() => setStep(2)} style={{ width: "100%", padding: "12px 0", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.continue} <LuArrowRight /></button>
             </>
           )}
           {step === 2 && (
@@ -846,23 +886,23 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, marginBottom: 14, background: darkMode ? "#0f172a" : "#f8fafc" }}>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>Jami:</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: "#3b82f6" }}>{course.price.toLocaleString()} so'm</span>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>{t.total}:</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: "#3b82f6" }}>{course.price.toLocaleString()} {t.currency}</span>
               </div>
               <button onClick={handlePay} disabled={loading}
                 style={{ width: "100%", padding: "12px 0", background: loading ? "#93c5fd" : "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer" }}>
-                {loading ? "⏳ Tekshirilmoqda..." : `💳 ${course.price.toLocaleString()} so'm To'lash`}
+                {loading ? <><LuRotateCcw className="inline animate-spin" /> {t.checking}...</> : <><LuCreditCard className="inline" /> {t.pay} {course.price.toLocaleString()} {t.currency}</>}
               </button>
             </>
           )}
           {step === 3 && (
             <div style={{ textAlign: "center", padding: "10px 0" }}>
               <div style={{ fontSize: 56, marginBottom: 12 }}><LuPartyPopper className="text-emerald-500" /></div>
-              <p style={{ fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111", margin: "0 0 6px" }}>Tabriklaymiz!</p>
-              <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 20px" }}>"{course.title}" kursiga muvaffaqiyatli yozildingiz!</p>
+              <p style={{ fontWeight: 700, fontSize: 16, color: darkMode ? "#f1f5f9" : "#111", margin: "0 0 6px" }}>{t.congratulations}!</p>
+              <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 20px" }}>"{course.title}" {t.enrolledSuccess}</p>
               <button onClick={() => { onSuccess(); onClose(); }}
                 style={{ padding: "11px 28px", background: "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                O'qishni boshlash <LuArrowRight />
+                {t.startLearning} <LuArrowRight />
               </button>
             </div>
           )}
@@ -872,9 +912,9 @@ const PaymentModal = ({ course, onClose, onSuccess, darkMode }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 // MAIN COURSEDETAIL
-// ─────────────────────────────────────────────────────────────────────────────
+// ”Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ—Ђ
 const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurchased }) => {
   const { t }    = useLang();
   const { user } = useAuth();
@@ -920,16 +960,17 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
   const [playingLesson,    setPlayingLesson]    = useState(null);
   const [loadingData,      setLoadingData]      = useState(true);
   const [showRatingModal,  setShowRatingModal]  = useState(false);
+  const navigate = useNavigate();
 
   const totalLessons = course.sections.reduce((a, s) => a + s.lessons.length, 0);
   const progress     = Math.round((completedLessons.length / totalLessons) * 100);
 
   const faqs = [
-    { q: "Kursga qancha vaqt kirish mumkin?",    a: "Sotib olgandan so'ng umrbod kirish imkoniyatiga ega bo'lasiz." },
-    { q: "Sertifikat beriladimi?",                a: "Ha, kursni 100% tugatgandan so'ng sertifikat yuklab olishingiz mumkin." },
-    { q: "Qaytarish mumkinmi?",                   a: "30 kun ichida so'rasangiz, to'lovni qaytarib beramiz." },
-    { q: "Mobil qurilmada o'qish mumkinmi?",      a: "Ha, barcha qurilmalarda ishlaydi." },
-    { q: "O'qituvchi bilan bog'lanish mumkinmi?", a: "Ha, har bir dars ostidagi izoh bo'limida savol berishingiz mumkin." },
+    { q: t.faqAccess, a: t.faqAccessAnswer },
+    { q: t.faqCertificate, a: t.faqCertificateAnswer },
+    { q: t.faqRefund, a: t.faqRefundAnswer },
+    { q: t.faqMobile, a: t.faqMobileAnswer },
+    { q: t.faqContact, a: t.faqContactAnswer },
   ];
 
   useEffect(() => {
@@ -963,14 +1004,14 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         { courseId, courseTitle: course.title, completedLessons: newCompleted, purchased: true, progress: newProgress, lastStudied: serverTimestamp() },
         { merge: true }
       );
-      await giveReward(user.uid, 10, "xp", "Darsni muvaffaqiyatli yakunladi");
-      showToast?.(`+10 XP qo'shildi! ✅`, "success");
+      await giveReward(user.uid, 10, "xp", t.lessonCompletedReward);
+      showToast?.(`+10 ${t.xpAdded}`, "success");
       await completeRealTask(user.uid, "watch_lesson", showToast);
       await completeRealTask(user.uid, "watch_3lessons", showToast);
       
       if (newProgress === 100) {
         await setDoc(doc(db, "users", user.uid, "notifications", `course_${courseId}`),
-          { title: "Kurs tugatildi! 🎉", message: `"${course.title}" muvaffaqiyatli tugatildi!`, type: "success", read: false, createdAt: serverTimestamp() }
+          { title: t.courseCompletedTitle, message: t.courseCompletedMessage.replace('{title}', course.title), type: "success", read: false, createdAt: serverTimestamp() }
         );
         await setDoc(doc(db, "users", user.uid), { 
           courses: increment(1),
@@ -979,12 +1020,12 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
         }, { merge: true });
         await setDoc(doc(db, "courses", String(courseId)), { students: increment(1) }, { merge: true });
         setRealStudents(prev => prev + 1);
-        showToast?.(`🎉 "${course.title}" tugatildi! Siz endi ${course.category} bo'yicha Support bo'ldingiz!`, "success");
+        showToast?.(t.courseCompletedSupport.replace('{title}', course.title).replace('{category}', course.category), "success");
       }
     } catch (err) {
       console.error("markComplete error:", err);
       setCompletedLessons(completedLessons);
-      showToast?.("Saqlashda xatolik. Internetni tekshiring.", "error");
+      showToast?.(t.saveError, "error");
     }
   };
 
@@ -1002,94 +1043,106 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
 
   if (loadingData) return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+      <style>{MODERN_CSS}</style>
       <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #3b82f6", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
+  const bgColor = darkMode ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.9)";
+  const borderColor = darkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const textMain = darkMode ? "#f1f5f9" : "#0f172a";
+  const textSub = darkMode ? "#94a3b8" : "#64748b";
+  const gradient = catGradients[course.category] || "linear-gradient(135deg, #3b82f6, #8b5cf6)";
+
   return (
-    <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: "32px 20px 80px", position: "relative" }}>
-      <button onClick={onBack}
-        style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#3b82f6", fontSize: 14, fontWeight: 600, marginBottom: 20, padding: 0 }}>
-        {t.backToCatalog}
+    <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto", padding: "24px 20px 80px" }}>
+      <style>{MODERN_CSS}</style>
+      
+      {/* Back Button */}
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: "#3b82f6", fontSize: 14, fontWeight: 700, marginBottom: 20 }}>
+        <LuArrowLeft /> {t.backToCatalog}
       </button>
 
-      <ScrollReveal direction="up">
-        <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 16, position: "relative" }}>
-          <img src={course.thumbnail} alt={course.title} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.7))", padding: "32px 24px 20px" }}>
-            <span style={{ background: course.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{course.category}</span>
-            <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 24, margin: "8px 0 4px" }}>{course.title}</h1>
-            <div className="flex items-center gap-4 text-xs font-bold text-slate-200 mt-2">
-              <span className="flex items-center gap-1.5"><LuStar className="text-amber-400" /> {realRating || 0}</span>
-              <span className="flex items-center gap-1.5"><LuUsers className="text-indigo-400" /> {(realStudents || 0).toLocaleString()} talaba</span>
-            </div>
+      {/* Hero Banner */}
+      <div className="animate-slide-up" style={{ borderRadius: 24, overflow: "hidden", marginBottom: 24, position: "relative" }}>
+        <img src={course.thumbnail} alt={course.title} style={{ width: "100%", height: 280, objectFit: "cover" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 28px 28px" }}>
+          <span style={{ background: gradient, color: "#fff", fontSize: 12, fontWeight: 800, padding: "6px 16px", borderRadius: 20 }}>{course.category}</span>
+          <h1 style={{ color: "#fff", fontWeight: 900, fontSize: 32, margin: "12px 0 8px" }}>{course.title}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 14, fontWeight: 700 }}>
+            {realRating > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#fbbf24" }}><LuStar fill="currentColor" /> {realRating}</span>
+            )}
+            {realStudents > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#94a3b8" }}><LuUsers /> {realStudents.toLocaleString()} {t.students}</span>
+            )}
+            <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#94a3b8" }}><LuBookOpen /> {totalLessons} {t.lessons}</span>
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
         <div style={{ flex: "1 1 520px" }}>
           {purchased && (
-            <ScrollReveal direction="up">
-              <div style={{ marginBottom: 20, padding: "16px 20px", background: darkMode ? "#1e293b" : "#fff", borderRadius: 12, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: darkMode ? "#f1f5f9" : "#111" }}>{t.progressLabel}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#3b82f6" }}>{progress}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: darkMode ? "#334155" : "#e5e7eb" }}>
-                  <div style={{ height: "100%", borderRadius: 4, background: progress === 100 ? "#10b981" : "#3b82f6", width: `${progress}%`, transition: "width 0.4s ease" }} />
-                </div>
-                <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6b7280" }}>
-                  {completedLessons.length} / {totalLessons} {t.lessonsCount} {t.completedLabel}
-                  {progress === 100 ? " 🎉 — Kurs tugatildi!" : ""}
-                </p>
-                {progress === 100 && (
-                  <button style={{ marginTop: 10, padding: "8px 18px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}><LuAward className="inline mr-1" /> {t.certificateBtn}</button>
-                )}
+            <div className="animate-slide-up" style={{ marginBottom: 24, padding: "24px", background: bgColor, backdropFilter: "blur(20px)", borderRadius: 20, border: `1px solid ${borderColor}`, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: textMain }}>{t.progressLabel}</span>
+                <span style={{ fontSize: 15, fontWeight: 900, background: gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{progress}%</span>
               </div>
-            </ScrollReveal>
+              <div style={{ height: 10, borderRadius: 5, background: darkMode ? "rgba(255,255,255,0.1)" : "#e5e7eb", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 5, background: gradient, width: `${progress}%`, transition: "width 0.5s ease" }} />
+              </div>
+              <p style={{ margin: "12px 0 0", fontSize: 13, color: textSub }}>
+                {completedLessons.length} / {totalLessons} {t.lessonsCompleted}
+                {progress === 100 && <span style={{ marginLeft: 8, color: "#10b981", fontWeight: 700 }}>- {t.courseCompleted}</span>}
+              </p>
+              {progress === 100 && (
+                <button onClick={() => navigate("/certificate")} style={{ marginTop: 12, padding: "12px 20px", background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                  <LuAward size={18} /> {t.certificateBtn}
+                </button>
+              )}
+            </div>
           )}
 
-          <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-            {[{ id: "lessons", label: t.lessonsTab }, { id: "reviews", label: t.reviewsTab }, { id: "faq", label: t.faqTab }].map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                style={{ padding: "10px 16px", background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: activeTab === tab.id ? "#3b82f6" : "#6b7280", borderBottom: `2px solid ${activeTab === tab.id ? "#3b82f6" : "transparent"}`, marginBottom: -1 }}>
-                {tab.label}
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 24, borderBottom: `2px solid ${borderColor}` }}>
+            {["lessons", "reviews", "faq"].map((tab) => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: "14px 24px", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 800, color: activeTab === tab ? "#3b82f6" : textSub, borderBottom: `3px solid ${activeTab === tab ? "#3b82f6" : "transparent"}`, marginBottom: -2, transition: "all 0.3s" }}>
+                {tab === "lessons" ? t.lessonsTab : tab === "reviews" ? t.reviewsTab : t.faqTab}
               </button>
             ))}
           </div>
 
           {activeTab === "lessons" && (
-            <div>
-              <p style={{ margin: "0 0 14px", fontSize: 13, color: "#6b7280" }}>{course.sections.length} {t.sectionsCount} · {totalLessons} {t.lessonsCount}</p>
+            <div className="animate-slide-up">
               {course.sections.map((section, si) => (
-                <div key={si} style={{ marginBottom: 8 }}>
+                <div key={si} style={{ marginBottom: 16 }}>
                   <button onClick={() => setOpenSections((prev) => prev.includes(si) ? prev.filter((x) => x !== si) : [...prev, si])}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: 10, background: darkMode ? "#1e293b" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, cursor: "pointer", textAlign: "left" }}>
-                    <span style={{ fontWeight: 600, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{openSections.includes(si) ? "▾" : "▸"} {section.title}</span>
-                    <span style={{ fontSize: 12, color: "#6b7280" }}>{section.lessons.length} {t.lessonsCount}</span>
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderRadius: 16, background: bgColor, backdropFilter: "blur(20px)", border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", transition: "all 0.3s" }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: textMain }}>{section.title}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: textSub, fontWeight: 600 }}>{section.lessons.length} {t.lessons}</span>
+                      <span style={{ color: "#3b82f6", fontSize: 20, transform: openSections.includes(si) ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }}>
+                        <LuChevronRight style={{ transform: "rotate(90deg)" }} />
+                      </span>
+                    </div>
                   </button>
                   {openSections.includes(si) && (
-                    <div style={{ borderRadius: "0 0 10px 10px", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderTop: "none", overflow: "hidden" }}>
+                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
                       {section.lessons.map((lesson) => {
-                        const done   = completedLessons.includes(lesson.id);
+                        const done = completedLessons.includes(lesson.id);
                         const locked = !purchased && !lesson.free;
                         return (
                           <div key={lesson.id}
                             onClick={() => locked ? setShowPayment(true) : setPlayingLesson(lesson)}
-                            style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", background: done ? (darkMode ? "#0f2818" : "#f0fdf4") : (darkMode ? "#0f172a" : "#fff"), borderBottom: `1px solid ${darkMode ? "#1e293b" : "#f3f4f6"}`, cursor: locked ? "not-allowed" : "pointer", opacity: locked ? 0.6 : 1, transition: "background 0.15s" }}
-                            onMouseEnter={(e) => { if (!locked) e.currentTarget.style.background = darkMode ? "#1e293b" : "#f8fafc"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = done ? (darkMode ? "#0f2818" : "#f0fdf4") : (darkMode ? "#0f172a" : "#fff"); }}
-                          >
-                            <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2px solid ${done ? "#10b981" : locked ? "#9ca3af" : "#3b82f6"}`, background: done ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: done ? "#fff" : locked ? "#9ca3af" : "#3b82f6", flexShrink: 0 }}>
-                              {done ? <LuCheck /> : locked ? <LuLock /> : <LuPlay />}
+                            style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderRadius: 12, background: done ? (darkMode ? "rgba(16,185,129,0.2)" : "#f0fdf4") : bgColor, border: `1px solid ${borderColor}`, cursor: locked ? "not-allowed" : "pointer", opacity: locked ? 0.5 : 1, transition: "all 0.2s" }}>
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: done ? "#10b981" : locked ? "#64748b" : "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                              {done ? <LuCheck size={18} /> : locked ? <LuLock size={18} /> : <LuPlay size={18} />}
                             </div>
-                            <div style={{ flex: 1 }}>
-                              <span style={{ fontSize: 13, color: darkMode ? "#e2e8f0" : "#374151" }}>{lesson.title}</span>
-                              {lesson.free && !purchased && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}>{t.freeLesson}</span>}
-                              {done && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#d1fae5", color: "#065f46", padding: "1px 6px", borderRadius: 4 }}><LuCheck className="inline" /> {t.completedLabel}</span>}
-                            </div>
+                            <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: textMain }}>{lesson.title}</span>
+                            {lesson.free && !purchased && <span style={{ fontSize: 11, fontWeight: 800, background: "#dbeafe", color: "#1d4ed8", padding: "4px 10px", borderRadius: 8 }}>{t.free}</span>}
+                            {done && <span style={{ fontSize: 11, fontWeight: 800, background: "#d1fae5", color: "#065f46", padding: "4px 10px", borderRadius: 8 }}>{t.completedLabel}</span>}
                           </div>
                         );
                       })}
@@ -1101,62 +1154,87 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
           )}
 
           {activeTab === "reviews" && <Reviews darkMode={darkMode} courseId={courseId} showToast={showToast} />}
-          {activeTab === "faq" && <div>{faqs.map((faq, i) => <FaqItem key={i} faq={faq} darkMode={darkMode} />)}</div>}
-        </div>
-
-        <div style={{ width: 260, flexShrink: 0 }}>
-          <div style={{ position: "sticky", top: 84, background: darkMode ? "#1e293b" : "#fff", borderRadius: 16, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, padding: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.1)" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800, color: purchased ? "#10b981" : "#3b82f6" }}>
-              {course.price === 0 ? t.freeLabel : `${course.price.toLocaleString()} ${t.priceLabel}`}
-            </p>
-            {!purchased && course.price > 0 && <p style={{ margin: "0 0 14px", fontSize: 11, color: "#6b7280" }}>{t.oneTimePayment}</p>}
-            {purchased ? (
-              <div style={{ padding: "10px 14px", borderRadius: 10, marginBottom: 14, background: "#d1fae5", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#065f46" }}>{t.enrolledLabel}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#065f46" }}>Progress: {progress}%</p>
-              </div>
-            ) : (
-              <button onClick={() => course.price === 0 ? handlePurchaseSuccess() : setShowPayment(true)}
-                style={{ width: "100%", padding: "13px 0", marginBottom: 10, background: "#3b82f6", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                {course.price === 0 ? t.startFreeBtn : t.buyBtn}
-              </button>
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {[
-                { icon: <LuSmartphone />, text: t.mobileAccess },
-                { icon: <LuInfinity />, text: t.lifeTimeAccess },
-                { icon: <LuAward />, text: t.certificate },
-                { icon: <LuRotateCcw />, text: t.moneyBack },
-              ].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, color: "#3b82f6" }}>{item.icon}</span>
-                  <span style={{ fontSize: 12, color: darkMode ? "#94a3b8" : "#6b7280" }}>{item.text}</span>
+          {activeTab === "faq" && (
+            <div className="animate-slide-up">
+              {faqs.map((faq, i) => (
+                <div key={i} style={{ marginBottom: 12 }}>
+                  <details style={{ background: bgColor, borderRadius: 16, border: `1px solid ${borderColor}` }}>
+                    <summary style={{ padding: "20px 24px", fontWeight: 700, fontSize: 15, color: textMain, cursor: "pointer", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      {faq.q}
+                      <LuChevronRight style={{ color: "#3b82f6", transform: "rotate(90deg)" }} />
+                    </summary>
+                    <div style={{ padding: "0 24px 20px", fontSize: 14, color: textSub, lineHeight: 1.7 }}>{faq.a}</div>
+                  </details>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div style={{ width: 300, flexShrink: 0 }}>
+          <div className="animate-slide-up" style={{ position: "sticky", top: 20, background: bgColor, backdropFilter: "blur(20px)", borderRadius: 24, border: `1px solid ${borderColor}`, padding: 28, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+            {!purchased && (
+              <div style={{ textAlign: "center", marginBottom: 20 }}>
+                <p style={{ margin: 0, fontWeight: 900, fontSize: 36, background: gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  {course.price === 0 ? t.free : `${course.price.toLocaleString()} ${t.sum}`}
+                </p>
+                {course.price > 0 && <p style={{ margin: "8px 0 0", fontSize: 13, color: textSub }}>{t.oneTimePayment}</p>}
+              </div>
+            )}
+            
+            {purchased ? (
+              <div style={{ padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", gap: 16, color: "#fff" }}>
+                <LuCheck size={32} />
+                <div>
+                  <p style={{ margin: 0, fontWeight: 800, fontSize: 16 }}>{t.purchased}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, opacity: 0.9 }}>{t.progressLabel}: {progress}%</p>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => course.price === 0 ? handlePurchaseSuccess() : setShowPayment(true)} style={{ width: "100%", padding: "16px", background: gradient, color: "#fff", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 30px rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                {course.price === 0 ? t.startFree : t.buyBtn} <LuArrowRight />
+              </button>
+            )}
+            
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              {[{ icon: LuInfinity, text: t.lifeTimeAccess }, { icon: LuAward, text: t.certificate }, { icon: LuSmartphone, text: t.mobileAccess }, { icon: LuZap, text: t.moneyBack }].map((item, i) => {
+                const IconComponent = item.icon;
+                return (
+                  <div key={i} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: darkMode ? "rgba(59,130,246,0.15)" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <IconComponent size={20} color="#3b82f6" />
+                    </div>
+                    <span style={{ fontSize: 15, color: textMain, fontWeight: 600 }}>{item.text}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
       {playingLesson && (
-        <VideoLessonModal lesson={playingLesson} courseColor={course.color}
-          courseRating={realRating} courseStudents={realStudents}
-          courseId={courseId} courseCategory={course.category}
-          onClose={(wasCompleted) => {
-            setPlayingLesson(null);
-            if (wasCompleted === true) {
-              // Faqat kurs 100% tugatilganda baholash oynasi chiqsin
-              const newCompleted = completedLessons.includes(playingLesson?.id)
-                ? completedLessons
-                : [...completedLessons, playingLesson?.id];
-              const newProgress = Math.round((newCompleted.length / totalLessons) * 100);
-              if (newProgress === 100) {
-                setTimeout(() => setShowRatingModal(true), 600);
-              }
-            }
-          }}
-          onComplete={markComplete} darkMode={darkMode} />
-      )}
+  <CourseDetailContent
+    lesson={playingLesson}
+    courseId={courseId}
+    courseColor={course.color}
+    darkMode={darkMode}
+    onClose={(wasCompleted) => {
+      setPlayingLesson(null);
+      if (wasCompleted === true) {
+        const newCompleted = completedLessons.includes(playingLesson?.id)
+          ? completedLessons
+          : [...completedLessons, playingLesson?.id];
+        const newProgress = Math.round((newCompleted.length / totalLessons) * 100);
+        if (newProgress === 100) {
+          setTimeout(() => setShowRatingModal(true), 600);
+        }
+      }
+    }}
+    onComplete={markComplete}
+  />
+)}
       {showPayment && <PaymentModal course={course} onClose={() => setShowPayment(false)} onSuccess={handlePurchaseSuccess} darkMode={darkMode} />}
       {showRatingModal && <RatingModal courseId={courseId} darkMode={darkMode} onClose={() => setShowRatingModal(false)} />}
     </div>
@@ -1164,3 +1242,4 @@ const CourseDetail = ({ courseId, onBack, darkMode, showToast, userPlan, onPurch
 };
 
 export default CourseDetail;
+

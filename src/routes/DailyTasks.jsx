@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import {
@@ -53,7 +52,7 @@ const DailyTasks = ({ darkMode, showToast }) => {
   const [levelUpAnim,  setLevelUpAnim]  = useState(false);
   const [, setPrevLevel] = useState(null);
 
-  // ─── Real-time ma'lumotlarni o'qish (Jonli yangilanish) ──────────────────
+  // в”Ђв”Ђв”Ђ Real-time ma'lumotlarni o'qish (Jonli yangilanish) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!user) return;
     
@@ -87,7 +86,7 @@ const DailyTasks = ({ darkMode, showToast }) => {
         setTasks(taskSnap.data().completed || {});
         setLoading(false);
       } else {
-        // Yangi kun boshlandi — Avtomatik login vazifasi bajariladi
+        // Yangi kun boshlandi —” Avtomatik login vazifasi bajariladi
         const newTasks = { login: 1 };
         await setDoc(taskRef, {
           completed: newTasks,
@@ -102,7 +101,7 @@ const DailyTasks = ({ darkMode, showToast }) => {
         );
         
         await setDoc(doc(db, "users", user.uid), { streak: increment(1) }, { merge: true });
-        await giveReward(user.uid, 10, "xp", "Kunlik kirish bonusi");
+        await giveReward(user.uid, 10, "xp", t.loginBonus);
         
         setTasks(newTasks);
         setLoading(false);
@@ -115,7 +114,7 @@ const DailyTasks = ({ darkMode, showToast }) => {
     };
   }, [user, showToast, levels, t.levelReachedSuffix]);
 
-  // ─── Hisob-kitoblar (Computed) ───────────────────────────────────────────
+  // в”Ђв”Ђв”Ђ Hisob-kitoblar (Computed) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const level     = getLevel(xp, levels);
   const nextLevel = levels.find((l) => l.level === level.level + 1);
   const progress  = nextLevel
@@ -140,14 +139,14 @@ const DailyTasks = ({ darkMode, showToast }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", animation: "bounceIn 0.5s ease" }}>
             <div style={{ fontSize: 80, marginBottom: 16, color: level.color, display: "flex", justifyContent: "center" }}>{level.badge}</div>
-            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 8px" }}>LEVEL UP! <LuPartyPopper className="inline-block" /></h2>
+            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 8px" }}>{t.levelUpTitle} <LuPartyPopper className="inline-block" /></h2>
             <p style={{ color: level.color, fontSize: 20, fontWeight: 700 }}>{level.name}</p>
           </div>
           <style>{`@keyframes bounceIn { 0%{transform:scale(0)} 60%{transform:scale(1.1)} 100%{transform:scale(1)} }`}</style>
         </div>
       )}
 
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div style={{ marginBottom: 24 }}>
           <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
             <LuZap className="inline-block mr-1" /> {t.dailyTasksTitle}
@@ -213,10 +212,10 @@ const DailyTasks = ({ darkMode, showToast }) => {
             </div>
           ))}
         </div>
-      </ScrollReveal>
+      </div>
 
       {/* Vazifalar */}
-      <ScrollReveal direction="up" delay={100}>
+      <div direction="up" delay={100}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {dailyTasks.map((task) => {
             const done        = (tasks[task.id] || 0) >= task.max;
@@ -259,10 +258,10 @@ const DailyTasks = ({ darkMode, showToast }) => {
             );
           })}
         </div>
-      </ScrollReveal>
+      </div>
 
       {/* Barcha darajalar */}
-      <ScrollReveal direction="up" delay={200}>
+      <div direction="up" delay={200}>
         <div style={{ marginTop: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 16px", color: darkMode ? "#f1f5f9" : "#111" }}>
             {t.allLevelsTitle}
@@ -291,7 +290,7 @@ const DailyTasks = ({ darkMode, showToast }) => {
             })}
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

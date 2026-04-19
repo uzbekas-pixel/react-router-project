@@ -51,7 +51,7 @@ export const completeRealTask = async (userId, taskId, showToast) => {
         await giveReward(userId, taskConf.xp, "xp", "Kunlik vazifa bajarildi: " + taskId);
         
         if (showToast) {
-           showToast(`Vazifa yakunlandi: +${taskConf.xp} XP! 🎉`, "success");
+           showToast(`Vazifa yakunlandi: +${taskConf.xp} XP!`, "success");
         }
     } else {
         // Masalan, 3 ta darsdan 1 tasi ko'rilganda shunchaki xabar berish

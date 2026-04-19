@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import { FaInstagram, FaYoutube, FaTelegram, FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { LuCheck, LuX, LuPencil, LuPalette, LuInfo, LuSettings, LuImage, LuTrash2, LuRocket, LuShield, LuClipboardList, LuCog, LuAtom, LuFlame, LuSmartphone, LuGlobe, LuHeart } from "react-icons/lu";
 
 
 const THEMES = [
@@ -65,9 +67,9 @@ const EditableField = ({ label, value, field, isAdmin, darkMode, onSave }) => {
                 darkMode ? "bg-slate-700 border-slate-500 text-white" : "bg-white border-gray-300 text-gray-900"
               }`} autoFocus />
             <button onClick={handleSave}
-              className="px-3 py-1.5 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-xl transition">✅</button>
+              className="px-3 py-1.5 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-xl transition"><LuCheck size={14} /></button>
             <button onClick={() => { setVal(value); setEditing(false); }}
-              className={`px-3 py-1.5 text-xs rounded-xl transition ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}>✕</button>
+              className={`px-3 py-1.5 text-xs rounded-xl transition ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}><LuX size={14} /></button>
           </div>
         ) : (
           <p className={`text-sm font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>{value || "—"}</p>
@@ -77,7 +79,7 @@ const EditableField = ({ label, value, field, isAdmin, darkMode, onSave }) => {
         <button onClick={() => setEditing(true)}
           className={`mt-5 w-7 h-7 rounded-lg flex items-center justify-center text-xs transition shrink-0 ${
             darkMode ? "bg-slate-600 hover:bg-slate-500 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-500"
-          }`}>✏️</button>
+          }`}><LuPencil size={14} /></button>
       )}
     </div>
   );
@@ -96,9 +98,9 @@ const SocialEditBtn = ({ id, value, darkMode, onSave }) => {
           darkMode ? "bg-slate-600 border-slate-500 text-white" : "bg-white border-gray-300 text-gray-900"
         }`} autoFocus />
       <button onClick={() => { onSave(id, val); setEditing(false); }}
-        className="px-2 py-1 bg-blue-500 text-white text-xs rounded-lg">✅</button>
+        className="px-2 py-1 bg-blue-500 text-white text-xs rounded-lg"><LuCheck size={14} /></button>
       <button onClick={() => setEditing(false)}
-        className={`px-2 py-1 text-xs rounded-lg ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}>✕</button>
+        className={`px-2 py-1 text-xs rounded-lg ${darkMode ? "bg-slate-600 text-gray-300" : "bg-gray-200 text-gray-600"}`}><LuX size={14} /></button>
     </div>
   );
 
@@ -106,12 +108,13 @@ const SocialEditBtn = ({ id, value, darkMode, onSave }) => {
     <button onClick={() => setEditing(true)}
       className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition shrink-0 ${
         darkMode ? "bg-slate-600 hover:bg-slate-500 text-gray-300" : "bg-gray-200 hover:bg-gray-300 text-gray-500"
-      }`}>✏️</button>
+      }`}><LuPencil size={14} /></button>
   );
 };
 
 const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange, currentBg }) => {
   const { user } = useAuth();
+  const { t } = useLang(); // Add useLang hook
   const [activeTab, setActiveTab] = useState("themes");
   const [isAdmin, setIsAdmin] = useState(false);
   const [customBg, setCustomBg] = useState(currentBg || null);
@@ -155,9 +158,9 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
       const updated = { ...about, [field]: value };
       setAbout(updated);
       await setDoc(doc(db, "aboutProject", "main"), updated);
-      showToast("Saqlandi! ✅", "success");
+      showToast(t.saved, "success");
     } catch {
-      showToast("Xatolik yuz berdi!", "error");
+      showToast(t.error, "error");
     }
   };
 
@@ -167,9 +170,9 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
       const updated = { ...about, socials: { ...about.socials, [id]: value } };
       setAbout(updated);
       await setDoc(doc(db, "aboutProject", "main"), updated);
-      showToast("Saqlandi! ✅", "success");
+      showToast(t.saved, "success");
     } catch {
-      showToast("Xatolik yuz berdi!", "error");
+      showToast(t.error, "error");
     }
   };
 
@@ -182,7 +185,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
       setCustomBg(reader.result);
       onBgChange(reader.result);
       localStorage.setItem("customBg", reader.result);
-      showToast("Fon rasmi o'rnatildi! 🎨", "success");
+      showToast(t.bgImageSet, "success");
     };
     reader.readAsDataURL(file);
   };
@@ -191,20 +194,20 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
     setCustomBg(null);
     onBgChange(null);
     localStorage.removeItem("customBg");
-    showToast("Fon rasmi olib tashlandi", "success");
+    showToast(t.bgImageRemoved, "success");
   };
 
   const cardClass = `rounded-2xl p-5 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`;
 
   const tabs = [
-    { id: "themes", label: "🎨 Mavzular"        },
-    { id: "about",  label: "ℹ️ Loyiha haqida"   },
+    { id: "themes", label: t.themesTab },
+    { id: "about",  label: t.aboutTab },
   ];
 
   return (
     <div className={`page-transition w-full max-w-3xl mx-auto px-4 py-10 mt-10 min-h-[calc(100vh-64px)]`}>
-      <h1 className={`text-2xl font-extrabold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        ⚙️ Sozlamalar
+      <h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+        <LuSettings className="text-blue-500" /> {t.settings}
       </h1>
 
       {/* Tabs */}
@@ -224,19 +227,19 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className={darkMode ? "text-gray-400" : "text-gray-500"}>Yuklanmoqda...</p>
+          <p className={darkMode ? "text-gray-400" : "text-gray-500"}>{t.loading}</p>
         </div>
       ) : (
         <>
 
-      {/* ── MAVZULAR TAB ── */}
+      {/* в”Ђв”Ђ MAVZULAR TAB в”Ђв”Ђ */}
       {activeTab === "themes" && (
         <div className="flex flex-col gap-6">
 
           {/* Gradient themes */}
           <div className={cardClass}>
-            <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              🎨 Fon mavzulari
+            <h2 className={`font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+              <LuPalette className="text-blue-500" /> {t.themeColors}
             </h2>
             <div className="grid grid-cols-4 gap-3">
               {THEMES.map((theme) => (
@@ -244,14 +247,14 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
                   onClick={() => {
                     onThemeChange(theme.id);
                     localStorage.setItem("theme", theme.id);
-                    showToast(`${theme.name} mavzusi tanlandi! 🎨`, "success");
+                    showToast(`${theme.name} ${t.themeSelected}`, "success");
                   }}
                   className={`relative h-16 rounded-2xl transition-all duration-200 hover:scale-105 ${
                     currentTheme === theme.id ? "ring-4 ring-blue-400 scale-105" : ""
                   }`}
                   style={{ background: theme.preview }}>
                   {currentTheme === theme.id && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-xl">✓</span>
+                    <span className="absolute inset-0 flex items-center justify-center text-white text-xl"><LuCheck size={24} /></span>
                   )}
                   <span className="absolute bottom-1 left-0 right-0 text-center text-white text-xs font-semibold drop-shadow">
                     {theme.name}
@@ -263,23 +266,23 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
 
           {/* Custom background */}
           <div className={cardClass}>
-            <h2 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              🖼️ Shaxsiy fon rasmi
+            <h2 className={`font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+              <LuImage className="text-blue-500" /> {t.customBgImage}
             </h2>
             {customBg ? (
               <div className="relative">
                 <img src={customBg} alt="bg" className="w-full h-40 object-cover rounded-2xl mb-3" />
                 <button onClick={removeBg}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm rounded-xl transition">
-                  🗑️ Olib tashlash
+                  className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white text-sm rounded-xl transition flex items-center gap-2">
+                  <LuTrash2 size={16} /> {t.remove}
                 </button>
               </div>
             ) : (
               <label className={`flex flex-col items-center justify-center w-full h-32 rounded-2xl border-2 border-dashed cursor-pointer transition ${
-                darkMode ? "border-slate-600 hover:border-blue-400 text-gray-400" : "border-gray-300 hover:border-blue-400 text-gray-400"
+                darkMode ? "border-slate-600 hover:border-blue-400 text-gray-300" : "border-gray-300 hover:border-blue-400 text-gray-600"
               }`}>
-                <span className="text-3xl mb-2">🖼️</span>
-                <span className="text-sm">Rasm tanlash</span>
+                <LuImage size={32} className="mb-2 text-blue-500" />
+                <span className={`text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t.selectImage}</span>
                 <input type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
               </label>
             )}
@@ -287,13 +290,13 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
         </div>
       )}
 
-      {/* ── LOYIHA HAQIDA TAB ── */}
+      {/* в”Ђв”Ђ LOYIHA HAQIDA TAB в”Ђв”Ђ */}
       {activeTab === "about" && (
         <div className="flex flex-col gap-5">
 
           {/* Header */}
           <div className="text-center py-4">
-            <div className="text-5xl mb-3">🚀</div>
+            <div className="text-5xl mb-3 flex justify-center"><LuRocket className="text-blue-500" size={48} /></div>
             <h2 className={`text-2xl font-extrabold mb-1 ${darkMode ? "text-white" : "text-gray-900"}`}>
               {about.name}
             </h2>
@@ -301,29 +304,29 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
               {about.version}
             </span>
             {isAdmin && (
-              <span className="ml-2 inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full">
-                🛡️ Admin rejimi
+              <span className="ml-2 inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full">
+                <LuShield size={12} /> {t.adminMode}
               </span>
             )}
           </div>
 
           {/* Asosiy ma'lumotlar */}
           <div className={cardClass}>
-            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>📋 Asosiy ma'lumotlar</h3>
+            <h3 className={`font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}><LuClipboardList className="text-blue-500" /> {t.basicInfo}</h3>
             <div className="flex flex-col gap-4">
-              <EditableField label="Loyiha nomi"    value={about.name}    field="name"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Versiya"         value={about.version} field="version" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Maqsad"          value={about.goal}    field="goal"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Muallif"         value={about.author}  field="author"  isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Vebsayt"         value={about.website} field="website" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Email"           value={about.email}   field="email"   isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
-              <EditableField label="Tashkil etilgan" value={about.founded} field="founded" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.projectName}    value={about.name}    field="name"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.version}         value={about.version} field="version" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.goal}          value={about.goal}    field="goal"    isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.author}         value={about.author}  field="author"  isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.website}         value={about.website} field="website" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.email}           value={about.email}   field="email"   isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
+              <EditableField label={t.founded} value={about.founded} field="founded" isAdmin={isAdmin} darkMode={darkMode} onSave={handleSave} />
             </div>
           </div>
 
           {/* Texnologiyalar */}
           <div className={cardClass}>
-            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>⚙️ Texnologiyalar</h3>
+            <h3 className={`font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}><LuCog className="text-blue-500" /> {t.technologies}</h3>
             <div className="flex flex-wrap gap-2">
               {about.technologies.map((tech, i) => (
                 <span key={i} className="px-3 py-1.5 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-xl">
@@ -334,7 +337,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
             {isAdmin && (
               <div className="mt-4 pt-4 border-t border-slate-700">
                 <p className={`text-xs mb-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                  Vergul bilan yozing: React, Firebase, ...
+                  {t.technologiesHint}
                 </p>
                 <input
                   defaultValue={about.technologies.join(", ")}
@@ -350,13 +353,13 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
           {/* Statistika kartalar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: "⚛️", label: "Framework", value: "React 18"  },
-              { icon: "🔥", label: "Backend",   value: "Firebase"  },
-              { icon: "🚀", label: "Deploy",    value: "Vercel"    },
-              { icon: "📱", label: "Platform",  value: "PWA"       },
+              { icon: LuAtom, label: t.framework, value: "React 18"  },
+              { icon: LuFlame, label: t.backend,   value: "Firebase"  },
+              { icon: LuRocket, label: t.deploy,    value: "Vercel"    },
+              { icon: LuSmartphone, label: t.platform,  value: "PWA"       },
             ].map((item, i) => (
               <div key={i} className={`${cardClass} text-center`}>
-                <div className="text-3xl mb-2">{item.icon}</div>
+                <div className="text-3xl mb-2 flex justify-center"><item.icon className="text-blue-500" /></div>
                 <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{item.label}</p>
                 <p className={`text-sm font-bold mt-1 ${darkMode ? "text-white" : "text-gray-900"}`}>{item.value}</p>
               </div>
@@ -365,7 +368,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
 
           {/* Ijtimoiy tarmoqlar */}
           <div className={cardClass}>
-            <h3 className={`font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>🌐 Ijtimoiy tarmoqlar</h3>
+            <h3 className={`font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}><LuGlobe className="text-blue-500" /> {t.socials}</h3>
            <div className="flex flex-col gap-3">
   {SOCIAL_META.map((s) => {
     // Ma'lumotni olish (about.socials dan yoki socials state'idan)
@@ -395,7 +398,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
             /* Admin uchun: To'g'ridan-to'g'ri tahrirlash inputi */
             <input
               type="url"
-              placeholder="Linkni kiriting..."
+              placeholder={t.enterLink}
               value={val}
               onChange={(e) => setSocials({ ...socials, [s.id]: e.target.value })}
               onBlur={(e) => handleSocialSave(s.id, e.target.value)}
@@ -417,7 +420,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
                 </a>
               ) : (
                 <p className={`text-sm ${darkMode ? "text-slate-600" : "text-gray-400"}`}>
-                  Bog'lanmagan
+                  {t.notConnected}
                 </p>
               )}
             </div>
@@ -435,7 +438,7 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
               darkMode ? "border-slate-600 text-slate-400 hover:bg-slate-700" : "border-gray-200 text-gray-500 hover:bg-white"
             } transition-colors`}
           >
-            Open
+            {t.open}
           </a>
         )}
       </div>
@@ -447,10 +450,10 @@ const Settings = ({ darkMode, showToast, onThemeChange, currentTheme, onBgChange
           {/* Footer */}
           <div className={`${cardClass} text-center`}>
             <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              © {about.founded} {about.name} — Barcha huquqlar himoyalangan
+              В© {about.founded} {about.name} — {t.allRightsReserved}
             </p>
-            <p className={`text-xs mt-1 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-              {about.version} • Made with ❤️ in Uzbekistan
+            <p className={`text-xs mt-1 flex items-center justify-center gap-1 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+              {about.version} • {t.madeWith} <LuHeart className="text-red-500" size={12} /> {t.inUzbekistan}
             </p>
           </div>
 

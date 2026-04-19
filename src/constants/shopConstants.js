@@ -1,15 +1,16 @@
 // src/constants/shopConstants.js
 // Barcha komponentlarda ism rangini ko'rsatish uchun: Leaderboard, Profile, Chat, DM, CoinShop
 
+// Name color translations - use with t[NAME_COLORS[key].labelKey]
 export const NAME_COLORS = {
-  default:    { label: "Standart",    style: {} },
-  gold:       { label: "Oltin",       style: { color: "#d97706", textShadow: "0 0 8px #f59e0b88" } },
-  neon_blue:  { label: "Neon Ko'k",   style: { color: "#06b6d4", textShadow: "0 0 10px #06b6d499" } },
-  neon_green: { label: "Neon Yashil", style: { color: "#10b981", textShadow: "0 0 10px #10b98199" } },
-  purple:     { label: "Binafsha",    style: { color: "#8b5cf6", textShadow: "0 0 8px #8b5cf699" } },
-  rose:       { label: "Atirgul",     style: { color: "#f43f5e", textShadow: "0 0 8px #f43f5e99" } },
+  default:    { labelKey: "nameColorDefault",    style: {} },
+  gold:       { labelKey: "nameColorGold",       style: { color: "#d97706", textShadow: "0 0 8px #f59e0b88" } },
+  neon_blue:  { labelKey: "nameColorNeonBlue",   style: { color: "#06b6d4", textShadow: "0 0 10px #06b6d499" } },
+  neon_green: { labelKey: "nameColorNeonGreen",  style: { color: "#10b981", textShadow: "0 0 10px #10b98199" } },
+  purple:     { labelKey: "nameColorPurple",     style: { color: "#8b5cf6", textShadow: "0 0 8px #8b5cf699" } },
+  rose:       { labelKey: "nameColorRose",       style: { color: "#f43f5e", textShadow: "0 0 8px #f43f5e99" } },
   rainbow:    {
-    label: "Kamalak",
+    labelKey: "nameColorRainbow",
     style: {
       background: "linear-gradient(90deg,#ef4444,#f59e0b,#10b981,#3b82f6,#8b5cf6)",
       WebkitBackgroundClip: "text",
@@ -30,4 +31,9 @@ export const getNameStyle = (owned = []) => {
 /** nameColor string ga qarab CSS style qaytaradi (Firestore users/{uid}.nameColor uchun) */
 export const getNameStyleByKey = (nameColor = "default") => {
   return NAME_COLORS[nameColor]?.style || {};
+};
+
+/** Tarjima kalitini qaytaradi (komponentda t[labelKey] ishlating) */
+export const getNameColorLabelKey = (nameColor = "default") => {
+  return NAME_COLORS[nameColor]?.labelKey || "nameColorDefault";
 };

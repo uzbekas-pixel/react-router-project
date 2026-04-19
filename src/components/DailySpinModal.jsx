@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { X, Gift, Sparkles, Clock, Star } from "lucide-react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import { giveReward } from "../utils/rewardSystem";
-
-const spinData = [
-  { option: "10 Coin", style: { backgroundColor: "#3b82f6", textColor: "white" }, value: 10, type: "coins" },
-  { option: "5 XP", style: { backgroundColor: "#f97316", textColor: "white" }, value: 5, type: "xp" },
-  { option: "Pixel Tuxum", style: { backgroundColor: "#ec4899", textColor: "white" }, value: 1, type: "pet_egg" }, // <-- YANGI YUTUQ
-  { option: "Bo'sh", style: { backgroundColor: "#64748b", textColor: "white" }, value: 0, type: "none" },
-  { option: "20 XP", style: { backgroundColor: "#8b5cf6", textColor: "white" }, value: 20, type: "xp" },
-  { option: "100 Coin", style: { backgroundColor: "#eab308", textColor: "white" }, value: 100, type: "coins" },
-];
 
 const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [mustSpin, setMustSpin] = useState(false);
+
+  const spinData = [
+    { option: "10 Coin", style: { backgroundColor: "#3b82f6", textColor: "white" }, value: 10, type: "coins" },
+    { option: "5 XP", style: { backgroundColor: "#f97316", textColor: "white" }, value: 5, type: "xp" },
+    { option: "25 Coin", style: { backgroundColor: "#22c55e", textColor: "white" }, value: 25, type: "coins" },
+    { option: t.empty || "Bo'sh", style: { backgroundColor: "#64748b", textColor: "white" }, value: 0, type: "none" },
+    { option: "20 XP", style: { backgroundColor: "#8b5cf6", textColor: "white" }, value: 20, type: "xp" },
+    { option: "100 Coin", style: { backgroundColor: "#eab308", textColor: "white" }, value: 100, type: "coins" },
+  ];
+
   const [prizeNumber, setPrizeNumber] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
@@ -51,7 +54,7 @@ const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
                 const remainingMs = (12 * 60 * 60 * 1000) - diffInMs;
                 const hours = Math.floor(remainingMs / (1000 * 60 * 60));
                 const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                setTimeLeft(`${hours} soat ${minutes} daqiqa`);
+                setTimeLeft(`${hours} ${t.hours} ${minutes} ${t.minutes}`);
               }
             };
             calculateTime();
@@ -92,18 +95,7 @@ const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
           const currentData = userSnap.data();
           
           if (prize.type === "coins" || prize.type === "xp") {
-            await giveReward(user.uid, prize.value, prize.type, "Omadli aylanma yutug'i");
-          } else if (prize.type === "pet_egg") {
-             // Agar hayvoni yo'q bo'lsa, yangi tuxum beramiz
-             if (!currentData.hasPet) {
-                const petUpdates = {
-                  hasPet: true,
-                  petLevel: 1,
-                  petXP: 0,
-                  petType: Math.floor(Math.random() * 10) + 1
-                };
-                await setDoc(userRef, petUpdates, { merge: true });
-             }
+            await giveReward(user.uid, prize.value, prize.type, t.luckySpinReward);
           }
           
           // Vaqtni har doim yangilaymiz
@@ -111,17 +103,14 @@ const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
           
          if (prize.type !== "none") {
             showConfetti && showConfetti();
-            const message = prize.type === "pet_egg" 
-              ? `Pixel Tuxum yutdingiz!`
-              : `+${prize.option}`; // Qisqa yozuv: "+10 Coin"
-            showToast && showToast(message, "success");
+            showToast && showToast(`+${prize.option}`, "success");
           } else {
-             showToast && showToast("Yutuq chiqmadi!", "info");
+             showToast && showToast(t.noPrize, "info");
           }
         }
       } catch (error) { 
         console.error("Yutuqni saqlashda xato:", error);
-        showToast("Xatolik yuz berdi", "error");
+        showToast(t.errorOccurred, "error");
       }
     }
     setTimeout(() => {
@@ -140,24 +129,24 @@ const DailySpinModal = ({ darkMode, onClose, showToast, showConfetti }) => {
         </button>
         <div className="flex items-center gap-2 mb-2">
           <Gift className="text-pink-500" size={28} />
-          <h2 className={`text-2xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>Omadlar Aylanmasi</h2>
+          <h2 className={`text-2xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>{t.dailySpinTitle}</h2>
         </div>
         
         {loadingEligiblity ? (
-            <p className={`text-sm text-center mb-6 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Tekshirilmoqda...</p>
+            <p className={`text-sm text-center mb-6 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{t.checking}</p>
         ) : (
             <p className={`text-sm text-center mb-6 ${!canSpin ? 'text-red-400 font-bold' : darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            {!canSpin ? `Keyingi imkoniyat: ${timeLeft} dan so'ng` : "12 soatda bir marta aylantirib bepul Coin va XP yutib oling!"}
+            {!canSpin ? `${t.nextSpinIn} ${timeLeft} ${t.spinAfter}` : t.spinDescription}
             </p>
         )}
         <div className="pointer-events-none drop-shadow-2xl mb-6 scale-90 md:scale-100">
           <Wheel mustStartSpinning={mustSpin} prizeNumber={prizeNumber} data={spinData} onStopSpinning={handleStopSpinning} outerBorderColor={darkMode ? "#1e293b" : "#f1f5f9"} outerBorderWidth={5} innerBorderColor={darkMode ? "#0f172a" : "#ffffff"} innerRadius={15} radiusLineColor="transparent" textColors={["#ffffff"]} fontSize={16} spinDuration={0.8} />
         </div>
         <button onClick={handleSpinClick} disabled={isSpinning || !canSpin || loadingEligiblity} className={`w-full py-3 px-6 rounded-2xl font-bold text-white text-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 ${ isSpinning || !canSpin || loadingEligiblity ? 'bg-slate-500 cursor-not-allowed opacity-60' : 'bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/30' }`} >
-          {isSpinning ? 'Aylanmoqda...' : !canSpin ? (
-              <> <Clock size={20} /> Kutish kerak </>
+          {isSpinning ? t.spinning : !canSpin ? (
+              <> <Clock size={20} /> {t.waitRequired} </>
           ) : (
-             <> <Sparkles size={20} /> Aylantirish </>
+             <> <Sparkles size={20} /> {t.spinButton} </>
           )}
         </button>
       </div>

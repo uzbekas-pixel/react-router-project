@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
@@ -143,8 +142,8 @@ const Dashboard = ({ darkMode, showToast }) => {
       ));
 
       const newItem = newProgress === 100
-        ? { icon: <LuTrophy />, text: `${course.title} ${t.courseCompleted}`, time: "Hozirgina", color: "#10b981" }
-        : { icon: <LuBook />, text: `${course.title} — ${t.lessonsLabel} ${newCompleted} ${t.lessonMarked}`, time: "Hozirgina", color: course.color };
+        ? { icon: <LuTrophy />, text: `${course.title} ${t.courseCompleted}`, time: t.justNow, color: "#10b981" }
+        : { icon: <LuBook />, text: `${course.title} — ${t.lessonsLabel} ${newCompleted} ${t.lessonMarked}`, time: t.justNow, color: course.color };
 
       const actRef  = doc(db, "users", user.uid, "data", "activity");
       const actSnap = await getDoc(actRef);
@@ -183,7 +182,14 @@ const Dashboard = ({ darkMode, showToast }) => {
     showToast?.(t.newAchievement, "success");
   };
 
-  const weeklyArr  = Object.entries(weekly).map(([day, minutes]) => ({ day, minutes }));
+  const dayCodeToName = (code) => {
+    const dayMap = { Du: 0, Se: 1, Ch: 2, Pa: 3, Ju: 4, Sh: 5, Ya: 6 };
+    const index = dayMap[code];
+    return index !== undefined ? t.daysShort?.[index] || code : code;
+  };
+
+  const dayOrder = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+  const weeklyArr  = dayOrder.map(day => ({ day, minutes: weekly[day] || 0 }));
   const maxMin     = Math.max(...weeklyArr.map((d) => d.minutes), 1);
   const totalMin   = weeklyArr.reduce((a, d) => a + d.minutes, 0);
   const completedCount = courses.filter((c) => c.progress === 100).length;
@@ -196,7 +202,7 @@ const Dashboard = ({ darkMode, showToast }) => {
     { icon: <LuBook size={24} />, label: t.enrolledCourses,  value: courses.length,                        color: "#3b82f6" },
     { icon: <LuCheck size={24} />, label: t.completedCourses,  value: completedCount,                             color: "#10b981" },
     { icon: <LuClock size={24} />, label: t.thisWeek,          value: `${Math.round(totalMin / 60)}${t.hoursLabel.slice(0,1)}`,       color: "#f59e0b" },
-    { icon: <LuTarget size={24} />, label: t.quizAvg,           value: stats.quizAvg > 0 ? `${stats.quizAvg}%` : "—", color: "#8b5cf6" },
+    { icon: <LuTarget size={24} />, label: t.quizAvg,           value: stats.quizAvg > 0 ? `${stats.quizAvg}%` : "—”", color: "#8b5cf6" },
   ];
 
   if (loading) return (
@@ -209,7 +215,7 @@ const Dashboard = ({ darkMode, showToast }) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24">
       {/* Header with glass effect */}
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div className="flex flex-wrap items-center justify-between gap-8 mb-12">
           <div>
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -238,12 +244,12 @@ const Dashboard = ({ darkMode, showToast }) => {
             </div>
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {statCards.map((s, i) => (
-          <ScrollReveal key={i} direction="up" delay={i * 100}>
+          <div key={i} direction="up" delay={i * 100}>
             <div className={`p-8 rounded-5xl border transition-all duration-500 hover:scale-[1.02] group ${
               darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-lg shadow-slate-100"
             }`}>
@@ -258,7 +264,7 @@ const Dashboard = ({ darkMode, showToast }) => {
               </h3>
               <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{s.label}</p>
             </div>
-          </ScrollReveal>
+          </div>
         ))}
       </div>
 
@@ -290,7 +296,7 @@ const Dashboard = ({ darkMode, showToast }) => {
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Activity Chart Card */}
-          <ScrollReveal direction="up">
+          <div direction="up">
             <div className={`p-10 rounded-5xl border h-full ${
               darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl"
             }`}>
@@ -315,16 +321,16 @@ const Dashboard = ({ darkMode, showToast }) => {
                         {d.minutes > 0 ? `${d.minutes}m` : ""}
                       </span>
                       <MiniBar value={d.minutes} max={maxMin} color="#3b82f6" darkMode={darkMode} />
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{d.day}</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{dayCodeToName(d.day)}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </ScrollReveal>
+          </div>
 
           {/* Recent Activity List */}
-          <ScrollReveal direction="up" delay={200}>
+          <div direction="up" delay={200}>
             <div className={`p-10 rounded-5xl border h-full ${
               darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl"
             }`}>
@@ -335,26 +341,55 @@ const Dashboard = ({ darkMode, showToast }) => {
                     <p className="text-slate-500 font-bold">{t.startCourses}</p>
                   </div>
                 ) : (
-                  activity.slice(0, 5).map((a, i) => (
-                    <div key={i} className="flex items-center gap-6 group">
-                      <div 
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"
-                        style={{ backgroundColor: `${a.color || "#3b82f6"}15`, color: a.color || "#3b82f6" }}
-                      >
-                        {a.icon}
+                  activity.slice(0, 5).map((a, i) => {
+                    // Map emoji icons to Lucide icons
+                    const getIcon = () => {
+                      if (a.color === "#10b981") return <LuTrophy size={20} />;
+                      return <LuBook size={20} />;
+                    };
+                    // Translate course names from stored text
+                    const translateActivityText = (text) => {
+                      if (!text) return text;
+                      // Replace Uzbek course names with current language
+                      const courseMappings = {
+                        "Ingliz Tili": t.courseData?.[5]?.title || "English",
+                        "HTML": "HTML",
+                        "CSS": "CSS",
+                        "JavaScript": "JavaScript",
+                        "React": "React",
+                        "kursi tugatildi": t.courseCompleted || "course completed",
+                        "tugatildi": t.lessonMarked || "completed",
+                        "dars": t.lessonsLabel || "lesson",
+                      };
+                      let translated = text;
+                      Object.entries(courseMappings).forEach(([uz, en]) => {
+                        translated = translated.replace(new RegExp(uz, 'g'), en);
+                      });
+                      return translated;
+                    };
+                    return (
+                      <div key={i} className="flex items-center gap-6 group">
+                        <div 
+                          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"
+                          style={{ backgroundColor: `${a.color || "#3b82f6"}15`, color: a.color || "#3b82f6" }}
+                        >
+                          {getIcon()}
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold tracking-tight mb-1 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
+                            {translateActivityText(a.text)}
+                          </p>
+                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+                            {a.time?.toLowerCase() === "hozirgina" || a.time?.toLowerCase() === "just now" ? t.justNow : a.time}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className={`text-sm font-bold tracking-tight mb-1 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
-                          {a.text}
-                        </p>
-                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">{a.time}</p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
-          </ScrollReveal>
+          </div>
         </div>
       )}
 
@@ -362,7 +397,7 @@ const Dashboard = ({ darkMode, showToast }) => {
       {activeTab === "courses" && (
         <div className="space-y-6">
           {courses.map((c, i) => (
-            <ScrollReveal key={c.id} direction="up" delay={i * 100}>
+            <div key={c.id} direction="up" delay={i * 100}>
               <div className={`p-8 rounded-4xl border flex flex-wrap items-center gap-10 transition-all duration-500 hover:scale-[1.01] ${
                 darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl"
               }`}>
@@ -407,7 +442,7 @@ const Dashboard = ({ darkMode, showToast }) => {
                   )}
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
           ))}
         </div>
       )}
@@ -418,7 +453,7 @@ const Dashboard = ({ darkMode, showToast }) => {
           {achievementsList.map((ach, i) => {
             const earned = !!achievements[ach.key];
             return (
-              <ScrollReveal key={i} direction="up" delay={i * 100}>
+              <div key={i} direction="up" delay={i * 100}>
                 <div className={`p-8 rounded-4xl border text-center transition-all duration-500 ${
                   earned 
                     ? darkMode ? "bg-slate-900/60 border-amber-500/30 shadow-2xl shadow-amber-500/5 scale-105" : "bg-white border-amber-200 shadow-xl shadow-amber-100" 
@@ -434,7 +469,7 @@ const Dashboard = ({ darkMode, showToast }) => {
                     {earned ? t.achievementEarned : t.achievementLocked}
                   </div>
                 </div>
-              </ScrollReveal>
+              </div>
             );
           })}
         </div>

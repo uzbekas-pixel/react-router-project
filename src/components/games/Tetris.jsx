@@ -137,7 +137,7 @@ const Tetris = ({ darkMode }) => {
   return (
     <div className={`flex flex-col items-center px-2 py-4 pb-10 ${darkMode?"bg-gray-900":"bg-gray-50"}`}>
       <h2 className={`text-xl font-extrabold mb-4 flex items-center justify-center gap-2 ${darkMode?"text-white":"text-gray-900"}`}>
-        <FaGamepad className="text-blue-500" /> Tetris
+        <FaGamepad className="text-blue-500" /> {t.tetrisTitle}
       </h2>
 
       <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
@@ -150,7 +150,7 @@ const Tetris = ({ darkMode }) => {
           {!running&&!gameOver&&(
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3">
               <p className="text-white text-xl font-extrabold flex items-center gap-2">
-                <FaGamepad /> Tetris
+                <FaGamepad /> {t.tetrisTitle}
               </p>
               <p className="text-gray-400 text-xs text-center px-4">{t.pcTetris}</p>
               <p className="text-gray-400 text-xs text-center px-4">{t.mobileTetris}</p>
@@ -196,7 +196,7 @@ const Tetris = ({ darkMode }) => {
            {running && (
   <button onClick={() => setPaused(p => !p)}
     className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${darkMode ? "bg-slate-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
-    {paused ? <><FaPlay /> {t.resume || "Davom"}</> : <><FaPause /> {t.pause || "Pauza"}</>}
+    {paused ? <><FaPlay /> {t.resume}</> : <><FaPause /> {t.pause}</>}
   </button>
 )}
             <button onClick={reset}
@@ -206,8 +206,8 @@ const Tetris = ({ darkMode }) => {
           </div>
           <div className={`md:hidden rounded-xl p-3 ${darkMode?"bg-slate-800":"bg-white"} shadow text-center`}>
             <div className={`text-[10px] flex flex-col gap-1 items-center justify-center ${darkMode?"text-gray-400":"text-gray-500"}`}>
-              <span className="flex items-center gap-1"><FaHandPointer /> Tap → burish • <FaArrowsAltH /> Swipe → harakat</span>
-              <span className="flex items-center gap-1"><FaArrowDown /> Swipe → tushirish • <FaArrowUp /> Yuqori → pauza</span>
+              <span className="flex items-center gap-1"><FaHandPointer /> {t.mobileHelpTap}</span>
+              <span className="flex items-center gap-1"><FaArrowDown /> {t.mobileHelpSwipe}</span>
             </div>
           </div>
         </div>

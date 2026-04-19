@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLang } from "../context/useLang";
-import { LuPlay, LuTrash2, LuSave, LuRotateCcw,LuTerminal  } from "react-icons/lu";
+import { LuPlay, LuTrash2, LuSave, LuRotateCcw, LuTerminal, LuUsers } from "react-icons/lu";
+import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 
 // ── Til konfiguratsiyalari ──────────────────────────────────────────────────
@@ -240,6 +241,7 @@ function handleEmmet(monaco, editor, langId) {
 // ── Asosiy komponent ────────────────────────────────────────────────────────
 const CodeEditor = ({ darkMode }) => {
   const { t } = useLang();
+  const navigate = useNavigate();
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
 
@@ -253,37 +255,37 @@ const CodeEditor = ({ darkMode }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("editor");
   const [saved, setSaved] = useState(false);
- const [_editorReady, setEditorReady] = useState(false);
+  const [_editorReady, setEditorReady] = useState(false);
 
- useEffect(() => {
-  const stored = loadFromStorage();
-  if (!stored) return;
+  useEffect(() => {
+    const stored = loadFromStorage();
+    if (!stored) return;
 
-  // Render siklini ajratib olamiz
-  setTimeout(() => {
-    if (stored.lang) setLang(stored.lang);
-    if (stored.codes) {
-      setCodes((prev) => ({ ...prev, ...stored.codes }));
-    }
-  }, 0);
-}, []);
+    // Render siklini ajratib olamiz
+    setTimeout(() => {
+      if (stored.lang) setLang(stored.lang);
+      if (stored.codes) {
+        setCodes((prev) => ({ ...prev, ...stored.codes }));
+      }
+    }, 0);
+  }, []);
   // ── Avtomatik saqlash (debounced) ────────────────────────────────────────
   useEffect(() => {
-  const timer = setTimeout(() => {
-    saveToStorage({ lang, codes });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
-  }, 800);
+    const timer = setTimeout(() => {
+      saveToStorage({ lang, codes });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }, 800);
 
-  return () => clearTimeout(timer);
-}, [lang, codes]);
-useEffect(() => {
-  const init = () => {
-    setMounted(true);
-  };
+    return () => clearTimeout(timer);
+  }, [lang, codes]);
+  useEffect(() => {
+    const init = () => {
+      setMounted(true);
+    };
 
-  init();
-}, []);
+    init();
+  }, []);
 
   // ── Til o'zgarganda editor tilini yangilash ──────────────────────────────
   const currentLang = LANGUAGES.find((l) => l.id === lang);
@@ -607,6 +609,49 @@ ${noScrollStyle}
         </div>
       </div>
 
+      {/* ══ Desktop Tabs ═══════════════════════════════════════════════════ */}
+      <div
+        className={`hidden md:flex border-b ${
+          darkMode ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-white"
+        }`}
+      >
+        {[
+          { id: "editor", label: t.codeTitle, icon: LuTerminal },
+          { id: "output", label: t.output ?? "Natija", icon: LuPlay },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold transition border-b-2 ${
+                activeTab === tab.id
+                  ? "text-blue-400 border-blue-400 bg-blue-500/5"
+                  : darkMode
+                  ? "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800"
+                  : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <Icon size={16} />
+              {tab.label}
+            </button>
+          );
+        })}
+        
+        {/* Supports tugmasi - o'ng tomonda */}
+        <button
+          onClick={() => navigate("/supports")}
+          className={`ml-auto flex items-center gap-2 px-6 py-3 text-sm font-semibold transition border-b-2 border-transparent ${
+            darkMode
+              ? "text-slate-400 hover:text-indigo-400 hover:bg-slate-800"
+              : "text-gray-500 hover:text-indigo-500 hover:bg-gray-50"
+          }`}
+        >
+          <LuUsers size={16} />
+          {t.supportsNav || "Supports"}
+        </button>
+      </div>
+
       {/* ══ Mobile tab ══════════════════════════════════════════════════════ */}
       <div
         className={`md:hidden flex border-b ${
@@ -625,14 +670,25 @@ ${noScrollStyle}
                 : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            {tab === "editor"
-              ? t.codeTitle
-              : t.output}
+            {tab === "editor" ? t.codeTitle : t.output}
           </button>
         ))}
+        
+        {/* Mobile Supports tugmasi */}
+        <button
+          onClick={() => navigate("/supports")}
+          className={`flex-1 py-2.5 text-xs font-semibold transition flex items-center justify-center gap-1 ${
+            darkMode
+              ? "text-slate-400 hover:text-indigo-400"
+              : "text-gray-500 hover:text-indigo-500"
+          }`}
+        >
+          <LuUsers size={14} />
+          {t.supportsNav || "Supports"}
+        </button>
       </div>
 
-      {/* ══ Editor + Output ═════════════════════════════════════════════════ */}
+      {/* ══ Editor + Output + Supports ═══════════════════════════════════════ */}
       <div
         className="flex flex-1 overflow-hidden"
         style={{ height: "calc(100vh - 210px)" }}
@@ -694,7 +750,7 @@ ${noScrollStyle}
         {/* ── Natija paneli ───────────────────────────────────────────── */}
         <div
           className={`${
-            activeTab === "editor" ? "hidden" : "flex"
+            activeTab !== "output" ? "hidden" : "flex"
           } md:flex flex-col w-full md:w-1/2`}
         >
           {/* Output toolbar */}

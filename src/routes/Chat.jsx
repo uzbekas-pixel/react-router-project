@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, deleteDoc, doc, updateDoc, getDoc, writeBatch } from "firebase/firestore";
 import { db, rtdb } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
@@ -10,13 +10,22 @@ import { useChatSound } from "../hooks/useChatSound";
 import {
   LuPhone, LuPhoneOff, LuMic, LuMicOff, LuVideo, LuVideoOff,
   LuSend, LuPaperclip, LuReply, LuTrash2, LuBell, LuBellOff,
-  LuMail, LuKeyboard, LuX, LuMessageSquare, LuSmile, LuCircleDot, LuUser, LuCamera
+  LuMail, LuKeyboard, LuX, LuMessageSquare, LuSmile, LuCircleDot, LuUser, LuCamera,
+  LuHeart, LuThumbsUp, LuLaugh, LuFrown, LuSparkles
 } from "react-icons/lu";
 import { completeRealTask } from "../utils/taskManager";
 const APP_ID = "2c3941d0b08d4c01b2735b6259550335";
 const TOKEN = null;
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
-const REACTIONS = ["❤️", "😂", "👍", "😮", "😢"];
+// Reaction configuration using react-icons instead of emojis
+const REACTION_CONFIG = {
+  "like": { icon: LuHeart, color: "text-red-500", labelKey: "reactionLike" },
+  "thumbsup": { icon: LuThumbsUp, color: "text-blue-500", labelKey: "reactionThumbsUp" },
+  "laugh": { icon: LuLaugh, color: "text-yellow-500", labelKey: "reactionLaugh" },
+  "wow": { icon: LuSparkles, color: "text-purple-500", labelKey: "reactionWow" },
+  "sad": { icon: LuFrown, color: "text-gray-500", labelKey: "reactionSad" },
+};
+const REACTION_KEYS = Object.keys(REACTION_CONFIG);
 const MSG_EXPIRE = 24 * 60 * 60 * 1000;
 
 const Chat = ({ darkMode }) => {
@@ -45,6 +54,7 @@ const displayUserName = user?.displayName || t.user;
   const longPressTimer = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const isAdminRef = useRef(false);
   const [inCall, setInCall] = useState(false);
   const [localTracks, setLocalTracks] = useState(null);
   const [remoteUsers, setRemoteUsers] = useState([]);
@@ -61,12 +71,25 @@ const displayUserName = user?.displayName || t.user;
     checkAdmin();
   }, [user]);
 
+  // Keep isAdminRef in sync with isAdmin state
+  useEffect(() => {
+    isAdminRef.current = isAdmin;
+  }, [isAdmin]);
+
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt"));
     const unsub = onSnapshot(q, (snap) => {
       const now = Date.now();
       const list = [];
       const expiredDocs = [];
+      // Only admin can delete expired messages (Firebase permissions)
+      if (!isAdminRef.current) {
+        snap.docs.forEach((d) => {
+          list.push({ id: d.id, ...d.data() });
+        });
+        setMessages(list);
+        return;
+      }
 
       snap.docs.forEach((d) => {
         const data = d.data();
@@ -437,26 +460,38 @@ const displayUserName = user?.displayName || t.user;
                   {showReactions === msg.id && (
                     <div onClick={(e) => e.stopPropagation()}
                       className={`absolute bottom-full mb-1 ${isMe ? "right-0" : "left-0"} flex gap-1 p-2 rounded-2xl shadow-xl z-50 ${darkMode ? "bg-slate-700" : "bg-white border border-gray-100"}`}>
-                      {REACTIONS.map((emoji) => (
-                        <button key={emoji} onClick={() => handleReaction(msg.id, emoji)}
-                          className="text-xl hover:scale-125 transition-transform">{emoji}</button>
-                      ))}
+                      {REACTION_KEYS.map((key) => {
+                        const config = REACTION_CONFIG[key];
+                        const Icon = config.icon;
+                        return (
+                          <button key={key} onClick={() => handleReaction(msg.id, key)}
+                            className={`p-1.5 rounded-full hover:scale-125 transition-transform ${config.color}`}
+                            title={t[config.labelKey]}>
+                            <Icon size={20} />
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
 
                 {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {Object.entries(msg.reactions).map(([emoji, uids]) =>
-                      uids.length > 0 ? (
-                        <button key={emoji} onClick={() => handleReaction(msg.id, emoji)}
-                          className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs transition ${
+                    {Object.entries(msg.reactions).map(([key, uids]) => {
+                      if (uids.length === 0) return null;
+                      const config = REACTION_CONFIG[key] || { icon: LuHeart, color: "text-gray-500", labelKey: "reactionLike" };
+                      const Icon = config.icon;
+                      return (
+                        <button key={key} onClick={() => handleReaction(msg.id, key)}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition ${
                             uids.includes(user.uid) ? "bg-blue-500 text-white" : darkMode ? "bg-slate-700 text-white" : "bg-gray-100 text-gray-700"
-                          }`}>
-                          {emoji} {uids.length}
+                          }`}
+                          title={t[config.labelKey]}>
+                          <Icon size={14} className={uids.includes(user.uid) ? "" : config.color} />
+                          <span>{uids.length}</span>
                         </button>
-                      ) : null
-                    )}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -480,10 +515,17 @@ const displayUserName = user?.displayName || t.user;
             <div className={`w-full max-w-sm rounded-2xl shadow-xl overflow-hidden mx-4 ${darkMode ? "bg-slate-700" : "bg-white"}`}
               onClick={(e) => e.stopPropagation()}>
               <div className={`flex justify-around p-4 border-b ${darkMode ? "border-slate-600" : "border-gray-100"}`}>
-                {REACTIONS.map((emoji) => (
-                  <button key={emoji} onClick={() => handleReaction(longPressMsg, emoji)}
-                    className="text-2xl hover:scale-125 transition-transform active:scale-110">{emoji}</button>
-                ))}
+                {REACTION_KEYS.map((key) => {
+                  const config = REACTION_CONFIG[key];
+                  const Icon = config.icon;
+                  return (
+                    <button key={key} onClick={() => handleReaction(longPressMsg, key)}
+                      className={`p-2 rounded-full hover:scale-125 transition-transform active:scale-110 ${config.color}`}
+                      title={t[config.labelKey]}>
+                      <Icon size={24} />
+                    </button>
+                  );
+                })}
               </div>
               {/* Profilga o'tish (o'zim emas) */}
               {!isMe && (

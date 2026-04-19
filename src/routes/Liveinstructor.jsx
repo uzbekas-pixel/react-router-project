@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { db, auth } from "../firebase/config";
+import { useLang } from "../context/useLang";
 import {
   collection,
   doc,
@@ -15,41 +16,41 @@ import {
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import { LuHand, LuCheck, LuTrash2, LuX, LuMessageCircle, LuEye } from "react-icons/lu";
+import { LuHand, LuCheck, LuTrash2, LuX, LuMessageCircle, LuEye, LuGraduationCap } from "react-icons/lu";
 
-// ─── ZegoCloud credentials ─────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ ZegoCloud credentials в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const ZEGO_APP_ID        = 77698519;
 const ZEGO_SERVER_SECRET = "640db04ef5b4b66c82185215c289bd00";
 
-// ─── Reaction emojis ───────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Reaction emojis в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const REACTION_EMOJIS = ["❤️", "🔥", "👍", "👏", "😂"];
 
-// ─── In-room command types ─────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ In-room command types в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const CMD_REACTION   = "REACTION";
 const CMD_RAISE_HAND = "RAISE_HAND";
 const CMD_HAND_DOWN  = "HAND_DOWN";
 const CMD_ACCEPT     = "ACCEPT_COHOST";
 const CMD_REMOVE     = "REMOVE_COHOST";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const formatTime = (ts) => {
   if (!ts) return "";
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
 };
 
-const timeAgo = (ts) => {
+const timeAgo = (ts, t) => {
   if (!ts) return "";
   const d   = ts.toDate ? ts.toDate() : new Date(ts);
   const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (sec < 60)   return `${sec}s oldin`;
-  if (sec < 3600) return `${Math.floor(sec / 60)}m oldin`;
-  return `${Math.floor(sec / 3600)}s oldin`;
+  if (sec < 60)   return `${sec}${t.secondsAgo}`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}${t.minutesAgo}`;
+  return `${Math.floor(sec / 3600)}${t.hoursAgo}`;
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── Floating Reaction Bubble
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ Floating Reaction Bubble
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const FloatingReaction = ({ emoji, onDone, rightOffset, riseAmount }) => {
   const ref = useRef(null);
 
@@ -86,9 +87,9 @@ const FloatingReaction = ({ emoji, onDone, rightOffset, riseAmount }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── Avatar component
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ Avatar component
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const Avatar = ({ photo, name, size = 28, className = "", bgClass = "bg-blue-500/20 border-blue-500/30 text-blue-300" }) => (
   <div
     className={`rounded-full flex items-center justify-center font-bold shrink-0 overflow-hidden border ${bgClass} ${className}`}
@@ -100,9 +101,9 @@ const Avatar = ({ photo, name, size = 28, className = "", bgClass = "bg-blue-500
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── Toast notification
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ Toast notification
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const Toast = ({ show, icon, title, subtitle, color = "green" }) => {
   if (!show) return null;
   const colors = {
@@ -125,9 +126,9 @@ const Toast = ({ show, icon, title, subtitle, color = "green" }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── WATCH VIEW
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ WATCH VIEW
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const WatchView = ({ live, currentUser, onBack }) => {
   const [messages,         setMessages]         = useState([]);
   const [msgInput,         setMsgInput]         = useState("");
@@ -148,7 +149,9 @@ const WatchView = ({ live, currentUser, onBack }) => {
   const presenceRegistered = useRef(false);
   const inputRef           = useRef(null);
 
-  // ── Mobile detection ───────────────────────────────────────────────────────
+  const { t } = useLang();
+
+  // в”Ђв”Ђ Mobile detection в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -161,13 +164,13 @@ const WatchView = ({ live, currentUser, onBack }) => {
     if (!isMobile) setChatOpen(true);
   }, [isMobile]);
 
-  // ── Presence ──────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Presence в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!live?.id || !currentUser) return;
     const presenceRef = doc(db, "liveLessons", live.id, "viewers", currentUser.uid);
     setDoc(presenceRef, {
       uid:      currentUser.uid,
-      name:     currentUser.displayName || "Tomoshabin",
+      name:     currentUser.displayName || t.viewer,
       joinedAt: serverTimestamp(),
     }).then(() => { presenceRegistered.current = true; }).catch(() => {});
     return () => {
@@ -178,7 +181,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     };
   }, [live?.id, currentUser]);
 
-  // ── Viewer count ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Viewer count в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!live?.id) return;
     const unsub = onSnapshot(
@@ -190,7 +193,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     return () => unsub();
   }, [live?.id]);
 
-  // ── Realtime chat ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Realtime chat в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!live?.id) return;
     const q = query(
@@ -204,7 +207,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     return () => unsub();
   }, [live?.id]);
 
-  // ── In-room command handler ────────────────────────────────────────────────
+  // в”Ђв”Ђ In-room command handler в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleInRoomCommand = useCallback((fromUser, command) => {
     try {
       const parsed = JSON.parse(command);
@@ -233,7 +236,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     }
   }, [currentUser]);
 
-  // ── Zego Init ──────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Zego Init в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!currentUser || !live?.channelName) return;
 
@@ -243,7 +246,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     const raf = requestAnimationFrame(() => {
       // Bu yerda zegoRef.current o'rniga saqlab olingan containerRef ni ishlatamiz
       if (!containerRef) {
-        setZegoError("Video konteyneri yuklanmadi. Qaytadan urinib ko'ring.");
+        setZegoError(t.videoContainerLoadError);
         return;
       }
       try {
@@ -252,7 +255,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
           ZEGO_SERVER_SECRET,
           live.channelName,
           currentUser.uid,
-          currentUser.displayName || "Tomoshabin"
+          currentUser.displayName || t.viewer
         );
         
         const zc = ZegoUIKitPrebuilt.create(token);
@@ -276,12 +279,12 @@ const WatchView = ({ live, currentUser, onBack }) => {
           onInRoomCommandReceived: handleInRoomCommand, 
           onError: (err) => {
             console.error("Zego error:", err);
-            setZegoError("Ulanishda xatolik. Sahifani yangilang.");
+            setZegoError(t.connectionError);
           },
         });
       } catch (err) {
         console.error("Init error:", err);
-        setZegoError("Initsializatsiya xatosi: " + err.message);
+        setZegoError(t.initError + err.message);
       }
     });
 
@@ -305,7 +308,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     };
   }, [live, currentUser, handleInRoomCommand, isCohost]);
 
-  // ── Send message ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Send message в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const sendMessage = useCallback(async () => {
     if (!msgInput.trim() || !currentUser || !live?.id) return;
     const text       = msgInput.trim();
@@ -316,7 +319,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
       await addDoc(collection(db, "liveLessons", live.id, "messages"), {
         text,
         uid:          currentUser.uid,
-        name:         currentUser.displayName || "Tomoshabin",
+        name:         currentUser.displayName || t.viewer,
         avatar:       currentUser.photoURL || null,
         isInstructor: false,
         isQuestion:   asQuestion,
@@ -326,7 +329,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     } catch (err) { console.warn("Message send failed:", err); }
   }, [msgInput, isQuestion, currentUser, live]);
 
-  // ── Delete message ────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Delete message в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const deleteMessage = useCallback(async (msgId) => {
     if (!live?.id || !currentUser) return;
     setDeletingId(msgId);
@@ -339,7 +342,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     }
   }, [live?.id, currentUser]);
 
-  // ── Send reaction ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Send reaction в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const sendReaction = useCallback((emoji) => {
     const newR = {
       id:          `r_${Date.now()}_${Math.random()}`,
@@ -353,13 +356,13 @@ const WatchView = ({ live, currentUser, onBack }) => {
       const cmd = JSON.stringify({
         type:       CMD_REACTION,
         emoji,
-        senderName: currentUser?.displayName || "O'quvchi",
+        senderName: currentUser?.displayName || t.student,
       });
       zegoInst.current.sendInRoomCommand(cmd, []);
     } catch (err) { console.error("Reaction error:", err); }
   }, [currentUser]);
 
-  // ── Toggle hand ───────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Toggle hand в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const toggleHand = useCallback(() => {
     if (!zegoInst.current || !currentUser) return;
     if (handRaised) {
@@ -374,7 +377,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
     } else {
       try {
         zegoInst.current.sendInRoomCommand?.(
-          JSON.stringify({ type: CMD_RAISE_HAND, uid: currentUser.uid, name: currentUser.displayName || "Tomoshabin" }), []
+          JSON.stringify({ type: CMD_RAISE_HAND, uid: currentUser.uid, name: currentUser.displayName || t.viewer }), []
         );
       } catch (_err) {
         console.error("Hand up error:", _err);
@@ -388,10 +391,10 @@ const WatchView = ({ live, currentUser, onBack }) => {
   return (
     <div className="live-watch-root">
 
-      {/* ── HEADER ──────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ HEADER в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <header className="live-header">
         <div className="live-header-left">
-          <button onClick={onBack} className="btn-back" aria-label="Orqaga">
+          <button onClick={onBack} className="btn-back" aria-label={t.back}>
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
@@ -402,9 +405,9 @@ const WatchView = ({ live, currentUser, onBack }) => {
                 <span className="live-dot"/>LIVE
               </span>
               <span className="live-title-text">{live?.title}</span>
-              {isCohost && <span className="cohost-badge">🎙 CO-HOST</span>}
+              {isCohost && <span className="cohost-badge">🎙️ {t.cohost}</span>}
             </div>
-            <p className="live-instructor-name">👨‍🏫 {live?.instructorName}</p>
+            <p className="live-instructor-name"><LuGraduationCap size={14}/> {live?.instructorName}</p>
           </div>
         </div>
 
@@ -418,7 +421,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
           <button
             onClick={() => setChatOpen((p) => !p)}
             className={`btn-chat-toggle ${chatOpen ? "active" : ""}`}
-            aria-label="Chat"
+            aria-label={t.chat}
           >
             <LuMessageCircle size={16}/>
             {unreadQuestions > 0 && <span className="chat-badge">{unreadQuestions}</span>}
@@ -426,52 +429,11 @@ const WatchView = ({ live, currentUser, onBack }) => {
         </div>
       </header>
 
-      {/* ── BODY ────────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ BODY в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div className="live-body">
-
-        {/* ── VIDEO AREA ──────────────────────────────────────────────────── */}
+        {/* в”Ђв”Ђ VIDEO AREA в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
         <div className="live-video-area">
-
-          {/* Error overlay */}
-          {zegoError && (
-            <div className="zego-error-overlay">
-              <div className="text-4xl">📡</div>
-              <p className="zego-error-text">{zegoError}</p>
-              <button onClick={() => window.location.reload()} className="btn-retry">
-                Qayta urinish
-              </button>
-            </div>
-          )}
-
-          {/* Zego container */}
-          <div ref={zegoRef} className="zego-container"/>
-
-          {/* Floating reactions */}
-          <div className="reactions-layer">
-            {floatingReactions.map((r) => (
-              <FloatingReaction
-                key={r.id}
-                emoji={r.emoji}
-                rightOffset={r.rightOffset}
-                riseAmount={r.riseAmount}
-                onDone={() => setFloatingReactions((prev) => prev.filter((x) => x.id !== r.id))}
-              />
-            ))}
-          </div>
-
-          {/* Hand raised indicator */}
-          {handRaised && (
-            <div className="hand-indicator">
-              <span className="hand-wave">🖐️</span>
-              <span>Qo'lingiz ko'tarilgan — o'qituvchi javob beradi</span>
-            </div>
-          )}
-
-          {/* Toasts */}
-          <Toast show={coHostNotif}  icon="🎙️" color="green" title="Sahnaga qo'shildingiz!" subtitle="Kamera va mikrofoniz yoqildi"/>
-          <Toast show={removedNotif} icon="👋" color="red"   title="Sahna tugadi"/>
-
-          {/* ── REACTION + RAISE HAND BAR ── */}
+          {/* в”Ђв”Ђ REACTION + RAISE HAND BAR в”Ђв”Ђ */}
           <div className="reaction-bar">
             {REACTION_EMOJIS.map((emoji) => (
               <button
@@ -487,33 +449,33 @@ const WatchView = ({ live, currentUser, onBack }) => {
             <button
               onClick={toggleHand}
               className={`btn-hand ${handRaised ? "raised" : ""}`}
-              title={handRaised ? "Qo'lni tushirish" : "Qo'l ko'tarish (sahna so'rash)"}
+              title={handRaised ? t.lowerHand : t.raiseHandAsk}
             >
               <LuHand size={15} className={handRaised ? "hand-anim" : ""}/>
-              <span className="hand-label">{handRaised ? "Tushirish" : "So'rash"}</span>
+              <span className="hand-label">{handRaised ? t.lower : t.ask}</span>
             </button>
           </div>
         </div>
 
-        {/* ── CHAT PANEL ──────────────────────────────────────────────────── */}
+        {/* в”Ђв”Ђ CHAT PANEL в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
         <div className={`live-chat-panel ${chatOpen ? "open" : ""}`}>
 
           {/* Chat header */}
           <div className="chat-header">
             <span className="chat-header-title">
-              💬 Jonli Chat
+              💬 {t.liveChat}
             </span>
             <div className="chat-header-right">
               {unreadQuestions > 0 && (
                 <span className="question-count-badge">
-                  ❓ {unreadQuestions} savol
+                  ❓ {unreadQuestions} {t.questions}
                 </span>
               )}
               {/* Mobile: close button */}
               <button
                 onClick={() => setChatOpen(false)}
                 className="btn-close-chat"
-                aria-label="Yopish"
+                aria-label={t.close}
               >
                 <LuX size={14}/>
               </button>
@@ -525,7 +487,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
             {messages.length === 0 ? (
               <div className="chat-empty">
                 <div className="chat-empty-icon">💬</div>
-                <p>Birinchi xabarni yozing!</p>
+                <p>{t.writeFirstMessage}</p>
               </div>
             ) : (
               messages.map((m) => {
@@ -550,13 +512,13 @@ const WatchView = ({ live, currentUser, onBack }) => {
                       <div className="chat-msg-meta">
                         <span className={`chat-msg-name ${m.isInstructor ? "instructor" : isOwn ? "own" : "other"}`}>
                           {m.name}
-                          {isOwn && <span className="you-label">(siz)</span>}
+                          {isOwn && <span className="you-label">({t.you})</span>}
                         </span>
-                        {m.isInstructor && <span className="badge-host">HOST</span>}
-                        {m.isQuestion && !m.answered && <span className="badge-question">❓ SAVOL</span>}
+                        {m.isInstructor && <span className="badge-host">{t.host}</span>}
+                        {m.isQuestion && !m.answered && <span className="badge-question">❓ {t.question}</span>}
                         {m.isQuestion && m.answered && (
                           <span className="badge-answered">
-                            <LuCheck size={8}/> Javob
+                            <LuCheck size={8}/> {t.answer}
                           </span>
                         )}
                         <span className="chat-msg-time">{formatTime(m.createdAt)}</span>
@@ -569,8 +531,8 @@ const WatchView = ({ live, currentUser, onBack }) => {
                         onClick={() => deleteMessage(m.id)}
                         disabled={deletingId === m.id}
                         className="btn-delete-msg"
-                        title="Xabarni o'chirish"
-                        aria-label="O'chirish"
+                        title={t.deleteMessage}
+                        aria-label={t.delete}
                       >
                         {deletingId === m.id
                           ? <span className="spin-sm"/>
@@ -590,7 +552,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
               onClick={() => setIsQuestion((p) => !p)}
               className={`btn-question-mode ${isQuestion ? "active" : ""}`}
             >
-              {isQuestion ? "❓ Savol rejimi" : "Savol yuborish"}
+              {isQuestion ? "❓ " + t.questionMode : t.sendQuestion}
             </button>
             <div className="chat-input-row">
               <input
@@ -598,14 +560,14 @@ const WatchView = ({ live, currentUser, onBack }) => {
                 value={msgInput}
                 onChange={(e) => setMsgInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                placeholder={isQuestion ? "Savolingizni yozing..." : "Xabar yozing..."}
+                placeholder={isQuestion ? t.writeYourQuestion : t.writeMessage}
                 className={`chat-input ${isQuestion ? "question-mode" : ""}`}
               />
               <button
                 onClick={sendMessage}
                 disabled={!msgInput.trim()}
                 className="btn-send"
-                aria-label="Yuborish"
+                aria-label={t.send}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <line x1="22" y1="2" x2="11" y2="13"/>
@@ -623,7 +585,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
       </div>
 
       <style>{`
-        /* ── ROOT ─────────────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ ROOT в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         :root { --navbar-h: 60px; }
         .live-watch-root {
           position: fixed;
@@ -638,7 +600,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
         }
         @media (min-width: 768px) { .live-watch-root { bottom: 0; } }
 
-        /* ── HEADER ─────────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ HEADER в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         .live-header {
           display: flex; align-items: center; justify-content: space-between;
           padding: 8px 10px;
@@ -706,12 +668,12 @@ const WatchView = ({ live, currentUser, onBack }) => {
           display: flex; align-items: center; justify-content: center; padding: 0 3px;
         }
 
-        /* ── BODY ─────────────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ BODY в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         .live-body {
           flex: 1; display: flex; overflow: hidden; position: relative; min-height: 0;
         }
 
-        /* ── VIDEO AREA ───────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ VIDEO AREA в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         .live-video-area {
           flex: 1; position: relative; min-height: 0; min-width: 0;
           background: #030609; overflow: hidden;
@@ -745,7 +707,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
           position: absolute; inset: 0; pointer-events: none; overflow: hidden;
         }
 
-        /* ── HAND INDICATOR ──────────────────────────────────────────────── */
+        /* в”Ђв”Ђ HAND INDICATOR в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         .hand-indicator {
           position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
           z-index: 40;
@@ -759,7 +721,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
         }
         .hand-wave { animation: wave 0.6s ease infinite alternate; display: inline-block; flex-shrink: 0; }
 
-        /* ── REACTION BAR ─────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ REACTION BAR в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         .reaction-bar {
           position: absolute;
           bottom: 14px;
@@ -803,7 +765,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
         @media (min-width: 360px) { .hand-label { display: inline; } }
         .hand-anim { animation: wave 0.6s ease infinite alternate; }
 
-        /* ── CHAT PANEL ───────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ CHAT PANEL в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         /* Desktop */
         .live-chat-panel {
           display: flex; flex-direction: column;
@@ -1010,7 +972,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
         .btn-send:active:not(:disabled) { transform: scale(0.93); }
         .btn-send:disabled { background: rgba(255,255,255,0.08); cursor: not-allowed; }
 
-        /* ── ANIMATIONS ─────────────────────────────────────────────────── */
+        /* в”Ђв”Ђ ANIMATIONS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         @keyframes wave {
           from { transform: rotate(-15deg); }
           to   { transform: rotate(15deg);  }
@@ -1025,7 +987,7 @@ const WatchView = ({ live, currentUser, onBack }) => {
           50%      { opacity: 0.65; }
         }
 
-        /* ── Zego barcha ichki UI yashirish ──────────────────────────────── */
+        /* в”Ђв”Ђ Zego barcha ichki UI yashirish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         /* Chat */
         .zego-room-message-list, .zego-chat-message-list,
         [class*="ZegoRoomMessage"], [class*="ZegoChat"],
@@ -1058,10 +1020,10 @@ const WatchView = ({ live, currentUser, onBack }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── LIVE CARD
-// ═══════════════════════════════════════════════════════════════════════════════
-const LiveCard = ({ live, onWatch }) => (
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ LIVE CARD
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+const LiveCard = ({ live, onWatch, t }) => (
   <div
     onClick={() => onWatch(live)}
     className="lc-card"
@@ -1102,11 +1064,11 @@ const LiveCard = ({ live, onWatch }) => (
       <div className="lc-meta">
         <Avatar photo={live.instructorPhoto} name={live.instructorName} size={18} bgClass="bg-white/10 border-white/10 text-white/60"/>
         <span className="lc-instructor">{live.instructorName}</span>
-        <span className="lc-time">{timeAgo(live.startedAt)}</span>
+        <span className="lc-time">{timeAgo(live.startedAt, t)}</span>
       </div>
       <button className="lc-join-btn" tabIndex={-1}>
         <span className="lc-join-dot"/>
-        Efirga Qo'shilish
+        {t.joinBroadcast}
       </button>
     </div>
 
@@ -1201,10 +1163,10 @@ const LiveCard = ({ live, onWatch }) => (
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── ENDED CARD
-// ═══════════════════════════════════════════════════════════════════════════════
-const EndedCard = ({ live }) => (
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ ENDED CARD
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+const EndedCard = ({ live, t }) => (
   <div style={{
     display: "flex", alignItems: "center", gap: 10, padding: "11px 12px",
     background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -1217,11 +1179,11 @@ const EndedCard = ({ live }) => (
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
         <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>{live.instructorName}</span>
-        <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>·</span>
-        <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>{timeAgo(live.startedAt)}</span>
+        <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>В·</span>
+        <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>{timeAgo(live.startedAt, t)}</span>
         {live.viewers > 0 && <>
-          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>·</span>
-          <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>{live.viewers} tomoshabin</span>
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>В·</span>
+          <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>{live.viewers} {t.viewers}</span>
         </>}
       </div>
     </div>
@@ -1229,14 +1191,15 @@ const EndedCard = ({ live }) => (
       fontSize: 10, fontWeight: 800, background: "rgba(255,255,255,0.08)",
       color: "rgba(255,255,255,0.35)", padding: "3px 8px", borderRadius: 999,
       border: "1px solid rgba(255,255,255,0.1)", whiteSpace: "nowrap", flexShrink: 0,
-    }}>Yakunlandi</span>
+    }}>{t.ended}</span>
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── ASOSIY SAHIFA
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ ASOSIY SAHIFA
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const LiveInstructor = () => {
+  const { t } = useLang();
   const [currentUser]  = useAuthState(auth);
   const [liveLessons,  setLiveLessons]  = useState([]);
   const [endedLessons, setEndedLessons] = useState([]);
@@ -1276,8 +1239,8 @@ const LiveInstructor = () => {
   }
 
   const TABS = [
-    { id: "live",  label: "🔴 Hozir Live",     count: liveLessons.length  },
-    { id: "ended", label: "📼 O'tgan Efirlar",  count: endedLessons.length },
+    { id: "live",  label: "🔴 " + t.nowLive,     count: liveLessons.length  },
+    { id: "ended", label: "📼 " + t.pastBroadcasts,  count: endedLessons.length },
   ];
 
   return (
@@ -1287,21 +1250,21 @@ const LiveInstructor = () => {
 
       <div className="li-container">
 
-        {/* ── Page header ── */}
+        {/* в”Ђв”Ђ Page header в”Ђв”Ђ */}
         <div className="li-page-header">
           <div className="li-header-top">
             <span className="li-live-tag">
-              <span className="li-live-tag-dot"/>Jonli Efirlar
+              <span className="li-live-tag-dot"/> {t.liveBroadcasts}
             </span>
             {liveLessons.length > 0 && (
-              <span className="li-count-tag">{liveLessons.length} ta faol</span>
+              <span className="li-count-tag">{liveLessons.length} {t.activeCount}</span>
             )}
           </div>
-          <h1 className="li-heading">Live Darslar</h1>
-          <p className="li-subtext">O'qituvchilar tomonidan o'tkazilayotgan jonli darslarni tomosha qiling</p>
+          <h1 className="li-heading">{t.liveLessons}</h1>
+          <p className="li-subtext">{t.watchLiveLessons}</p>
         </div>
 
-        {/* ── Tabs ── */}
+        {/* в”Ђв”Ђ Tabs в”Ђв”Ђ */}
         <div className="li-tabs">
           {TABS.map((tab) => (
             <button
@@ -1319,7 +1282,7 @@ const LiveInstructor = () => {
           ))}
         </div>
 
-        {/* ── Live tab ── */}
+        {/* в”Ђв”Ђ Live tab в”Ђв”Ђ */}
         {activeTab === "live" && (
           loading ? (
             <div className="li-loading">
@@ -1328,29 +1291,29 @@ const LiveInstructor = () => {
           ) : liveLessons.length === 0 ? (
             <div className="li-empty">
               <div className="li-empty-icon">📡</div>
-              <h3 className="li-empty-title">Hozircha faol efir yo'q</h3>
-              <p className="li-empty-text">O'qituvchilar live dars boshlashsa, bu yerda ko'rinadi. Keyinroq qaytib keling!</p>
+              <h3 className="li-empty-title">{t.noActiveBroadcast}</h3>
+              <p className="li-empty-text">{t.noActiveBroadcastDesc}</p>
             </div>
           ) : (
             <div className="li-grid">
               {liveLessons.map((live) => (
-                <LiveCard key={live.id} live={live} onWatch={handleWatch}/>
+                <LiveCard key={live.id} live={live} onWatch={handleWatch} t={t}/>
               ))}
             </div>
           )
         )}
 
-        {/* ── Ended tab ── */}
+        {/* в”Ђв”Ђ Ended tab в”Ђв”Ђ */}
         {activeTab === "ended" && (
           endedLessons.length === 0 ? (
             <div className="li-empty">
               <div className="li-empty-icon">📼</div>
-              <h3 className="li-empty-title">O'tgan efirlar yo'q</h3>
-              <p className="li-empty-text">Hali birorta efir yakunlanmagan</p>
+              <h3 className="li-empty-title">{t.noPastBroadcasts}</h3>
+              <p className="li-empty-text">{t.noPastBroadcastsDesc}</p>
             </div>
           ) : (
             <div className="li-ended-list">
-              {endedLessons.map((live) => <EndedCard key={live.id} live={live}/>)}
+              {endedLessons.map((live) => <EndedCard key={live.id} live={live} t={t}/>)}
             </div>
           )
         )}

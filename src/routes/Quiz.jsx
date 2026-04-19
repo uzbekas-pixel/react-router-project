@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+
 import { useAuth } from "../context/useAuth";
 import { doc, getDoc, setDoc, increment, updateDoc } from "firebase/firestore";
 import { giveReward } from "../utils/rewardSystem";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
 import {
-  LuBrain, LuTrophy, LuRefreshCw, LuChevronRight, LuFlame, LuGlobe, LuPalette, LuZap, LuAtom, LuLanguages, LuInfo, LuTimer, LuCheck, LuSettings, LuX, LuTarget, LuPartyPopper, LuBook, LuActivity, LuLightbulb, LuSmile, LuStar, LuBot, LuDollarSign
+  LuBrain, LuTrophy, LuRefreshCw, LuChevronRight, LuFlame, LuGlobe, LuPalette, LuZap, LuAtom, LuLanguages, LuInfo, LuTimer, LuCheck, LuSettings, LuX, LuTarget, LuPartyPopper, LuBook, LuActivity, LuLightbulb, LuSmile, LuStar, LuBot, LuDollarSign, LuArrowLeft
 } from "react-icons/lu";
 import { completeRealTask } from "../utils/taskManager";
 
@@ -15,7 +15,7 @@ const QUESTIONS_PER_QUIZ = 10;
 const GEMINI_API_KEY     = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL         = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-const DIFF_ORDER = ["Oson", "O'rta", "Qiyin"];
+const getDiffOrder = (t) => [t.diffEasy, t.diffMedium, t.diffHard];
 
 const CATEGORY_CONFIG = {
   HTML:       { icon: <LuGlobe size={32} />, color: "orange" },
@@ -344,15 +344,16 @@ if (res.status === 429) {
   } catch { return null; }
 };
 
-const getDifficultyFromScore = (avg) => {
-  if (avg === null || avg === undefined) return "Oson";
-  if (avg < 50) return "Oson";
-  if (avg < 80) return "O'rta";
-  return "Qiyin";
+const getDifficultyFromScore = (avg, t) => {
+  if (!t) return "Oson";
+  if (avg === null || avg === undefined) return t.diffEasy;
+  if (avg < 50) return t.diffEasy;
+  if (avg < 80) return t.diffMedium;
+  return t.diffHard;
 };
 
-const escalateDifficulty   = (d) => { const i = DIFF_ORDER.indexOf(d); return i < DIFF_ORDER.length - 1 ? DIFF_ORDER[i + 1] : d; };
-const deescalateDifficulty = (d) => { const i = DIFF_ORDER.indexOf(d); return i > 0 ? DIFF_ORDER[i - 1] : d; };
+const escalateDifficulty   = (d, t) => { const diffOrder = getDiffOrder(t); const i = diffOrder.indexOf(d); return i < diffOrder.length - 1 ? diffOrder[i + 1] : d; };
+const deescalateDifficulty = (d, t) => { const diffOrder = getDiffOrder(t); const i = diffOrder.indexOf(d); return i > 0 ? diffOrder[i - 1] : d; };
 
 const shuffleOptions = (q) => {
   if (!q) return null;
@@ -431,7 +432,7 @@ const Quiz = ({ darkMode, showToast }) => {
   const savingRef = useRef(false);
   const pendingRef = useRef(null);
 
-  const initialDiff = useMemo(() => getDifficultyFromScore(stats.quizAvg), [stats.quizAvg]);
+  const initialDiff = useMemo(() => getDifficultyFromScore(stats.quizAvg, t), [stats.quizAvg, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -558,7 +559,7 @@ const Quiz = ({ darkMode, showToast }) => {
       setScreen("result");
       saveResult(pct, score, newAnswers.length, category);
     } else {
-      const newDiff = isCorrect ? (newStreak >= 2 ? escalateDifficulty(currentDiff) : currentDiff) : deescalateDifficulty(currentDiff);
+      const newDiff = isCorrect ? (newStreak >= 2 ? escalateDifficulty(currentDiff, t) : currentDiff) : deescalateDifficulty(currentDiff, t);
       setCurrentDiff(newDiff);
       setLoadingQ(true);
       setCurrentQ(cq + 1);
@@ -585,7 +586,7 @@ const Quiz = ({ darkMode, showToast }) => {
   // UI RENDERING
   if (screen === "select") return (
     <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24">
-      <ScrollReveal direction="up">
+      <div>
         <div className="text-center max-w-2xl mx-auto mb-16 md:mb-20">
           <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
             {t.quizBadge}
@@ -594,7 +595,7 @@ const Quiz = ({ darkMode, showToast }) => {
             {t.quizTitle}
           </h2>
           <p className="text-slate-500 text-lg mb-10">
-            {QUESTIONS_PER_QUIZ} {t.quizQuestions} · {TIMER}s {t.secLabel} limit · AI adaptive
+            {QUESTIONS_PER_QUIZ} {t.quizQuestions} В· {TIMER}s {t.secLabel} limit В· AI adaptive
           </p>
           {!loading && (
             <div className={`mt-8 inline-flex items-center gap-4 px-6 py-3 rounded-2xl border ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-200"}`}>
@@ -604,14 +605,14 @@ const Quiz = ({ darkMode, showToast }) => {
             </div>
           )}
         </div>
-      </ScrollReveal>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {CATEGORIES.map((cat, i) => {
           const cfg = CATEGORY_CONFIG[cat];
           const hs = stats.highScores?.[cat] || 0;
           return (
-            <ScrollReveal key={cat} direction="up" delay={i * 100}>
+            <div>
               <div 
                 onClick={() => startQuiz(cat)}
                 className={`group relative p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer overflow-hidden ${
@@ -647,7 +648,7 @@ const Quiz = ({ darkMode, showToast }) => {
                   {t.play} <LuChevronRight />
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
           );
         })}
       </div>
@@ -667,7 +668,7 @@ const Quiz = ({ darkMode, showToast }) => {
               darkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
             }`}
           >
-             {t.exitQuiz}
+             <LuArrowLeft size={16} /> {t.exitQuiz}
           </button>
           <div className="flex items-center gap-4">
             {streak >= 2 && (
@@ -700,7 +701,7 @@ const Quiz = ({ darkMode, showToast }) => {
             <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-slate-900"}`}>{t.aiGenerating}</h3>
           </div>
         ) : q ? (
-          <ScrollReveal direction="up">
+          <div>
             <div className={`p-8 md:p-12 rounded-[2.5rem] border mb-8 ${darkMode ? "bg-slate-900/40 border-white/5 shadow-2xl shadow-indigo-500/5" : "bg-white border-slate-100 shadow-2xl shadow-slate-200/50"}`} style={{ backdropFilter: "blur(20px)" }}>
               {/* Timer Header */}
               <div className="flex items-center justify-between mb-10">
@@ -790,7 +791,7 @@ const Quiz = ({ darkMode, showToast }) => {
                 </div>
               )}
             </div>
-          </ScrollReveal>
+          </div>
         ) : (
           <div className="text-center py-20">
              <p className="text-slate-500 mb-6">{t.loadingError}</p>
@@ -810,7 +811,7 @@ const Quiz = ({ darkMode, showToast }) => {
 
     return (
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 lg:py-24">
-        <ScrollReveal direction="up">
+        <div>
           <div className="text-center mb-16">
             <div className="text-8xl mb-8 transform hover:scale-110 transition-transform duration-500 cursor-default flex justify-center">{resultIcon}</div>
             {isNewHS && (
@@ -819,20 +820,20 @@ const Quiz = ({ darkMode, showToast }) => {
               </div>
             )}
             <h2 className={`text-4xl md:text-5xl font-black mb-4 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>{msg}</h2>
-            <p className="text-slate-500 font-medium">{category} · {t.diffEasy}: {currentDiff}</p>
+            <p className="text-slate-500 font-medium">{category} В· {t.diffEasy}: {currentDiff}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             <div className={`p-8 rounded-[2rem] border text-center transition-all ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl shadow-slate-100"}`}>
-               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Accuracy</p>
+               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t.accuracy}</p>
                <div className="text-5xl font-black tabular-nums text-indigo-500">{pct}%</div>
             </div>
             <div className={`p-8 rounded-[2rem] border text-center transition-all ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl shadow-slate-100"}`}>
-               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Total XP</p>
+               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t.totalXP}</p>
                <div className="text-5xl font-black tabular-nums text-emerald-500">+{score * 5}</div>
             </div>
             <div className={`p-8 rounded-[2rem] border text-center transition-all ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-xl shadow-slate-100"}`}>
-               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Score</p>
+               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t.score}</p>
                <div className={`text-5xl font-black tabular-nums ${darkMode ? "text-white" : "text-slate-900"}`}>{score}/{qs.length}</div>
             </div>
           </div>
@@ -878,7 +879,7 @@ const Quiz = ({ darkMode, showToast }) => {
                {t.otherQuiz}
             </button>
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     );
   }

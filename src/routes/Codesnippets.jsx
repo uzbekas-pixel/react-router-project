@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
+import { useLang } from "../context/useLang";
 import {
   collection,
   addDoc,
@@ -22,8 +23,9 @@ import {
   LuSave,
 } from "react-icons/lu";
 
-// ─── CodeSnippets Panel ────────────────────────────────────────────────────────
-const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
+// в”Ђв”Ђв”Ђ CodeSnippets Panel в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+const CodeSnippets = ({ isOpen, onClose, darkMode, user, triggerRef }) => {
+  const { t } = useLang();
   const [snippets, setSnippets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -40,7 +42,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
     "json", "bash", "sql", "jsx", "tsx",
   ];
 
-  // ── Firestore real-time listener ───────────────────────────────────────────
+  // в”Ђв”Ђ Firestore real-time listener в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!user || !isOpen) return;
     setLoading(true);
@@ -55,24 +57,29 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
     return () => unsub();
   }, [user, isOpen]);
 
-  // ── Outside click to close ─────────────────────────────────────────────────
+  // в”Ђв”Ђ Outside click to close в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
+      // Panel va trigger button—™dan tashqariga bosilgandagina yopish
+      if (
+        panelRef.current && 
+        !panelRef.current.contains(e.target) &&
+        !(triggerRef?.current && triggerRef.current.contains(e.target))
+      ) {
         onClose();
       }
     };
     if (isOpen) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, triggerRef]);
 
-  // ── Save snippet ───────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Save snippet в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleSave = async () => {
     if (!title.trim() || !code.trim() || !user) return;
     // LIMIT TEKSHIRISH:
   // Bu yerda maxSnippets ni bazadan olib, snippets.length bilan solishtirish kerak
   if (snippets.length >= (user.maxSnippets || 5)) {
-    alert("Limit to'lgan! Do'kondan qo'shimcha slot sotib oling.");
+    alert(t.snippetsLimit);
     return;
   }
     setSaving(true);
@@ -94,7 +101,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
     }
   };
 
-  // ── Delete snippet ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Delete snippet в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleDelete = async (snippetId) => {
     if (!user) return;
     try {
@@ -104,7 +111,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
     }
   };
 
-  // ── Copy to clipboard ──────────────────────────────────────────────────────
+  // в”Ђв”Ђ Copy to clipboard в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleCopy = (snippetId, codeText) => {
     navigator.clipboard.writeText(codeText).then(() => {
       setCopiedId(snippetId);
@@ -114,7 +121,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
 
   if (!isOpen) return null;
 
-  // ── Styles ─────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Styles в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const glass = {
     background: darkMode
       ? "rgba(10, 15, 30, 0.88)"
@@ -152,7 +159,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
         ...glass,
       }}
     >
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Header в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div
         style={{
           display: "flex",
@@ -168,7 +175,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LuCode style={{ color: "#6366f1", fontSize: 18 }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: textPrimary, letterSpacing: "0.01em" }}>
-            Kod Parchalarim
+            {t.snippetsTitle}
           </span>
           <span
             style={{
@@ -187,7 +194,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
         <div style={{ display: "flex", gap: 6 }}>
           <button
             onClick={() => setShowForm((s) => !s)}
-            title="Yangi snippet"
+            title={t.snippetNew}
             style={{
               width: 30,
               height: 30,
@@ -225,7 +232,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
         </div>
       </div>
 
-      {/* ── Add Form ────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Add Form в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {showForm && (
         <div
           style={{
@@ -242,7 +249,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
           {/* Title input */}
           <input
             type="text"
-            placeholder="Sarlavha (masalan: useDebounce hook)"
+            placeholder={t.snippetPlaceholder}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             style={{
@@ -282,7 +289,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
 
           {/* Code textarea */}
           <textarea
-            placeholder="// Kodingizni shu yerga yozing..."
+            placeholder={t.snippetCodePlaceholder}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             rows={5}
@@ -327,29 +334,39 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
             }}
           >
             <LuSave style={{ fontSize: 14 }} />
-            {saving ? "Saqlanmoqda..." : "Saqlash"}
+            {saving ? t.snippetSaving : t.snippetSave}
           </button>
         </div>
       )}
 
-      {/* ── Snippets List ────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Snippets List в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 10px" }}>
         {!user ? (
           <div style={{ textAlign: "center", padding: "30px 16px", color: textSecondary, fontSize: 13 }}>
-            Snippet saqlash uchun tizimga kiring.
+            {t.snippetLogin}
           </div>
         ) : loading ? (
-          <div style={{ textAlign: "center", padding: "30px", color: textSecondary, fontSize: 13 }}>
-            Yuklanmoqda...
+          <div style={{ padding: 20, textAlign: "center", color: textSecondary, fontSize: 12 }}>
+            {t.snippetLoading}
           </div>
         ) : snippets.length === 0 ? (
           <div style={{ textAlign: "center", padding: "30px 16px" }}>
             <LuCode style={{ fontSize: 32, color: "rgba(99,102,241,0.4)", margin: "0 auto 10px" }} />
             <p style={{ color: textSecondary, fontSize: 12, lineHeight: 1.6 }}>
-              Hali snippet yo'q. <br />
-              <span style={{ color: "#818cf8", cursor: "pointer" }} onClick={() => setShowForm(true)}>
-                + Birinchisini qo'shing
-              </span>
+              {t.snippetEmpty} <br />
+              <button
+                onClick={() => setShowForm(true)}
+                style={{
+                  fontSize: 12,
+                  color: "#6366f1",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                {t.snippetAddFirst}
+              </button>
             </p>
           </div>
         ) : (
@@ -394,7 +411,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
                         flexShrink: 0,
                       }}
                     >
-                      {snippet.language || "code"}
+                      {snippet.language || t.snippetCode}
                     </span>
                     <span
                       style={{
@@ -416,7 +433,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
                         e.stopPropagation();
                         handleCopy(snippet.id, snippet.code);
                       }}
-                      title="Nusxa olish"
+                      title={t.snippetCopy}
                       style={{
                         width: 26,
                         height: 26,
@@ -450,7 +467,7 @@ const CodeSnippets = ({ isOpen, onClose, darkMode, user }) => {
                         e.stopPropagation();
                         handleDelete(snippet.id);
                       }}
-                      title="O'chirish"
+                      title={t.snippetDelete}
                       style={{
                         width: 26,
                         height: 26,

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect } from "react";
+
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import {
   collection, doc, getDoc, getDocs, setDoc,
   updateDoc, query, where, serverTimestamp, increment,
@@ -17,6 +18,7 @@ const REFERRAL_XP = 100;
 const REFERRED_XP = 50;
 
 const Referral = ({ darkMode, showToast }) => {
+  const { t } = useLang();
   const { user } = useAuth();
 
   const [referralCode,   setReferralCode]   = useState("");
@@ -28,7 +30,7 @@ const Referral = ({ darkMode, showToast }) => {
   const [copied,         setCopied]         = useState(false);
   const [alreadyUsed,    setAlreadyUsed]    = useState(false);
 
-  // ── Referral code yuklash ─────────────────────────────────────────────────
+  // в”Ђв”Ђ Referral code yuklash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -68,7 +70,7 @@ const Referral = ({ darkMode, showToast }) => {
     return () => { cancelled = true; };
   }, [user]);
 
-  // ── Taklif qilingan userlar ───────────────────────────────────────────────
+  // в”Ђв”Ђ Taklif qilingan userlar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!referralCode) return;
     let cancelled = false;
@@ -89,17 +91,17 @@ const Referral = ({ darkMode, showToast }) => {
     return () => { cancelled = true; };
   }, [referralCode]);
 
-  // ── Kod qo'llash ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Kod qo'llash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const applyCode = async () => {
     if (!user || !inputCode.trim()) return;
     const code = inputCode.trim().toUpperCase();
 
     if (code === referralCode) {
-      showToast?.("O'z kodingizni ishlata olmaysiz!", "error");
+      showToast?.(t.cannotUseOwnCode, "error");
       return;
     }
     if (alreadyUsed) {
-      showToast?.("Siz allaqachon referral kod ishlatgansiz!", "error");
+      showToast?.(t.alreadyUsedCode, "error");
       return;
     }
 
@@ -109,7 +111,7 @@ const Referral = ({ darkMode, showToast }) => {
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        showToast?.("Kod topilmadi!", "error");
+        showToast?.(t.codeNotFound, "error");
         setApplying(false);
         return;
       }
@@ -117,13 +119,13 @@ const Referral = ({ darkMode, showToast }) => {
       const ownerDoc  = snap.docs[0];
       const ownerData = ownerDoc.data();
 
-      await giveReward(ownerData.uid, REFERRAL_XP, "xp", "Do'st taklif qilgani uchun");
+      await giveReward(ownerData.uid, REFERRAL_XP, "xp", t.referralReward);
 
       await updateDoc(doc(db, "referrals", ownerData.uid), {
         totalEarned: increment(REFERRAL_XP),
       });
 
-      await giveReward(user.uid, REFERRED_XP, "xp", "Taklif orqali qo'shilgani uchun");
+      await giveReward(user.uid, REFERRED_XP, "xp", t.referredReward);
 
       await updateDoc(doc(db, "referrals", user.uid), {
         usedCode: code,
@@ -133,8 +135,8 @@ const Referral = ({ darkMode, showToast }) => {
       await setDoc(
         doc(db, "users", ownerData.uid, "notifications", `ref_${Date.now()}`),
         {
-          title:     "Referral bonus!",
-          message:   `Kimdir sizning kodingizni ishlatdi! +${REFERRAL_XP} XP qo'shildi.`,
+          title:     t.referralNotification,
+          message:   `${t.referralNotificationMessage} +${REFERRAL_XP} XP`,
           type:      "success",
           read:      false,
           createdAt: serverTimestamp(),
@@ -143,30 +145,30 @@ const Referral = ({ darkMode, showToast }) => {
 
       setAlreadyUsed(true);
       setInputCode("");
-      showToast?.(`+${REFERRED_XP} XP qo'shildi! Kod egasi ham +${REFERRAL_XP} XP oldi!`, "success");
+      showToast?.(`${REFERRED_XP} ${t.xpAddedBoth}`, "success");
 
     } catch (err) {
       console.error("applyCode error:", err);
-      showToast?.("Xatolik yuz berdi!", "error");
+      showToast?.(t.error, "error");
     }
     setApplying(false);
   };
 
-  // ── Copy & Share ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Copy & Share в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const copyCode = () => {
     navigator.clipboard.writeText(referralCode).catch(() => {});
     setCopied(true);
-    showToast?.("Kod nusxalandi!", "success");
+    showToast?.(t.codeCopied, "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareCode = () => {
-    const text = `Uzbekas Pixel platformasiga qo'shiling!\nMening kodim: ${referralCode}\n+${REFERRED_XP} XP bonus olasiz\nhttps://uzbekas.vercel.app`;
+    const text = `${t.shareTitle} ${t.shareTextLine1}\n${t.shareTextLine2} ${referralCode}\n+${REFERRED_XP} ${t.shareTextLine3}\nhttps://uzbekas.vercel.app`;
     if (navigator.share) {
-      navigator.share({ title: "Uzbekas Pixel", text }).catch(() => {});
+      navigator.share({ title: t.shareTitle, text }).catch(() => {});
     } else {
       navigator.clipboard.writeText(text).catch(() => {});
-      showToast?.("Havola nusxalandi!", "success");
+      showToast?.(t.linkCopied, "success");
     }
   };
 
@@ -179,23 +181,23 @@ const Referral = ({ darkMode, showToast }) => {
 
   return (
     <div style={{ width:"100%", maxWidth:700, margin:"0 auto", padding:"40px 16px 80px" }}>
-      <ScrollReveal direction="up">
+      <div>
         <div style={{ marginBottom:28 }}>
-            <LuGift size={14} className="inline mr-2" /> Referral
+            <LuGift size={14} className={`${darkMode ? 'text-white' : 'text-black'}`} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} /> 
           <h2 style={{ fontSize:26, fontWeight:800, margin:"0 0 6px", color:darkMode?"#f1f5f9":"#111" }}>
-            Do'st Taklif Qiling
+            {t.referralTitle}
           </h2>
           <p style={{ margin:0, fontSize:14, color:"#6b7280" }}>
-            Do'stingiz sizning kodingiz bilan ro'yxatdan o'tsa — ikkalingiz ham XP olasiz!
+            {t.referralSubtitle}
           </p>
         </div>
 
         {/* Statistika */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
           {[
-            { icon:<LuUsers size={20}/>,  color:"#3b82f6", value:referredUsers.length, label:"Taklif qilingan" },
-            { icon:<LuStar size={20}/>,   color:"#f59e0b", value:`+${totalEarned}`,    label:"Jami XP"        },
-            { icon:<LuTrophy size={20}/>, color:"#10b981", value:REFERRAL_XP,          label:"Har taklif"     },
+            { icon:<LuUsers size={20}/>,  color:"#3b82f6", value:referredUsers.length, label:t.referredCount },
+            { icon:<LuStar size={20}/>,   color:"#f59e0b", value:`+${totalEarned}`,    label:t.totalXP       },
+            { icon:<LuTrophy size={20}/>, color:"#10b981", value:REFERRAL_XP,          label:t.perReferral   },
           ].map((s,i) => (
             <div key={i} style={{ padding:"16px", borderRadius:14, background:darkMode?"#1e293b":"#fff", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, textAlign:"center" }}>
               <div style={{ color:s.color, display:"flex", justifyContent:"center", marginBottom:6 }}>{s.icon}</div>
@@ -208,37 +210,37 @@ const Referral = ({ darkMode, showToast }) => {
         {/* Referral kod */}
         <div style={{ padding:"24px", borderRadius:16, background:"linear-gradient(135deg,#3b82f611,#8b5cf611)", border:"2px solid #3b82f644", marginBottom:20 }}>
           <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:600, color:"#6b7280", display:"flex", alignItems:"center", gap:6 }}>
-            <LuGift size={14}/> Sizning referral kodingiz
+            <LuGift size={14}/> {t.yourReferralCode}
           </p>
           <div style={{ display:"flex", gap:10, alignItems:"center" }}>
             <div style={{ flex:1, padding:"14px 20px", borderRadius:12, background:darkMode?"#0f172a":"#fff", border:"2px dashed #3b82f6", textAlign:"center" }}>
               <span style={{ fontSize:24, fontWeight:800, color:"#3b82f6", letterSpacing:3, fontFamily:"monospace" }}>
-                {referralCode || "Yuklanmoqda..."}
+                {referralCode || t.loading}
               </span>
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
               <button onClick={copyCode}
                 style={{ padding:"10px 16px", borderRadius:10, border:"none", background:copied?"#10b981":"#3b82f6", color:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", gap:6, transition:"all 0.2s" }}>
-                {copied ? <><LuCheck size={16}/> Nusxalandi</> : <><LuCopy size={16}/> Nusxalash</>}
+                {copied ? <><LuCheck size={16}/> {t.copied}</> : <><LuCopy size={16}/> {t.copy}</>}
               </button>
               <button onClick={shareCode}
                 style={{ padding:"10px 16px", borderRadius:10, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:"transparent", color:darkMode?"#f1f5f9":"#374151", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
-                <LuShare2 size={16}/> Ulashish
+                <LuShare2 size={16}/> {t.share}
               </button>
             </div>
           </div>
 
           <div style={{ display:"flex", gap:16, marginTop:16, flexWrap:"wrap" }}>
             {[
-              { step:"1", text:"Kodingizni do'stingizga yuboring" },
-              { step:"2", text:`Do'stingiz ro'yxatdan o'tib kodni kiritadi` },
-              { step:"3", text:`Ikkalingiz +XP olasiz!` },
+              { step:"1", text:t.referralStep1 },
+              { step:"2", text:t.referralStep2 },
+              { step:"3", text:t.referralStep3 },
             ].map((s,i) => (
               <div key={i} style={{ display:"flex", alignItems:"center", gap:8, flex:1, minWidth:140 }}>
                 <div style={{ width:24, height:24, borderRadius:"50%", background:"#3b82f6", color:"#fff", fontSize:11, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   {s.step}
                 </div>
-                <p style={{ margin:0, fontSize:12, color:darkMode?"#94a3b8":"#6b7280" }}>{s.text}</p>
+                <p style={{ margin:0, fontSize:12, color:"#6b7280" }}>{s.text}</p>
               </div>
             ))}
           </div>
@@ -247,14 +249,14 @@ const Referral = ({ darkMode, showToast }) => {
         {/* Kod kiritish */}
         <div style={{ padding:"24px", borderRadius:16, background:darkMode?"#1e293b":"#fff", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, marginBottom:24 }}>
           <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:700, color:darkMode?"#f1f5f9":"#111", display:"flex", alignItems:"center", gap:6 }}>
-            <LuZap size={16} style={{ color:"#f59e0b" }}/> Do'stingiz kodini kiriting
+            <LuZap size={16} style={{ color:"#f59e0b" }}/> {t.enterFriendCode}
           </p>
 
           {alreadyUsed ? (
             <div style={{ padding:"14px 16px", borderRadius:10, background:"#d1fae5", border:"1px solid #10b981", display:"flex", alignItems:"center", gap:10 }}>
               <LuCheck size={18} style={{ color:"#10b981", flexShrink:0 }}/>
               <p style={{ margin:0, fontSize:14, color:"#065f46", fontWeight:600 }}>
-                Siz allaqachon referral kod ishlatgansiz! +{REFERRED_XP} XP oldingiz.
+                {t.alreadyUsedReferral} +{REFERRED_XP} XP {t.earned}
               </p>
             </div>
           ) : (
@@ -263,21 +265,21 @@ const Referral = ({ darkMode, showToast }) => {
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && applyCode()}
-                placeholder="Masalan: UZP-ABC123"
+                placeholder={t.referralCodePlaceholder}
                 style={{ flex:1, padding:"12px 16px", borderRadius:10, border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, background:darkMode?"#0f172a":"#f8fafc", color:darkMode?"#f1f5f9":"#111", fontSize:14, outline:"none", fontFamily:"monospace", letterSpacing:2 }}
               />
               <button onClick={applyCode} disabled={applying || !inputCode.trim()}
                 style={{ padding:"12px 20px", borderRadius:10, border:"none", background:applying||!inputCode.trim()?"#94a3b8":"#10b981", color:"#fff", fontSize:14, fontWeight:700, cursor:applying||!inputCode.trim()?"default":"pointer", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}>
                 {applying
                   ? <div style={{ width:16, height:16, borderRadius:"50%", border:"2px solid #fff", borderTopColor:"transparent", animation:"spin 0.8s linear infinite" }}/>
-                  : <><LuCheck size={16}/> Qo'llash</>
+                  : <><LuCheck size={16}/> {t.apply}</>
                 }
               </button>
             </div>
           )}
 
-          <p style={{ margin:"10px 0 0", fontSize:12, color:"#6b7280" }}>
-            💡 Kod kiritish bir marta ishlaydi. +{REFERRED_XP} XP olasiz, do'stingiz +{REFERRAL_XP} XP oladi.
+          <p style={{ margin:"10px 0 0", fontSize:12, color:"#6b7280", display: 'flex', alignItems: 'center', gap: 6 }}>
+            <LuLightbulb size={14} /> {t.referralOnceInfo} +{REFERRED_XP} XP {t.youGet}, {t.friendGets} +{REFERRAL_XP} XP.
           </p>
         </div>
 
@@ -285,7 +287,7 @@ const Referral = ({ darkMode, showToast }) => {
         {referredUsers.length > 0 && (
           <div>
             <h3 style={{ margin:"0 0 14px", fontSize:16, fontWeight:700, color:darkMode?"#f1f5f9":"#111", display:"flex", alignItems:"center", gap:8 }}>
-              <LuUsers size={18} style={{ color:"#3b82f6" }}/> Sizning kodingizni ishlatganlar ({referredUsers.length})
+              <LuUsers size={18} style={{ color:"#3b82f6" }}/> {t.referredUsersTitle} ({referredUsers.length})
             </h3>
             <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
               {referredUsers.map((u) => (
@@ -295,10 +297,10 @@ const Referral = ({ darkMode, showToast }) => {
                   </div>
                   <div style={{ flex:1 }}>
                     <p style={{ margin:0, fontSize:13, fontWeight:600, color:darkMode?"#f1f5f9":"#111" }}>
-                      {u.displayName || "Foydalanuvchi"}
+                      {u.displayName || t.user}
                     </p>
                     <p style={{ margin:0, fontSize:11, color:"#6b7280" }}>
-                      {u.usedAt?.toDate?.()?.toLocaleDateString("uz") || "—"}
+                      {u.usedAt?.toDate?.()?.toLocaleDateString("uz") || "—”"}
                     </p>
                   </div>
                   <span style={{ fontSize:12, fontWeight:700, color:"#10b981", background:"#d1fae5", padding:"3px 10px", borderRadius:20 }}>
@@ -309,7 +311,7 @@ const Referral = ({ darkMode, showToast }) => {
             </div>
           </div>
         )}
-      </ScrollReveal>
+      </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { db } from "../firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import {
   LuDownload, LuAward, LuStar, LuCalendar,
   LuUser, LuBadgeCheck, LuPrinter, LuGraduationCap, LuSprout, LuBookOpen, LuSearch, LuBrain, LuZap, LuTarget, LuTrophy, LuGem, LuCrown, LuCheck, LuTriangleAlert,
@@ -10,36 +9,36 @@ import {
 import { useLang } from "../context/useLang";
 
 const getCertificateCourses = (t) => [
-  { id: 1, title: t.course_html_basis || "HTML Asoslar",         category: "HTML",       color: "#e44d26", duration: "12 soat", instructor: "Jasur Toshmatov" },
-  { id: 2, title: t.course_css_flex  || "CSS & Flexbox To'liq", category: "CSS",        color: "#264de4", duration: "18 soat", instructor: "Nilufar Karimova" },
-  { id: 3, title: t.course_js_full   || "JavaScript To'liq",    category: "JavaScript", color: "#d4a017", duration: "36 soat", instructor: "Bobur Yusupov" },
-  { id: 4, title: t.course_react_mod || "React.js Zamonaviy",   category: "React",      color: "#0ea5e9", duration: "30 soat", instructor: "Sardor Nazarov" },
-  { id: 5, title: t.course_en_a1b2   || "Ingliz Tili A1→B2",   category: "English",    color: "#003580", duration: "60 soat", instructor: "Malika Ergasheva" },
-  { id: 6, title: t.course_ru_basis  || "Rus Tili Asosiy",      category: "Russian",    color: "#c0392b", duration: "45 soat", instructor: "Alisher Hamidov" },
-  { id: 7, title: t.course_fr_full   || "Fransuz Tili",         category: "French",     color: "#002395", duration: "40 soat", instructor: "Dilorom Saidova" },
-  { id: 8, title: t.course_html5_sem || "HTML5 & Semantik",     category: "HTML",       color: "#e44d26", duration: "8 soat",  instructor: "Kamol Rashidov" },
+  { id: 1, title: t.course_html_basis || "HTML Asoslar",         category: "HTML",       color: "#e44d26",  instructor: "Uzbekas AI" },
+  { id: 2, title: t.course_css_flex  || "CSS & Flexbox To'liq", category: "CSS",        color: "#264de4",  instructor: "Uzbekas AI" },
+  { id: 3, title: t.course_js_full   || "JavaScript To'liq",    category: "JavaScript", color: "#d4a017",  instructor: "Uzbekas AI" },
+  { id: 4, title: t.course_react_mod || "React.js Zamonaviy",   category: "React",      color: "#0ea5e9",  instructor: "Uzbekas AI" },
+  { id: 5, title: t.course_en_a1b2   || "Ingliz Tili A1→B2",   category: "English",    color: "#003580",  instructor: "Uzbekas AI" },
+  { id: 6, title: t.course_ru_basis  || "Rus Tili Asosiy",      category: "Russian",    color: "#c0392b",  instructor: "Uzbekas AI" },
+  { id: 7, title: t.course_fr_full   || "Fransuz Tili",         category: "French",     color: "#002395",  instructor: "  Uzbekas AI" },
+  { id: 8, title: t.course_html5_sem || "HTML5 & Semantik",     category: "HTML",       color: "#e44d26",  instructor: "Uzbekas AI" },
 ];
 
-const getCertificateLevels = (t) => [
-  { level: 1,  name: t.level1Name, minXP: 0,     badge: <LuSprout /> },
-  { level: 2,  name: t.level2Name, minXP: 100,   badge: <LuBookOpen /> },
-  { level: 3,  name: t.level3Name, minXP: 300,   badge: <LuSearch /> },
-  { level: 4,  name: t.level4Name, minXP: 600,   badge: <LuBrain /> },
-  { level: 5,  name: t.level5Name, minXP: 1000,  badge: <LuZap /> },
-  { level: 6,  name: t.level6Name, minXP: 1500,  badge: <LuTarget /> },
-  { level: 7,  name: t.level7Name, minXP: 2500,  badge: <LuTrophy /> },
-  { level: 8,  name: t.level8Name, minXP: 4000,  badge: <LuGem /> },
-  { level: 9,  name: t.level9Name, minXP: 6000,  badge: <LuCrown /> },
-  { level: 10, name: t.level10Name, minXP: 10000, badge: <LuStar /> },
-];
-
-const getLevel  = (xp, levels) => [...levels].reverse().find((l) => xp >= l.minXP) || levels[0];
+// Kurs kategoriyasiga qarab darajani olish
+const getCourseLevel = (course, t) => {
+  const levels = {
+    "HTML": { name: t.levelHTML || "HTML Developer", badge: <LuBookOpen />, color: "#e44d26" },
+    "CSS": { name: t.levelCSS || "CSS Expert", badge: <LuSearch />, color: "#264de4" },
+    "JavaScript": { name: t.levelJS || "JavaScript Specialist", badge: <LuBrain />, color: "#d4a017" },
+    "React": { name: t.levelReact || "React Developer", badge: <LuZap />, color: "#0ea5e9" },
+    "English": { name: t.levelEnglish || "English Learner", badge: <LuTrophy />, color: "#003580" },
+    "Russian": { name: t.levelRussian || "Russian Learner", badge: <LuTrophy />, color: "#c0392b" },
+    "French": { name: t.levelFrench || "French Learner", badge: <LuTrophy />, color: "#002395" },
+  };
+  
+  return levels[course?.category] || { name: t.levelDefault || "Developer", badge: <LuStar />, color: "#3b82f6" };
+};
 const formatDate = (lang) =>
   new Date().toLocaleDateString(lang === "uz" ? "uz-UZ" : "en-US", { year: "numeric", month: "long", day: "numeric" });
 
-// ─── Sertifikat preview ───────────────────────────────────────────────────────
-const CertificatePreview = ({ userName, course, date, certId, xp, t, levels }) => {
-  const level = getLevel(xp, levels);
+// в”Ђв”Ђв”Ђ Sertifikat preview в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+const CertificatePreview = ({ userName, course, date, certId, xp, t }) => {
+  const level = getCourseLevel(course, t);
   return (
     <div
       id="certificate-preview"
@@ -107,7 +106,7 @@ const CertificatePreview = ({ userName, course, date, certId, xp, t, levels }) =
           <div style={{ display: "inline-block", padding: "14px 32px", background: course.color + "22", border: `2px solid ${course.color}`, borderRadius: 12 }}>
             <p style={{ margin: "0 0 4px", fontSize: 11, color: "#94a3b8", letterSpacing: 2, textTransform: "uppercase" }}>{t.certCourseName}</p>
             <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff" }}>{course.title}</h3>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: course.color }}>{course.category} · {course.duration}</p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: course.color }}>{course.category} В· {course.duration}</p>
           </div>
         </div>
 
@@ -132,11 +131,58 @@ const CertificatePreview = ({ userName, course, date, certId, xp, t, levels }) =
             <div style={{ width: 80, height: 1, background: "#f59e0b", marginBottom: 4 }} />
             <p style={{ margin: 0, fontSize: 10, color: "#64748b" }}>{t.certSignature}</p>
           </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ width: 50, height: 50, borderRadius: "50%", border: "2px solid #f59e0b", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 4px" }}>
-              <span style={{ fontSize: 22, color: "#f59e0b" }}><LuCheck /></span>
+          {/* PECHAT - Uzbekas Pixel Coding Corporations */}
+          <div style={{ textAlign: "center", position: "relative" }}>
+            <div style={{
+              width: 100,
+              height: 100,
+              borderRadius: "50%",
+              border: "3px double #1e40af",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 4px",
+              position: "relative",
+              background: "rgba(30, 64, 175, 0.05)",
+              boxShadow: "0 0 20px rgba(30, 64, 175, 0.3), inset 0 0 20px rgba(30, 64, 175, 0.1)"
+            }}>
+              {/* Ichki chegara */}
+              <div style={{
+                position: "absolute",
+                inset: 6,
+                borderRadius: "50%",
+                border: "1px solid #1e40af"
+              }} />
+              {/* Atrafdagi yozuv */}
+              <svg viewBox="0 0 100 100" style={{ position: "absolute", width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
+                <defs>
+                  <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" />
+                </defs>
+                <text fill="#1e40af" fontSize="8" fontWeight="700" letterSpacing="2">
+                  <textPath href="#circlePath">
+                    UZBEKAS PIXEL CODING CORPORATIONS
+                  </textPath>
+                </text>
+              </svg>
+              {/* TUGATILDI yozuvi */}
+              <div style={{
+                textAlign: "center",
+                zIndex: 1,
+                transform: "rotate(-5deg)"
+              }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: "#1e40af",
+                  letterSpacing: 1,
+                  lineHeight: 1,
+                  textShadow: "0 0 5px rgba(30, 64, 175, 0.5)"
+                }}>
+                  {t.certStamp || "TUGATILDI"}
+                </p>
+              </div>
             </div>
-            <p style={{ margin: 0, fontSize: 9, color: "#64748b", letterSpacing: 1 }}>{t.certVerified}</p>
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ margin: "0 0 4px", fontSize: 10, color: "#64748b", fontFamily: "monospace" }}>ID: {certId}</p>
@@ -148,11 +194,10 @@ const CertificatePreview = ({ userName, course, date, certId, xp, t, levels }) =
   );
 };
 
-// ─── Main Certificate ─────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Main Certificate в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const Certificate = ({ darkMode, showToast }) => {
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const levels = React.useMemo(() => getCertificateLevels(t), [t]);
   const courses = React.useMemo(() => getCertificateCourses(t), [t]);
 
   const [selectedCourse, setSelectedCourse] = useState(courses[0]);
@@ -161,6 +206,7 @@ const Certificate = ({ darkMode, showToast }) => {
   const [printing, setPrinting]             = useState(false);
   const [date]                              = useState(formatDate(lang));
   const [certId]                            = useState(`UZP-${Date.now().toString(36).toUpperCase()}`);
+  const [completedCourses, setCompletedCourses] = useState([]);
 
   useEffect(() => {
     setSelectedCourse(courses[0]);
@@ -169,12 +215,49 @@ const Certificate = ({ darkMode, showToast }) => {
   useEffect(() => {
     if (!user) return;
     setUserName(user.displayName || user.email?.split("@")[0] || "");
+    
+    // XP ni olish
     getDoc(doc(db, "users", user.uid, "data", "stats"))
       .then((snap) => { if (snap.exists()) setXp(snap.data().xp || 0); })
       .catch(console.error);
+    
+    // Tugatilgan kurslarni olish (progress 100% bo'lgan kurslar)
+    const loadCompletedCourses = async () => {
+      try {
+        console.log("Loading progress for user:", user.uid);
+        const progressSnapshot = await getDocs(collection(db, "users", user.uid, "progress"));
+        const completed = [];
+        progressSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const courseId = Number(doc.id);
+          console.log(`Course ${courseId} progress:`, data.progress, "completedLessons:", data.completedLessons?.length);
+          
+          // Faqat progress 100% bo'lsa tugatilgan hisoblanadi
+          const progress = Number(data.progress) || 0;
+          const isCompleted = progress === 100;
+          
+          if (isCompleted) {
+            completed.push(courseId);
+            console.log(`✅ Course ${courseId} is COMPLETED (progress: ${progress}%)`);
+          } else {
+            console.log(`❌ Course ${courseId} NOT completed (progress: ${progress}%)`);
+          }
+        });
+        console.log("Total completed courses:", completed);
+        setCompletedCourses(completed);
+        // Agar hozirgi tanlangan kurs tugatilmagan bo'lsa, birinchi tugatilgan kursni tanlash
+        if (completed.length > 0 && !completed.includes(selectedCourse.id)) {
+          const firstCompleted = courses.find(c => completed.includes(c.id));
+          if (firstCompleted) setSelectedCourse(firstCompleted);
+        }
+      } catch (err) {
+        console.error("Error loading completed courses:", err);
+      }
+    };
+    loadCompletedCourses();
   }, [user]);
 
-  // ── Print ─────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Print в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handlePrint = () => {
     setPrinting(true);
     setTimeout(() => {
@@ -208,9 +291,9 @@ const Certificate = ({ darkMode, showToast }) => {
     }, 400);
   };
 
-  // ── Download — Canvas API (tashqi kutubxonasiz) ───────────────────────────
+  // в”Ђв”Ђ Download — Canvas API (tashqi kutubxonasiz) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleDownload = async () => {
-    if (!userName) { showToast?.("Ismingizni kiriting!", "error"); return; }
+    if (!userName) { showToast?.(t.certNameError, "error"); return; }
     setPrinting(true);
 
     try {
@@ -253,12 +336,11 @@ const Certificate = ({ darkMode, showToast }) => {
     }
   };
 
-  const level = getLevel(xp, levels);
+  const level = getCourseLevel(selectedCourse, t);
 
   return (
     <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: "40px 16px 80px" }}>
-      <ScrollReveal direction="up">
-        {/* Header */}
+              {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <span style={{ display: "inline-block", background: "#eff6ff", color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "4px 14px", borderRadius: 20, marginBottom: 8, border: "1px solid #bfdbfe" }}>
             <LuAward className="inline-block mr-1" /> {t.certificateTitle}
@@ -267,7 +349,7 @@ const Certificate = ({ darkMode, showToast }) => {
             {t.certificateSub}
           </h2>
           <p style={{ margin: 0, fontSize: 14, color: "#6b7280" }}>
-            Tugatgan kursingiz uchun rasmiy sertifikat oling
+            {t.certSubtitle}
           </p>
         </div>
 
@@ -318,21 +400,45 @@ const Certificate = ({ darkMode, showToast }) => {
             <LuAward size={16} /> {t.certChooseCourse}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-            {courses.map((course) => (
-              <button key={course.id} onClick={() => setSelectedCourse(course)}
-                style={{ padding: "12px 14px", borderRadius: 12, border: `2px solid ${selectedCourse.id === course.id ? course.color : (darkMode ? "#334155" : "#e5e7eb")}`, background: selectedCourse.id === course.id ? course.color + "22" : (darkMode ? "#1e293b" : "#fff"), cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
-                <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: selectedCourse.id === course.id ? course.color : (darkMode ? "#f1f5f9" : "#111") }}>
-                  {course.title}
-                </p>
-                <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{course.duration}</p>
-              </button>
-            ))}
+            {courses.map((course) => {
+              const isCompleted = completedCourses.includes(course.id);
+              const isSelected = selectedCourse.id === course.id;
+              return (
+                <button 
+                  key={course.id} 
+                  onClick={() => isCompleted && setSelectedCourse(course)}
+                  disabled={!isCompleted}
+                  style={{ 
+                    padding: "12px 14px", 
+                    borderRadius: 12, 
+                    border: `2px solid ${isSelected ? course.color : isCompleted ? (darkMode ? "#334155" : "#e5e7eb") : (darkMode ? "#1e293b" : "#f1f5f4")}`, 
+                    background: isSelected ? course.color + "22" : isCompleted ? (darkMode ? "#1e293b" : "#fff") : (darkMode ? "#0f172a" : "#f8fafc"), 
+                    cursor: isCompleted ? "pointer" : "not-allowed", 
+                    textAlign: "left", 
+                    transition: "all 0.2s",
+                    opacity: isCompleted ? 1 : 0.5,
+                    position: "relative"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: isSelected ? course.color : isCompleted ? (darkMode ? "#f1f5f9" : "#111") : "#64748b" }}>
+                      {course.title}
+                    </p>
+                    {!isCompleted && (
+                      <span style={{ fontSize: 12, color: "#64748b" }}>🔒</span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>
+                    {isCompleted ? course.duration : t.courseNotCompleted || "Tugatilmagan"}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
-      </ScrollReveal>
-
+      
       {/* Sertifikat preview */}
-      <ScrollReveal direction="up" delay={100}>
+      <div>
         <div style={{ marginBottom: 20 }}>
           <p style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 600, color: darkMode ? "#94a3b8" : "#6b7280", display: "flex", alignItems: "center", gap: 6 }}>
             <LuBadgeCheck size={16} /> {t.certView}
@@ -344,7 +450,6 @@ const Certificate = ({ darkMode, showToast }) => {
             certId={certId}
             xp={xp}
             t={t}
-            levels={levels}
           />
         </div>
 
@@ -373,9 +478,9 @@ const Certificate = ({ darkMode, showToast }) => {
             <LuTriangleAlert className="inline-block mr-1" /> {t.certNameError}
           </p>
         )}
-      </ScrollReveal>
-
+      
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
     </div>
   );
 };

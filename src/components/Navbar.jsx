@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
@@ -7,6 +7,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { usePWA } from "../hooks/usePWA";
 import CodeSnippets from "../routes/Codesnippets";
+import DailySpinModal from "./DailySpinModal";
+import PetSystem from "./PetSystem";
 
 import { LuCalendarCheck, LuClock } from "react-icons/lu";
 import { LuAward } from "react-icons/lu";
@@ -28,7 +30,7 @@ import { MdOutlineLogout, MdOutlineLogin } from "react-icons/md";
 import { RiUserSmileLine } from "react-icons/ri";
 import { TbBrandSpeedtest } from "react-icons/tb";
 
-// ─── Sound Panel ──────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Sound Panel в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function SoundPanel({ activeSounds, toggleSound, darkMode, t }) {
   const SOUND_OPTIONS = [
     { key: "rain",     label: t?.ambienceRain || "Yomg'ir",    icon: <LuCloudRain className="text-blue-400" /> },
@@ -80,8 +82,8 @@ function SoundPanel({ activeSounds, toggleSound, darkMode, t }) {
   );
 }
 
-// ─── Navbar ────────────────────────────────────────────────────────────────────
-const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
+// в”Ђв”Ђв”Ђ Navbar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
   const { lang, setLang, t } = useLang();
   const { user, logout } = useAuth();
   const { activeSounds, toggleSound } = useSound();
@@ -97,8 +99,16 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
   const [desktopSoundOpen, setDesktopSoundOpen] = useState(false);
   const desktopSoundRef = useRef(null);
 
-  // ── CodeSnippets panel state ──────────────────────────────────────────────
+  // в”Ђв”Ђ CodeSnippets panel state в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const [snippetsOpen, setSnippetsOpen] = useState(false);
+  const snippetBtnRef = useRef(null);
+
+  // Logo dropdown va Daily Spin state
+  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
+  const [showDailySpin, setShowDailySpin] = useState(false);
+  const [showPet, setShowPet] = useState(false);
+  const [petLevel, setPetLevel] = useState(1);
+  const logoRef = useRef(null);
 
   // Close desktop sound panel on outside click
   useEffect(() => {
@@ -106,12 +116,15 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
       if (desktopSoundRef.current && !desktopSoundRef.current.contains(e.target)) {
         setDesktopSoundOpen(false);
       }
+      if (logoRef.current && !logoRef.current.contains(e.target)) {
+        setLogoDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Nav link data ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Nav link data в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const navLinks = [
     { path: "/",            label: t.coursesNav,    icon: <LuBookOpen className="text-blue-400" />,  end: true  },
     { path: "/pricing",     label: t.pricingNav,    icon: <LuGem className="text-cyan-400" />,       end: false },
@@ -122,27 +135,21 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
     { path: "/battlemode",    label: t.battleModeNav,                icon: <LuSwords className="text-red-400" />             },
-    { path: "/schedule",      label: t.schedule || "Jadval",         icon: <LuCalendar className="text-blue-400" />          },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
-    { path: "/pixel-challenge", label: "Pixel Challenge",            icon: <LuSwords className="text-red-400" />             },
+    { path: "/pixel-challenge", label: t.pixelChallengeNav,            icon: <LuSwords className="text-red-400" />             },
     { path: "/live",          label: t.liveClassNav,                 icon: <LuRadio className="text-red-400" />              },
     { path: "/chat",          label: t.chatTab,                      icon: <LuMessageSquare className="text-green-400" />    },
-    { path: "/dm",            label: t.dm,                           icon: <LuMail className="text-blue-400" />              },
     { path: "/daily",         label: t.dailyTasksNav,                icon: <LuCalendarCheck className="text-orange-400" />   },
     { path: "/friends",       label: t.friendsNav,                   icon: <LuUsers className="text-blue-400" />             },
-    { path: "/referral",      label: t.referralNav,                  icon: <LuGift className="text-pink-400" />              },
-    { path: "/pixel-market",  label: "Pixel Market",                 icon: <LuStore className="text-yellow-400" />              },
-    { path: "/tournament",    label: t.tournamentNav,                icon: <LuSwords className="text-red-400" />             },
+    { path: "/pixel-market",  label: t.pixelMarketNav,                 icon: <LuStore className="text-yellow-400" />              },
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
     { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
-    { path: "/supports",      label: "Ko'makchilar",               icon: <LuUsers className="text-green-400" />            },
-    { path: "/projects",      label: "Loyiha",                       icon: <LuTerminal className="text-cyan-400" />              },
+    { path: "/supports",      label: t.supportsNav,                  icon: <LuUsers className="text-green-400" />            },
+    { path: "/projects",      label: t.projectsNav,                       icon: <LuTerminal className="text-cyan-400" />              },
     { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
-    { path: "/certificate",   label: t.certificateNav,               icon: <LuAward className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
-    { path: "/history", label: "Tarix", icon: <LuClock className="text-indigo-400" /> },
-    { path: "/settings",      label: t.settingsTitle || "Sozlamalar",icon: <LuSettings className="text-gray-400" />          },
+    { path: "/history", label: t.historyNav || "Tarix", icon: <LuClock className="text-indigo-400" /> },
     { path: "/qa",            label: t.qaNav,                        icon: <LuMessageCircle className="text-blue-400" />     },
     ...(isAdmin
       ? [{ path: "/admin",      label: t.adminBadge,        icon: <LuShieldCheck className="text-yellow-400" /> }]
@@ -152,7 +159,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
       : []),
   ];
 
-  // ── MOBIL MENYU UCHUN FILTR ───────────────────────────────────────────────
+  // в”Ђв”Ђ MOBIL MENYU UCHUN FILTR в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   // Bottom nav'da qatnashadigan linklar va umuman olib tashlanadigan linklar (masalan, /code, /live) ro'yxati.
   // Eslatma: Bottom nav'ingizda qaysi sahifalar bo'lsa, ularni shu yerga qo'shing.
   const hiddenOnMobile = [
@@ -163,7 +170,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     "/story" // Avvalgi filtrda bor edi, uni ham shu yerga qo'shdim
   ];
 
-  // ── Effects ───────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Effects в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     const checkAdmin = async () => {
       if (!user) { setIsAdmin(false); return; }
@@ -180,13 +187,13 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
     );
   }, [user]);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const closeMenu          = () => { onNavClick(); setMenuOpen(false); };
   const handleInstallClick = () => { installApp(); setMenuOpen(false); setSidebarOpen(false); };
 
   const anySoundActive = activeSounds && activeSounds.length > 0;
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Render в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   return (
     <>
       <nav 
@@ -201,9 +208,12 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
       >
         <div className="flex items-center justify-between py-3 px-6">
 
-          {/* ── Logo ──────────────────────────────────────────────────────── */}
-          <Link to="/" onClick={onNavClick} className="hover:opacity-90 transition-opacity">
-            <span className="flex items-center gap-3">
+          {/* в”Ђв”Ђ Logo Dropdown в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
+          <div className="relative" ref={logoRef}>
+            <button 
+              onClick={() => setLogoDropdownOpen(!logoDropdownOpen)}
+              className="hover:opacity-90 transition-opacity flex items-center gap-3"
+            >
               <svg className="logo-svg-group" width="44" height="44" viewBox="0 0 72 72" fill="none">
                 <circle cx="36" cy="36" r="34" fill={darkMode ? "#0d1224" : "#f8fafc"} stroke={darkMode ? "#1e2a50" : "#e2e8f0"} strokeWidth="1"/>
                 <polygon points="36,14 44,28 52,14 52,50 44,36 36,50 28,36 20,50 20,14 28,28" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinejoin="round" opacity="0.25" />
@@ -224,10 +234,81 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                 </span>
                 <span className="text-[11px] font-normal text-indigo-500 tracking-[4px]">PIXEL</span>
               </span>
-            </span>
-          </Link>
+            </button>
 
-          {/* ── Desktop Nav ───────────────────────────────────────────────── */}
+            {/* Dropdown Menu */}
+            {logoDropdownOpen && (
+              <div 
+                className="absolute top-full left-0 mt-2 w-48 rounded-xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+                style={{
+                  background: darkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                  backdropFilter: "blur(12px)",
+                  border: darkMode ? "1px solid rgba(99, 102, 241, 0.3)" : "1px solid rgba(148, 163, 184, 0.3)",
+                }}
+              >
+                <Link 
+                  to="/" 
+                  onClick={() => { setLogoDropdownOpen(false); onNavClick?.(); }}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${darkMode ? "hover:bg-slate-700/50 text-slate-200" : "hover:bg-slate-100 text-slate-700"}`}
+                >
+                  <LuBookOpen className="text-blue-400" size={18} />
+                  <span className="text-sm font-medium">{t.coursesNav || "Bosh sahifa"}</span>
+                </Link>
+                <button
+                  onClick={() => { setLogoDropdownOpen(false); setShowDailySpin(true); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${darkMode ? "hover:bg-slate-700/50 text-slate-200" : "hover:bg-slate-100 text-slate-700"}`}
+                >
+                  <LuGift className="text-purple-400" size={18} />
+                  <span className="text-sm font-medium">Daily Spin</span>
+                  <span className="ml-auto w-2 h-2 bg-linear-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" />
+                </button>
+
+                {/* Pet Option */}
+                <button
+                  onClick={() => { setLogoDropdownOpen(false); setShowPet(true); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${darkMode ? "hover:bg-slate-700/50 text-slate-200" : "hover:bg-slate-100 text-slate-700"}`}
+                >
+                  {/* Small 3D Cat Icon */}
+                  <div className="relative w-6 h-6">
+                    <div 
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: "radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899)",
+                      }}
+                    />
+                    <div 
+                      className="absolute -top-0.5 left-0.5 w-0 h-0"
+                      style={{
+                        borderLeft: "3px solid transparent",
+                        borderRight: "3px solid transparent",
+                        borderBottom: "6px solid #ec4899",
+                        transform: "rotate(-15deg)",
+                      }}
+                    />
+                    <div 
+                      className="absolute -top-0.5 right-0.5 w-0 h-0"
+                      style={{
+                        borderLeft: "3px solid transparent",
+                        borderRight: "3px solid transparent",
+                        borderBottom: "6px solid #ec4899",
+                        transform: "rotate(15deg)",
+                      }}
+                    />
+                    <div className="absolute top-1.5 left-1 w-1 h-1.5 rounded-full bg-white" />
+                    <div className="absolute top-1.5 right-1 w-1 h-1.5 rounded-full bg-white" />
+                  </div>
+                  <span className="text-sm font-medium">Mening Mushukim</span>
+                  {user && (
+                    <span className="ml-auto px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[10px] rounded-full">
+                      Lv.{petLevel}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <NavLink
@@ -283,6 +364,20 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
                   </div>
                 )}
               </div>
+
+              <button
+                ref={snippetBtnRef}
+                onClick={() => setSnippetsOpen(!snippetsOpen)}
+                className="p-2 rounded-xl transition-all duration-200"
+                style={{
+                  background: snippetsOpen ? "rgba(99,102,241,0.4)" : darkMode ? "rgba(30,41,59,0.6)" : "rgba(241,245,249,0.8)",
+                  color: snippetsOpen ? "#6366f1" : darkMode ? "#cbd5e1" : "#475569",
+                  border: snippetsOpen ? "1px solid #6366f1" : "1px solid transparent",
+                  boxShadow: snippetsOpen ? "0 0 12px rgba(99,102,241,0.4)" : "none",
+                }}
+              >
+                <LuCode size={20} />
+              </button>
               
               {/* Auth */}
               {user ? (
@@ -303,7 +398,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
             </div>
           </div>
 
-          {/* ── Mobile Controls ───────────────────────────────────────────── */}
+          {/* в”Ђв”Ђ Mobile Controls в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
           <div className="flex md:hidden items-center gap-3">
             <button 
               onClick={() => setLang(lang === "en" ? "uz" : "en")} 
@@ -325,7 +420,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
           </div>
         </div>
 
-      {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Mobile Menu в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
         <div className={`md:hidden transition-all duration-500 ease-in-out ${menuOpen ? "max-h-[85vh] overflow-y-auto border-t border-slate-700/30" : "max-h-0 overflow-hidden"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(20px)" }}>
           <div className="p-6 pb-32 flex flex-col gap-2">
             
@@ -388,7 +483,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         </div>
       </nav>
 
-      {/* ── Sidebar (Katta ekranlar / Yon tomondan chiquvchi menyu) ───────── */}
+      {/* в”Ђв”Ђ Sidebar (Katta ekranlar / Yon tomondan chiquvchi menyu) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div className={`fixed inset-0 z-60 transition-opacity duration-500 ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
         <div className={`absolute top-0 right-0 h-full w-80 transition-transform duration-500 ease-out shadow-2xl overflow-y-auto ${sidebarOpen ? "translate-x-0" : "translate-x-full"}`} style={{ background: darkMode ? "rgba(15, 23, 42, 0.9)" : "rgba(255, 255, 255, 0.9)", backdropFilter: "blur(40px)", borderLeft: "1px solid rgba(255,255,255,0.1)" }}>
@@ -429,12 +524,29 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick }) => {
         </div>
       </div>
 
-      {/* ── CodeSnippets floating panel ───────────────────────────────────────── */}
+      {/* в”Ђв”Ђ CodeSnippets floating panel в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <CodeSnippets
         isOpen={snippetsOpen}
         onClose={() => setSnippetsOpen(false)}
         darkMode={darkMode}
         user={user}
+        triggerRef={snippetBtnRef}
+      />
+      {/* в”Ђв”Ђ Daily Spin Modal (FAQAT LOGO DAN OCHILADI) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
+      {showDailySpin && (
+        <DailySpinModal
+          darkMode={darkMode}
+          onClose={() => setShowDailySpin(false)}
+          showToast={showToast}
+        />
+      )}
+
+      {/* в”Ђв”Ђ Pet System (Alohida Komponent) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
+      <PetSystem
+        darkMode={darkMode}
+        showToast={showToast}
+        isOpen={showPet}
+        onClose={() => setShowPet(false)}
       />
     </>
   );

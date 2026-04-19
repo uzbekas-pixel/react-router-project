@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { doc, getDoc } from "firebase/firestore";
@@ -10,7 +10,7 @@ const AdminRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      // BUG #12 FIX — reset first so loading spinner shows while new check runs
+      // BUG #12 FIX —” reset first so loading spinner shows while new check runs
       setIsAdmin(null);
       if (!user) { setIsAdmin(false); return; }
       const docSnap = await getDoc(doc(db, "admins", user.uid));

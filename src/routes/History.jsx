@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import { LuHistory, LuTrendingUp, LuTrendingDown, LuCoins, LuStar, LuClock, LuShoppingBag } from "react-icons/lu";
-import ScrollReveal from "../components/ScrollReveal";
 
 const History = ({ darkMode }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +24,7 @@ const History = ({ darkMode }) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setHistory(data);
       } catch (error) {
-        console.error("Tarixni yuklashda xato:", error);
+        console.error(t.historyLoadError, error);
       } finally {
         setLoading(false);
       }
@@ -33,24 +34,24 @@ const History = ({ darkMode }) => {
   }, [user]);
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return "Hozirgina";
+    if (!timestamp) return t.justNow;
     const date = timestamp.toDate();
     return `${date.toLocaleDateString("uz-UZ")} • ${date.toLocaleTimeString("uz-UZ", { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 md:py-12">
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div className="flex items-center gap-4 mb-8">
           <div className={`p-4 rounded-2xl ${darkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
             <LuHistory size={32} />
           </div>
           <div>
             <h1 className={`text-2xl md:text-4xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-              Faollik Tarixi
+              {t.historyTitle}
             </h1>
             <p className={`text-sm mt-1 font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Sizning barcha yutuq va xarajatlaringiz ro'yxati
+              {t.historySubtitle}
             </p>
           </div>
         </div>
@@ -59,12 +60,12 @@ const History = ({ darkMode }) => {
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full py-20 opacity-60">
                <LuClock className="animate-spin mb-4 text-indigo-500" size={40} />
-               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>Ma'lumotlar yuklanmoqda...</p>
+               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>{t.loadingData}</p>
             </div>
           ) : history.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-20 opacity-60">
                <LuShoppingBag size={56} className="mb-4 text-slate-400" />
-               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>Hali tarix mavjud emas</p>
+               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>{t.noHistoryYet}</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -102,7 +103,7 @@ const History = ({ darkMode }) => {
             </div>
           )}
         </div>
-      </ScrollReveal>
+      </div>
     </div>
   );
 };

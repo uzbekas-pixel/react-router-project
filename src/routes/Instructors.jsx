@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState } from "react";
 import { useLang } from "../context/useLang";
 import { 
   LuStar, 
@@ -35,7 +34,7 @@ const Instructors = ({ darkMode }) => {
 
   if (selected) {
     const ins = instructors.find((i) => i.id === selected);
-    const detail = t.instructorData[ins.id] || { role: "Dasturchi", bio: "..." };
+    const detail = t.instructorData[ins.id] || { role: t.developer, bio: "..." };
 
     return (
       <div style={{ width: "100%", maxWidth: 760, margin: "0 auto", padding: "32px 20px 80px" }}>
@@ -50,7 +49,7 @@ const Instructors = ({ darkMode }) => {
           <LuArrowLeft /> {t.backToInstructors}
         </button>
 
-        <ScrollReveal direction="up">
+        <div direction="up">
           <div style={{
             background: darkMode ? "rgba(30,41,59,.7)" : "#fff",
             backdropFilter: "blur(12px)",
@@ -73,9 +72,9 @@ const Instructors = ({ darkMode }) => {
             </div>
             <p style={{ margin: "24px 0 0", fontSize: 15, color: darkMode ? "#cbd5e1" : "#4b5563", lineHeight: 1.8 }}>{detail.bio}</p>
           </div>
-        </ScrollReveal>
+        </div>
 
-        <ScrollReveal direction="up" delay={100}>
+        <div direction="up" delay={100}>
           <div style={{
             background: darkMode ? "rgba(30,41,59,.7)" : "#fff",
             backdropFilter: "blur(12px)",
@@ -96,14 +95,14 @@ const Instructors = ({ darkMode }) => {
               ))}
             </div>
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     );
   }
 
   return (
     <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto", padding: "40px 20px 80px" }}>
-      <ScrollReveal direction="up">
+      <div direction="up">
         <span style={{
           display: "inline-block", background: darkMode ? "rgba(59,130,246,.15)" : "#eff6ff", 
           color: "#3b82f6", fontSize: 12, fontWeight: 700, padding: "5px 16px",
@@ -117,7 +116,7 @@ const Instructors = ({ darkMode }) => {
         <p style={{ color: darkMode ? "#94a3b8" : "#64748b", fontSize: 15, marginBottom: 40, maxWidth: 600 }}>
           {t.instructorsDesc}
         </p>
-      </ScrollReveal>
+      </div>
 
       <div style={{
         display: "grid",
@@ -127,7 +126,7 @@ const Instructors = ({ darkMode }) => {
         {instructors.map((ins, i) => {
           const detail = t.instructorData[ins.id] || { role: "..." };
           return (
-            <ScrollReveal key={ins.id} direction="up" delay={i * 80}>
+            <div key={ins.id} direction="up" delay={i * 80}>
               <div
                 onClick={() => setSelected(ins.id)}
                 style={{
@@ -186,7 +185,7 @@ const Instructors = ({ darkMode }) => {
                   </div>
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
           );
         })}
       </div>

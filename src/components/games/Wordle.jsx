@@ -75,7 +75,7 @@ const Wordle = ({ darkMode }) => {
     if (current.length !== WORD_LENGTH) {
       setShake(true);
       setTimeout(() => setShake(false), 500);
-      showMsg(t.wordleLengthError || (lang === "uz" ? "5 ta harf kiriting!" : "Enter 5 letters!"));
+      showMsg(t.wordleLengthError);
       return;
     }
     const newGuesses = [...guesses, current];
@@ -84,7 +84,7 @@ const Wordle = ({ darkMode }) => {
 
     if (current === answer) {
       setGameOver(true);
-      showMsg(<div className="flex items-center gap-2">{t.wordleWin || (lang === "uz" ? "Ajoyib!" : "Brilliant!")} <LuPartyPopper /></div>, 3000);
+      showMsg(<div className="flex items-center gap-2">{t.wordleWin} <LuPartyPopper className="text-yellow-500" /></div>, 3000);
       return;
     }
     if (newGuesses.length >= MAX_GUESSES) {
@@ -174,7 +174,7 @@ const Wordle = ({ darkMode }) => {
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm mb-4 mt-10">
         <h2 className={`text-2xl font-extrabold flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-          <LuType className="text-blue-500" /> Wordle
+          <LuType className="text-blue-500" /> {t.wordleGameTitle}
         </h2>
         <div className="flex items-center gap-2">
           {/* Til */}

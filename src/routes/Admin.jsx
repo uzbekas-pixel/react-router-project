@@ -1,16 +1,15 @@
-  import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import {
   collection, getDocs, deleteDoc, doc,
   setDoc, updateDoc, serverTimestamp, addDoc, writeBatch, getDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
-import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import {
   LuInfo, LuCircleCheck, LuTriangleAlert, LuGift, LuGraduationCap,
-  LuLayoutDashboard, LuUsers, LuTicket, LuBell, LuShield,
+  LuUsers, LuTicket, LuBell, LuShield,
   LuChartBar, LuPlus, LuX, LuTrash2, LuCheck, LuMegaphone, LuSend,
-  LuBookOpen, LuUser, LuCoins,  LuClipboardList, LuMonitorPlay,
+  LuBookOpen, LuUser, LuCoins, LuClipboardList, LuMonitorPlay,
   LuBriefcase, LuPhoneCall, LuAward, LuClock
 } from "react-icons/lu";
 
@@ -22,7 +21,7 @@ const NOTIF_TYPES = (t) => [
   { value: "course",  label: t.course || "Course",            icon: <LuGraduationCap />, color: "#06b6d4" },
 ];
 
-// ─── InstructorRow komponenti ─────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ InstructorRow komponenti в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const InstructorRow = ({ u, darkMode, showToast }) => {
   const { t } = useLang();
   const [isInstructor, setIsInstructor] = useState(false);
@@ -41,7 +40,7 @@ const InstructorRow = ({ u, darkMode, showToast }) => {
       if (isInstructor) {
         await deleteDoc(doc(db, "instructors", u.id));
         setIsInstructor(false);
-        showToast(`${u.displayName || u.email} — ${t.instructorAccessRemoved}`, "error");
+        showToast(`${u.displayName || u.email} —” ${t.instructorAccessRemoved}`, "error");
       } else {
         await setDoc(doc(db, "instructors", u.id), {
           isInstructor: true,
@@ -51,7 +50,7 @@ const InstructorRow = ({ u, darkMode, showToast }) => {
           grantedAt: serverTimestamp(),
         });
         setIsInstructor(true);
-        showToast(`${u.displayName || u.email} — ${t.instructorCreated}`, "success");
+        showToast(`${u.displayName || u.email} —” ${t.instructorCreated}`, "success");
         // Bildirishnoma yuborish
         await setDoc(
           doc(db, "users", u.id, "notifications", `instructor_${Date.now()}`),
@@ -105,7 +104,7 @@ const InstructorRow = ({ u, darkMode, showToast }) => {
   );
 };
 
-// ─── Main Admin ───────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Main Admin в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const Admin = ({ darkMode, showToast }) => {
   const { t } = useLang();
   const [users, setUsers]         = useState([]);
@@ -116,8 +115,9 @@ const Admin = ({ darkMode, showToast }) => {
   const [promoCodes, setPromoCodes]       = useState([]);
   const [promoLoading, setPromoLoading]   = useState(false);
   const [showPromoForm, setShowPromoForm] = useState(false);
-  const [promoForm, setPromoForm]         = useState({ code: "", discount: "", type: "percent", course: "all", maxUses: "100" });
+  const [promoForm, setPromoForm]         = useState({ code: "", discount: "", type: "percent", course: "all", maxUses: "100", coins: "" });
   const [promoSaving, setPromoSaving]     = useState(false);
+  const [promoType, setPromoType]         = useState(null); // 'discount' | 'coins' | null
 
   // Bildirishnoma
   const [notifForm, setNotifForm]   = useState({ title: "", message: "", type: "info", target: "all", userId: "", link: "" });
@@ -140,7 +140,7 @@ const Admin = ({ darkMode, showToast }) => {
   const [chalForm, setChalForm] = useState({ title: "", desc: "", prize: 500, duration: 24 });
   const [chalSaving, setChalSaving] = useState(false);
 
-  // ── Foydalanuvchilar ─────────────────────────────────────────────────────
+  // в”Ђв”Ђ Foydalanuvchilar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -152,7 +152,7 @@ const Admin = ({ darkMode, showToast }) => {
     fetchUsers();
   }, [showToast, t.loadError]);
 
-  // ── Fetch Functions ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Fetch Functions в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const fetchPromoCodes = useCallback(async () => {
     setPromoLoading(true);
     try {
@@ -216,7 +216,7 @@ const Admin = ({ darkMode, showToast }) => {
     if (activeTab === "challenges") fetchChallenges(); // Xakatonlarni yuklash
   }, [activeTab, fetchPromoCodes, fetchNotifHistory, fetchPendingCourses, fetchMentorApps, fetchChallenges]);
 
-  // ── Handlers (Foydalanuvchilar) ──────────────────────────────────────────
+  // в”Ђв”Ђ Handlers (Foydalanuvchilar) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleDeleteUser = async (userId, userName) => {
     if (!window.confirm(`${userName} ${t.confirmDelete}`)) return;
     try {
@@ -226,10 +226,10 @@ const Admin = ({ darkMode, showToast }) => {
     } catch { showToast(t.deleteError, "error"); }
   };
 
-  // ── Handlers (Xakatonlar / Challenges) ──────────────────────────────────
+  // в”Ђв”Ђ Handlers (Xakatonlar / Challenges) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleAddChallenge = async () => {
     if (!chalForm.title.trim() || !chalForm.desc.trim() || !chalForm.duration || !chalForm.prize) {
-      showToast("Barcha maydonlarni to'ldiring!", "error"); return;
+      showToast(t.fillAllFields, "error"); return;
     }
     setChalSaving(true);
     try {
@@ -250,13 +250,13 @@ const Admin = ({ darkMode, showToast }) => {
         endDate: endDate
       });
 
-      showToast("Yangi musobaqa e'lon qilindi! Taymer ishga tushdi.", "success");
+      showToast(t.challengeCreated, "success");
       setShowChalForm(false);
       setChalForm({ title: "", desc: "", prize: 500, duration: 24 });
       fetchChallenges();
     } catch (err) {
       console.error(err);
-      showToast("Xatolik yuz berdi", "error");
+      showToast(t.errorOccurred, "error");
     }
     setChalSaving(false);
   };
@@ -265,24 +265,24 @@ const Admin = ({ darkMode, showToast }) => {
     try {
       await updateDoc(doc(db, "challenges", id), { status: currentStatus === "active" ? "ended" : "active" });
       fetchChallenges();
-      showToast("Holat o'zgardi", "success");
+      showToast(t.statusChanged, "success");
     } catch (err) { 
       console.error(err);
-      showToast("Xatolik", "error"); }
+      showToast(t.error, "error"); }
   };
 
   const handleDeleteChallenge = async (id) => {
-    if (!window.confirm("Musobaqani va uning ishlarini butunlay o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t.confirmDeleteChallenge)) return;
     try {
       await deleteDoc(doc(db, "challenges", id));
       setChallenges(prev => prev.filter(c => c.id !== id));
-      showToast("Musobaqa o'chirildi", "success");
+      showToast(t.challengeDeleted, "success");
     } catch (err) {
       console.error(err);
-      showToast("Xatolik", "error"); }
+      showToast(t.error, "error"); }
   };
 
-  // ── Handlers (Kurslar) ───────────────────────────────────────────────────
+  // в”Ђв”Ђ Handlers (Kurslar) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleApproveCourse = async (courseId, instructorId, title) => {
     try {
       await updateDoc(doc(db, "instructorCourses", courseId), { status: "approved" });
@@ -318,9 +318,9 @@ const Admin = ({ darkMode, showToast }) => {
     } catch (err) { showToast("Xatolik: " + err.message, "error"); }
   };
 
-  // ── Handlers (Mentor arizalari) ──────────────────────────────────
+  // в”Ђв”Ђ Handlers (Mentor arizalari) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleApproveMentor = async (appId, userId, userName) => {
-    if (!window.confirm(`${userName} ni rasmiy Mentor sifatida tasdiqlaysizmi?`)) return;
+    if (!window.confirm(`${userName} ${t.confirmApproveMentor}`)) return;
     try {
       await updateDoc(doc(db, "mentorApplications", appId), { status: "approved" });
       await setDoc(doc(db, "users", userId), { isMentor: true }, { merge: true });
@@ -330,14 +330,14 @@ const Admin = ({ darkMode, showToast }) => {
         type: "success", read: false, createdAt: serverTimestamp(),
       });
       setMentorApps(prev => prev.filter(a => a.id !== appId));
-      showToast(`${userName} Mentor etib tayinlandi!`, "success");
+      showToast(`${userName} ${t.mentorApprovedMsg}`, "success");
     } catch (err) { 
       showToast("Xatolik: " + err.message, "error"); 
     }
   };
 
   const handleRejectMentor = async (appId, userId, userName) => {
-    const reason = window.prompt(`${userName} arizasini rad etish sababini yozing:`);
+    const reason = window.prompt(`${userName} ${t.enterRejectReason}`);
     if (reason === null) return;
     try {
       await updateDoc(doc(db, "mentorApplications", appId), { status: "rejected", rejectReason: reason });
@@ -347,28 +347,62 @@ const Admin = ({ darkMode, showToast }) => {
         type: "warning", read: false, createdAt: serverTimestamp(),
       });
       setMentorApps(prev => prev.filter(a => a.id !== appId));
-      showToast("Ariza rad etildi.", "success");
+      showToast(t.mentorRejectedMsg, "success");
     } catch (err) { 
       showToast("Xatolik: " + err.message, "error"); 
     }
   };
 
-  // ── Handlers (Promo kodlar) ──────────────────────────────────────────────
+  // в”Ђв”Ђ Handlers (Promo kodlar) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleAddPromo = async () => {
     const code = promoForm.code.trim().toUpperCase();
-    if (!code || !promoForm.discount) { showToast("Kod va chegirma kiritilmadi!", "error"); return; }
+    if (!code) { showToast(t.promoCodeRequired || "Kod nomini kiriting", "error"); return; }
+
+    // Type-specific validation
+    if (promoType === 'discount') {
+      if (!promoForm.discount || Number(promoForm.discount) <= 0) {
+        showToast(t.discountRequired || "Chegirma miqdorini kiriting", "error");
+        return;
+      }
+    } else if (promoType === 'coins') {
+      if (!promoForm.coins || Number(promoForm.coins) <= 0) {
+        showToast(t.coinsRequired || "Coin miqdorini kiriting", "error");
+        return;
+      }
+    } else {
+      showToast(t.selectPromoType || "Promo kod turini tanlang", "error");
+      return;
+    }
+
     setPromoSaving(true);
     try {
-      await setDoc(doc(db, "promoCodes", code), {
-        discount: Number(promoForm.discount), type: promoForm.type,
-        course: promoForm.course, maxUses: Number(promoForm.maxUses),
-        uses: 0, valid: true, createdAt: serverTimestamp(),
-      });
-      showToast(`"${code}" promo kodi qo'shildi!`, "success");
+      const promoData = {
+        code,
+        maxUses: Number(promoForm.maxUses) || 100,
+        uses: 0,
+        valid: true,
+        createdAt: serverTimestamp(),
+      };
+
+      if (promoType === 'discount') {
+        promoData.discount = Number(promoForm.discount);
+        promoData.type = promoForm.type;
+        promoData.course = promoForm.course;
+        promoData.coins = 0;
+      } else {
+        promoData.coins = Number(promoForm.coins);
+        promoData.discount = 0;
+        promoData.type = 'none';
+        promoData.course = 'all';
+      }
+
+      await setDoc(doc(db, "promoCodes", code), promoData);
+      showToast(`${code} ${t.promoAdded}`, "success");
       setShowPromoForm(false);
-      setPromoForm({ code: "", discount: "", type: "percent", course: "all", maxUses: "100" });
+      setPromoType(null);
+      setPromoForm({ code: "", discount: "", type: "percent", course: "all", maxUses: "100", coins: "" });
       fetchPromoCodes();
-    } catch { showToast("Xatolik!", "error"); }
+    } catch { showToast(t.error, "error"); }
     setPromoSaving(false);
   };
 
@@ -377,7 +411,7 @@ const Admin = ({ darkMode, showToast }) => {
       await updateDoc(doc(db, "promoCodes", promoId), { valid: !currentValid });
       setPromoCodes((prev) => prev.map((p) => p.id === promoId ? { ...p, valid: !currentValid } : p));
       showToast(currentValid ? t.promoDisabled : t.promoEnabled, "success");
-    } catch { showToast("Xatolik!", "error"); }
+    } catch { showToast(t.error, "error"); }
   };
 
   const handleDeletePromo = async (promoId) => {
@@ -385,17 +419,17 @@ const Admin = ({ darkMode, showToast }) => {
     try {
       await deleteDoc(doc(db, "promoCodes", promoId));
       setPromoCodes((prev) => prev.filter((p) => p.id !== promoId));
-      showToast("O'chirildi!", "success");
-    } catch { showToast("Xatolik!", "error"); }
+      showToast(t.deleted, "success");
+    } catch { showToast(t.error, "error"); }
   };
 
-  // ── Handlers (Bildirishnomalar) ──────────────────────────────────────────
+  // в”Ђв”Ђ Handlers (Bildirishnomalar) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleSendNotif = async () => {
     if (!notifForm.title.trim() || !notifForm.message.trim()) {
-      showToast("Sarlavha va xabar kiritilmadi!", "error"); return;
+      showToast(t.titleAndMessageRequired, "error"); return;
     }
     if (notifForm.target === "user" && !notifForm.userId) {
-      showToast("Foydalanuvchi tanlanmadi!", "error"); return;
+      showToast(t.userNotSelected, "error"); return;
     }
     setNotifSending(true);
     try {
@@ -416,7 +450,7 @@ const Admin = ({ darkMode, showToast }) => {
         });
         await batch.commit();
         await addDoc(collection(db, "adminNotifications"), { ...base, target: "all", targetCount: users.length });
-        showToast(`✅ ${users.length} ${t.notificationSentCount}`, "success");
+        showToast(`${users.length} ${t.notificationSentCount}`, "success");
       } else {
         const targetUser = users.find((u) => u.id === notifForm.userId);
         const timestamp  = Date.now();
@@ -425,7 +459,7 @@ const Admin = ({ darkMode, showToast }) => {
         await addDoc(collection(db, "adminNotifications"), {
           ...base, target: "user",
           targetId:   notifForm.userId,
-          targetName: targetUser?.displayName || targetUser?.email || "—",
+          targetName: targetUser?.displayName || targetUser?.email || "—”",
         });
         showToast(`${targetUser?.displayName || "Foydalanuvchi"}${t.sentPrefix || ""} ${t.notificationSentCount}`, "success");
       }
@@ -433,7 +467,7 @@ const Admin = ({ darkMode, showToast }) => {
       fetchNotifHistory();
     } catch (err) {
       console.error(err);
-      showToast("Yuborishda xatolik!", "error");
+      showToast(t.sendError, "error");
     }
     setNotifSending(false);
   };
@@ -444,10 +478,10 @@ const Admin = ({ darkMode, showToast }) => {
       await deleteDoc(doc(db, "adminNotifications", notifId));
       setSentHistory((prev) => prev.filter((n) => n.id !== notifId));
       showToast(t.deleteSuccess || "Bildirishnoma o'chirildi!", "success");
-    } catch { showToast("Xatolik!", "error"); }
+    } catch { showToast(t.error, "error"); }
   };
 
-  // ── Styles ───────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Styles в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const cardClass  = `rounded-2xl p-6 shadow-lg ${darkMode ? "bg-slate-800" : "bg-white"}`;
   const inputStyle = {
     width: "100%", padding: "9px 12px", borderRadius: 8,
@@ -457,22 +491,21 @@ const Admin = ({ darkMode, showToast }) => {
     fontSize: 13, outline: "none", boxSizing: "border-box",
   };
 
-  // ── TABS ─────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ TABS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const tabs = [
     { id: "stats",       label: t.adminTabStats,        icon: <LuChartBar />      },
     { id: "users",       label: t.adminTabUsers,         icon: <LuUsers />         },
     { id: "instructors", label: t.adminTabInstructors,    icon: <LuGraduationCap /> },
-    { id: "mentors",     label: "Arizalar",            icon: <LuBriefcase /> },
+    { id: "mentors",     label: t.adminTabMentors,            icon: <LuBriefcase /> },
     { id: "courses",     label: t.adminTabCourses, icon: <LuBookOpen />  },
-    { id: "challenges",  label: "Xakaton",             icon: <LuAward /> }, // Xakaton tabi qo'shildi
+    { id: "challenges",  label: t.adminTabChallenges,             icon: <LuAward /> },
     { id: "promo",       label: t.adminTabPromo,     icon: <LuTicket />        },
     { id: "notif",       label: t.adminTabNotif,    icon: <LuBell />          },
   ];
 
   return (
     <div className={`page-transition w-full max-w-6xl mx-auto px-6 py-10 mt-10 ${darkMode ? "text-white" : "text-gray-900"}`}>
-      <ScrollReveal direction="up">
-        <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className={`text-3xl font-extrabold flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
               <LuShield className="text-blue-500" /> {t.adminTitle}
@@ -481,9 +514,8 @@ const Admin = ({ darkMode, showToast }) => {
           </div>
           <span className="px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-xl">{t.adminBadge}</span>
         </div>
-      </ScrollReveal>
-
-      <ScrollReveal direction="up" delay={100}>
+      
+      <div>
         <div className="flex gap-2 mb-8 flex-wrap">
           {tabs.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -499,11 +531,11 @@ const Admin = ({ darkMode, showToast }) => {
             </button>
           ))}
         </div>
-      </ScrollReveal>
-
+      </div>
+      
       {/* ── Stats ── */}
       {activeTab === "stats" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <div className={cardClass}>
               <div className="text-3xl font-extrabold text-blue-400">{users.length}</div>
@@ -528,12 +560,12 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
       {/* ── Users ── */}
       {activeTab === "users" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <h3 className={`text-lg font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"}`}>
               {t.allUsers || "All Users"} ({users.length})
@@ -559,12 +591,12 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── O'qituvchilar ── */}
+      {/* в”Ђв”Ђ O'qituvchilar в”Ђв”Ђ */}
       {activeTab === "instructors" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
@@ -584,27 +616,29 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── MENTORLIK ARIZALARI ── */}
+      {/* в”Ђв”Ђ MENTORLIK ARIZALARI в”Ђв”Ђ */}
       {activeTab === "mentors" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                <LuBriefcase className="text-purple-500" /> Mentorlikka Arizalar ({mentorApps.length})
+                <LuBriefcase className="text-purple-500" /> {t.mentorApplicationsTitle} ({mentorApps.length})
               </h3>
             </div>
             
-            {mentorsLoading ? (
-              <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin" /></div>
-            ) : mentorApps.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px 0" }}>
-                <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuBriefcase /></div>
-                <p style={{ color: "#6b7280" }}>Yangi arizalar yo'q.</p>
-              </div>
-            ) : mentorApps.map((app) => (
+            {mentorsLoading
+              ? <div className="flex justify-center py-8"><div className="w-8 h-8 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin" /></div>
+              : mentorApps.length === 0
+              ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuBriefcase /></div>
+                  <p style={{ color: "#6b7280" }}>{t.noMentorApps}</p>
+                </div>
+              )
+              : mentorApps.map((app) => (
                 <div key={app.id} style={{ display: "flex", flexDirection: "column", gap: 12, padding: "20px", borderRadius: 16, marginBottom: 16, background: darkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
                   
                   <div className="flex items-center gap-4 border-b border-gray-200 dark:border-slate-700 pb-4">
@@ -628,7 +662,7 @@ const Admin = ({ darkMode, showToast }) => {
                       <span className="text-xs text-gray-400">{app.createdAt?.toDate?.()?.toLocaleString("uz")}</span>
                     </div>
                     <p className={`text-sm leading-relaxed p-3 rounded-xl ${darkMode ? "bg-slate-800 text-gray-300" : "bg-white text-gray-700"} border ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
-                      <span className="font-semibold block mb-1">Tajribasi va maqsadi:</span>
+                      <span className="font-semibold block mb-1">{t.experienceAndGoal}:</span>
                       "{app.reason}"
                     </p>
                   </div>
@@ -636,11 +670,11 @@ const Admin = ({ darkMode, showToast }) => {
                   <div className="flex gap-3 mt-2">
                     <button onClick={() => handleApproveMentor(app.id, app.userId, app.userName)}
                       className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition flex justify-center items-center gap-2 shadow-sm shadow-green-500/20">
-                      <LuCheck /> Mentor qilib tasdiqlash
+                      <LuCheck /> {t.approveMentor}
                     </button>
                     <button onClick={() => handleRejectMentor(app.id, app.userId, app.userName)}
                       className="py-2.5 px-6 border border-red-500 text-red-500 hover:bg-red-50 hover:dark:bg-red-500/10 rounded-xl font-semibold transition flex justify-center items-center gap-2">
-                      <LuX /> Rad etish
+                      <LuX /> {t.reject}
                     </button>
                   </div>
 
@@ -648,12 +682,12 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── Kutilayotgan kurslar (Pending) ── */}
+      {/* в”Ђв”Ђ Kutilayotgan kurslar (Pending) в”Ђв”Ђ */}
       {activeTab === "courses" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
@@ -693,13 +727,13 @@ const Admin = ({ darkMode, showToast }) => {
                    <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => handleApproveCourse(course.id, course.instructorId, course.title)}
                       style={{ padding: "8px 14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                      <LuCheck /> Tasdiqlash
+                      <LuCheck /> {t.approve}
                     </button>
                     
                     {course.status !== "rejected" && (
                       <button onClick={() => handleRejectCourse(course.id, course.instructorId, course.title)}
                         style={{ padding: "8px 14px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                        <LuX /> Rad etish
+                        <LuX /> {t.reject}
                       </button>
                     )}
                   </div>
@@ -708,40 +742,40 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── XAKATONLAR (Pixel Challenge) ── */}
+      {/* в”Ђв”Ђ XAKATONLAR (Pixel Challenge) в”Ђв”Ђ */}
       {activeTab === "challenges" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                <LuAward className="text-purple-500" /> Pixel Challenges ({challenges.length})
+                <LuAward className="text-purple-500" /> {t.adminTabChallenges} ({challenges.length})
               </h3>
               <button onClick={() => setShowChalForm(!showChalForm)}
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2">
-                {showChalForm ? <><LuX /> Bekor qilish</> : <><LuPlus /> Yangi e'lon qilish</>}
+                {showChalForm ? <><LuX /> {t.cancel}</> : <><LuPlus /> {t.challengeNewAnnounce}</>}
               </button>
             </div>
 
             {showChalForm && (
               <div style={{ background: darkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, padding: "20px", marginBottom: 20, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
-                <h4 style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>Yangi Xakaton yaratish</h4>
+                <h4 style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{t.challengeNewTitle}</h4>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Sarlavha *</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.challengeTitleLabel} *</label>
                     <input value={chalForm.title} placeholder="Masalan: Minimal Music Player"
                       onChange={(e) => setChalForm({ ...chalForm, title: e.target.value })} style={inputStyle} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Qisqacha ta'rif va qoidalar *</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.challengeDescLabel} *</label>
                     <textarea value={chalForm.desc} placeholder="Talablar va shartlarni yozing..." rows={3}
                       onChange={(e) => setChalForm({ ...chalForm, desc: e.target.value })} style={{...inputStyle, resize: "none"}} />
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Mukofot (Tanga) *</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.challengePrizeLabel} *</label>
                       <input 
   type="number" 
   value={chalForm.prize} 
@@ -752,7 +786,7 @@ const Admin = ({ darkMode, showToast }) => {
 />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Davomiyligi (Soat) *</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.challengeDurationLabel} *</label>
                       <input 
   type="number" 
   value={chalForm.duration} 
@@ -767,11 +801,11 @@ const Admin = ({ darkMode, showToast }) => {
                 <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
                   <button onClick={handleAddChallenge} disabled={chalSaving}
                     style={{ padding: "10px 24px", background: chalSaving ? "#d8b4fe" : "#9333ea", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: chalSaving ? "default" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                    {chalSaving ? "Saqlanmoqda..." : <><LuCheck /> E'lon qilish</>}
+                    {chalSaving ? t.saving : <><LuCheck /> {t.challengePublish}</>}
                   </button>
                   <button onClick={() => setShowChalForm(false)}
                     style={{ padding: "10px 16px", background: "transparent", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, color: darkMode ? "#94a3b8" : "#374151", cursor: "pointer" }}>
-                    Bekor qilish
+                    {t.challengeCancel}
                   </button>
                 </div>
               </div>
@@ -783,7 +817,7 @@ const Admin = ({ darkMode, showToast }) => {
               ? (
                 <div style={{ textAlign: "center", padding: "40px 0" }}>
                   <div style={{ fontSize: 42, marginBottom: 12, display: "flex", justifyContent: "center", color: "#94a3b8" }}><LuAward /></div>
-                  <p style={{ color: "#6b7280" }}>Hali musobaqalar yo'q. Yangi e'lon qiling!</p>
+                  <p style={{ color: "#6b7280" }}>{t.noChallenges}</p>
                 </div>
               )
               : challenges.map((chal) => (
@@ -792,23 +826,23 @@ const Admin = ({ darkMode, showToast }) => {
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: chal.status === "active" ? "#dcfce7" : "#f1f5f9", color: chal.status === "active" ? "#166534" : "#475569" }}>
-                          {chal.status === "active" ? "Aktiv" : "Tugagan"}
+                          {chal.status === "active" ? t.statusActive : t.statusEnded}
                         </span>
-                        <span className="flex items-center gap-1 text-amber-500 text-xs font-bold"><LuCoins /> {chal.prize} Tanga</span>
+                        <span className="flex items-center gap-1 text-amber-500 text-xs font-bold"><LuCoins /> {chal.prize} {t.coinsLabel}</span>
                       </div>
                       <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: darkMode ? "#f1f5f9" : "#111" }}>{chal.title}</h4>
                       <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>{chal.desc}</p>
                       
                       <div style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 16 }}>
-                         <span className="flex items-center gap-1"><LuClock size={12}/> Boshlandi: {chal.createdAt?.toDate?.()?.toLocaleString("uz") || "—"}</span>
-                         <span className="flex items-center gap-1"><LuClock size={12}/> Tugaydi: {chal.endDate?.toDate?.()?.toLocaleString("uz") || "—"}</span>
+                         <span className="flex items-center gap-1"><LuClock size={12}/> Boshlandi: {chal.createdAt?.toDate?.()?.toLocaleString("uz") || "—”"}</span>
+                         <span className="flex items-center gap-1"><LuClock size={12}/> Tugaydi: {chal.endDate?.toDate?.()?.toLocaleString("uz") || "—”"}</span>
                       </div>
                     </div>
                     
                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <button onClick={() => handleToggleChallengeStatus(chal.id, chal.status)}
                       style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${chal.status === "active" ? "#f59e0b" : "#10b981"}`, color: chal.status === "active" ? "#f59e0b" : "#10b981", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                      {chal.status === "active" ? "To'xtatish" : "Qayta aktivlash"}
+                      {chal.status === "active" ? t.stop : t.reactivate}
                     </button>
                     <button onClick={() => handleDeleteChallenge(chal.id)}
                       style={{ padding: "6px 12px", background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -820,12 +854,12 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── Promo ── */}
+      {/* в”Ђв”Ђ Promo в”Ђв”Ђ */}
       {activeTab === "promo" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div className={cardClass}>
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
@@ -840,60 +874,179 @@ const Admin = ({ darkMode, showToast }) => {
             {showPromoForm && (
               <div style={{ background: darkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, padding: "20px", marginBottom: 20, border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}` }}>
                 <h4 style={{ margin: "0 0 16px", fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{t.newPromoTitle || "Yangi promo kod"}</h4>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoCodeName} *</label>
-                    <input value={promoForm.code} placeholder="PIXEL50"
-                      onChange={(e) => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} style={inputStyle} />
+
+                {/* Step 1: Type Selection */}
+                {!promoType && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <button
+                      onClick={() => setPromoType('discount')}
+                      style={{
+                        padding: "24px 16px",
+                        borderRadius: 12,
+                        border: `2px solid ${darkMode ? "#334155" : "#e5e7eb"}`,
+                        background: darkMode ? "#1e293b" : "#fff",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 8,
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <LuTicket size={32} style={{ color: "#10b981" }} />
+                      <span style={{ fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{t.promoTypeDiscount || "Chegirma"}</span>
+                      <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center" }}>{t.promoTypeDiscountDesc || "Kurs sotib olishga chegirma"}</span>
+                    </button>
+                    <button
+                      onClick={() => setPromoType('coins')}
+                      style={{
+                        padding: "24px 16px",
+                        borderRadius: 12,
+                        border: `2px solid ${darkMode ? "#334155" : "#e5e7eb"}`,
+                        background: darkMode ? "#1e293b" : "#fff",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 8,
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <LuCoins size={32} style={{ color: "#f59e0b" }} />
+                      <span style={{ fontWeight: 700, fontSize: 14, color: darkMode ? "#f1f5f9" : "#111" }}>{t.promoTypeCoins || "Coin"}</span>
+                      <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center" }}>{t.promoTypeCoinsDesc || "Foydalanuvchiga coin berish"}</span>
+                    </button>
                   </div>
+                )}
+
+                {/* Step 2: Discount Form */}
+                {promoType === 'discount' && (
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.discount} *</label>
-                    <input 
-  type="number" 
-  value={promoForm.discount} 
-  placeholder="50"
-  onChange={(e) => setPromoForm({ ...promoForm, discount: e.target.value })} 
-  style={inputStyle}
-  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-/>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                      <button
+                        onClick={() => setPromoType(null)}
+                        style={{ padding: "4px 8px", borderRadius: 6, border: "none", background: "transparent", color: "#6b7280", cursor: "pointer", fontSize: 12 }}
+                      >
+                        ← {t.back || "Orqaga"}
+                      </button>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>|</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#10b981", display: "flex", alignItems: "center", gap: 4 }}>
+                        <LuTicket size={14} /> {t.promoTypeDiscount || "Chegirma"}
+                      </span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoCodeName} *</label>
+                        <input value={promoForm.code} placeholder="PIXEL50"
+                          onChange={(e) => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.discount} *</label>
+                        <input
+                          type="number"
+                          value={promoForm.discount}
+                          placeholder="50"
+                          onChange={(e) => setPromoForm({ ...promoForm, discount: e.target.value })}
+                          style={inputStyle}
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoType}</label>
+                        <select value={promoForm.type} onChange={(e) => setPromoForm({ ...promoForm, type: e.target.value })} style={inputStyle}>
+                          <option value="percent">{t.promoPercent}</option>
+                          <option value="sum">{t.promoSum}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.courseLabel}</label>
+                        <select value={promoForm.course} onChange={(e) => setPromoForm({ ...promoForm, course: e.target.value })} style={inputStyle}>
+                          {["all", "HTML", "CSS", "JavaScript", "React", "English", "Russian", "French"].map((c) => (
+                            <option key={c} value={c}>{c === "all" ? t.allCourses : c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoMaxUses}</label>
+                        <input
+                          type="number"
+                          value={promoForm.maxUses}
+                          placeholder="100"
+                          onChange={(e) => setPromoForm({ ...promoForm, maxUses: e.target.value })}
+                          style={inputStyle}
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                      <button onClick={handleAddPromo} disabled={promoSaving}
+                        style={{ padding: "10px 24px", background: promoSaving ? "#93c5fd" : "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: promoSaving ? "default" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                        {promoSaving ? (t.saving || "Saqlanmoqda...") : <><LuCheck /> {t.save || "Saqlash"}</>}
+                      </button>
+                      <button onClick={() => { setPromoType(null); setShowPromoForm(false); }}
+                        style={{ padding: "10px 16px", background: "transparent", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, color: darkMode ? "#94a3b8" : "#374151", cursor: "pointer" }}>
+                        {t.cancel || "Bekor qilish"}
+                      </button>
+                    </div>
                   </div>
+                )}
+
+                {/* Step 3: Coins Form */}
+                {promoType === 'coins' && (
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoType}</label>
-                    <select value={promoForm.type} onChange={(e) => setPromoForm({ ...promoForm, type: e.target.value })} style={inputStyle}>
-                      <option value="percent">{t.promoPercent}</option>
-                      <option value="sum">{t.promoSum}</option>
-                    </select>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                      <button
+                        onClick={() => setPromoType(null)}
+                        style={{ padding: "4px 8px", borderRadius: 6, border: "none", background: "transparent", color: "#6b7280", cursor: "pointer", fontSize: 12 }}
+                      >
+                        ← {t.back || "Orqaga"}
+                      </button>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>|</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", display: "flex", alignItems: "center", gap: 4 }}>
+                        <LuCoins size={14} /> {t.promoTypeCoins || "Coin"}
+                      </span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoCodeName} *</label>
+                        <input value={promoForm.code} placeholder="SALOM1000"
+                          onChange={(e) => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoCoins || "Coinlar"} *</label>
+                        <input
+                          type="number"
+                          value={promoForm.coins}
+                          placeholder="1000"
+                          onChange={(e) => setPromoForm({ ...promoForm, coins: e.target.value })}
+                          style={inputStyle}
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoMaxUses}</label>
+                        <input
+                          type="number"
+                          value={promoForm.maxUses}
+                          placeholder="100"
+                          onChange={(e) => setPromoForm({ ...promoForm, maxUses: e.target.value })}
+                          style={inputStyle}
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                      <button onClick={handleAddPromo} disabled={promoSaving}
+                        style={{ padding: "10px 24px", background: promoSaving ? "#93c5fd" : "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: promoSaving ? "default" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                        {promoSaving ? (t.saving || "Saqlanmoqda...") : <><LuCheck /> {t.save || "Saqlash"}</>}
+                      </button>
+                      <button onClick={() => { setPromoType(null); setShowPromoForm(false); }}
+                        style={{ padding: "10px 16px", background: "transparent", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, color: darkMode ? "#94a3b8" : "#374151", cursor: "pointer" }}>
+                        {t.cancel || "Bekor qilish"}
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Kurs</label>
-                    <select value={promoForm.course} onChange={(e) => setPromoForm({ ...promoForm, course: e.target.value })} style={inputStyle}>
-                      {["all", "HTML", "CSS", "JavaScript", "React", "English", "Russian", "French"].map((c) => (
-                        <option key={c} value={c}>{c === "all" ? "Barcha kurslar" : c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.promoMaxUses}</label>
-                   <input 
-  type="number" 
-  value={promoForm.maxUses} 
-  placeholder="100"
-  onChange={(e) => setPromoForm({ ...promoForm, maxUses: e.target.value })} 
-  style={inputStyle}
-  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-/>
-                  </div>
-                </div>
-                <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
-                  <button onClick={handleAddPromo} disabled={promoSaving}
-                    style={{ padding: "10px 24px", background: promoSaving ? "#93c5fd" : "#10b981", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: promoSaving ? "default" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                    {promoSaving ? (t.saving || "Saqlanmoqda...") : <><LuCheck /> {t.save || "Saqlash"}</>}
-                  </button>
-                  <button onClick={() => setShowPromoForm(false)}
-                    style={{ padding: "10px 16px", background: "transparent", border: `1px solid ${darkMode ? "#334155" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, color: darkMode ? "#94a3b8" : "#374151", cursor: "pointer" }}>
-                    {t.cancel || "Bekor qilish"}
-                  </button>
-                </div>
+                )}
               </div>
             )}
 
@@ -913,8 +1066,13 @@ const Admin = ({ darkMode, showToast }) => {
                     <span style={{ padding: "2px 10px", borderRadius: 20, background: "#d1fae5", color: "#065f46", fontSize: 12, fontWeight: 700 }}>
                       {promo.type === "percent" ? `${promo.discount}%` : `${Number(promo.discount).toLocaleString()} so'm`}
                     </span>
-                    <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.course === "all" ? "Barcha kurslar" : promo.course}</span>
-                    <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.uses || 0}/{promo.maxUses} marta</span>
+                    {promo.coins > 0 && (
+                      <span style={{ padding: "2px 10px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                        <LuCoins size={12} /> {promo.coins}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.course === "all" ? t.allCourses : promo.course}</span>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{promo.uses || 0}/{promo.maxUses} {t.timesUsed}</span>
                    <span style={{ 
   display: "inline-flex", 
   alignItems: "center", 
@@ -943,12 +1101,12 @@ const Admin = ({ darkMode, showToast }) => {
               ))
             }
           </div>
-        </ScrollReveal>
+        </div>
       )}
-      
-      {/* ── Bildirishnoma ── */}
+
+      {/* в”Ђв”Ђ Bildirishnoma в”Ђв”Ђ */}
       {activeTab === "notif" && (
-        <ScrollReveal direction="up" delay={200}>
+        <div>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
             <div className={cardClass}>
@@ -957,14 +1115,14 @@ const Admin = ({ darkMode, showToast }) => {
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 14, marginBottom: 16 }}>
                 <div style={{ gridColumn: "1/-1" }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Sarlavha *</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.labelTitle} *</label>
                   <input value={notifForm.title} onChange={(e) => setNotifForm({ ...notifForm, title: e.target.value })}
-                    placeholder="Yangi kurs qo'shildi!" style={inputStyle} />
+                    placeholder={t.placeholderTitle} style={inputStyle} />
                 </div>
                 <div style={{ gridColumn: "1/-1" }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Xabar matni *</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.labelMessage} *</label>
                   <textarea value={notifForm.message} onChange={(e) => setNotifForm({ ...notifForm, message: e.target.value })}
-                    placeholder="Xabar matnini yozing..." rows={3}
+                    placeholder={t.placeholderMessage} rows={3}
                     style={{ ...inputStyle, resize: "none" }} />
                 </div>
                 <div>
@@ -978,15 +1136,15 @@ const Admin = ({ darkMode, showToast }) => {
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.notificationTarget}</label>
                   <select value={notifForm.target} onChange={(e) => setNotifForm({ ...notifForm, target: e.target.value, userId: "" })} style={inputStyle}>
-                    <option value="all"> {t.notificationAll} ({users.length})</option>
-                    <option value="user"> {t.notificationUser}</option>
+                    <option value="all"> {t.notificationAllUsers} ({users.length})</option>
+                    <option value="user"> {t.labelUser}</option>
                   </select>
                 </div>
                 {notifForm.target === "user" && (
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Foydalanuvchi *</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.labelUser} *</label>
                     <select value={notifForm.userId} onChange={(e) => setNotifForm({ ...notifForm, userId: e.target.value })} style={inputStyle}>
-                      <option value="">— {t.selectUser || "Tanlang"} —</option>
+                      <option value="">—” {t.selectUser || "Tanlang"} —”</option>
                       {users.map((u) => (
                         <option key={u.id} value={u.id}>{u.displayName || u.email}</option>
                       ))}
@@ -994,9 +1152,9 @@ const Admin = ({ darkMode, showToast }) => {
                   </div>
                 )}
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Havola (ixtiyoriy)</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>{t.labelLink}</label>
                   <input value={notifForm.link} onChange={(e) => setNotifForm({ ...notifForm, link: e.target.value })}
-                    placeholder="/courses yoki /quiz" style={inputStyle} />
+                    placeholder="/courses" style={inputStyle} />
                 </div>
               </div>
 
@@ -1046,15 +1204,15 @@ const Admin = ({ darkMode, showToast }) => {
                         <p style={{ margin: "0 0 6px", fontSize: 12, color: "#6b7280" }}>{n.message}</p>
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 11, padding: "1px 8px", borderRadius: 20, background: darkMode ? "#334155" : "#e5e7eb", color: "#6b7280" }}>
-                            {n.target === "all" ? `👥 ${n.targetCount || "?"} ta foydalanuvchi` : `👤 ${n.targetName || "?"}`}
+                            {n.target === "all" ? `${n.targetCount || "?"} ${t.usersIconLabel}` : `${n.targetName || "?"} ${t.userIconLabel}`}
                           </span>
-                          {n.link && <span style={{ fontSize: 11, color: "#3b82f6" }}>🔗 {n.link}</span>}
+                          {n.link && <span style={{ fontSize: 11, color: "#3b82f6" }}>{n.link}</span>}
                           <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                            {n.createdAt?.toDate?.()?.toLocaleString("uz") || "—"}
+                            {n.createdAt?.toDate?.()?.toLocaleString("uz") || "—”"}
                           </span>
                         </div>
                       </div>
-                      <button onClick={() => handleDeleteNotif(n.id)}
+                     <button onClick={() => handleDeleteNotif(n.id)}
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", flexShrink: 0, padding: "2px 6px", borderRadius: 6 }}>
                         <LuTrash2 size={15} />
                       </button>
@@ -1064,8 +1222,8 @@ const Admin = ({ darkMode, showToast }) => {
               }
             </div>
           </div>
-        </ScrollReveal>
-      )}
+          </div> 
+        )}
     </div>
   );
 };

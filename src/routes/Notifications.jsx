@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect } from "react";
 import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
 import {
@@ -46,7 +45,7 @@ const Notifications = ({ darkMode, showToast }) => {
     warning:     t.typeWarning,
   };
 
-  // ── Real-time Firestore dan o'qish ─────────────────────────────────────────
+  // в”Ђв”Ђ Real-time Firestore dan o'qish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!user) return;
 
@@ -68,7 +67,7 @@ const Notifications = ({ darkMode, showToast }) => {
           time:  data.createdAt?.toDate?.()?.toLocaleString(t.lang === "uz" ? "uz" : "en", {
             day: "2-digit", month: "2-digit",
             hour: "2-digit", minute: "2-digit",
-          }) || "Hozirgina",
+          }) || t.justNow,
         };
       });
       setNotifs(list);
@@ -78,7 +77,7 @@ const Notifications = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user, t.lang]);
 
-  // ── Hammasini o'qilgan deb belgilash ───────────────────────────────────────
+  // в”Ђв”Ђ Hammasini o'qilgan deb belgilash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const markAllRead = async () => {
     if (!user) return;
     const unreadList = notifs.filter((n) => !n.read);
@@ -97,7 +96,7 @@ const Notifications = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── Bitta o'qilgan deb belgilash ──────────────────────────────────────────
+  // в”Ђв”Ђ Bitta o'qilgan deb belgilash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const markRead = async (id) => {
     if (!user) return;
     try {
@@ -107,7 +106,7 @@ const Notifications = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── O'chirish ─────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ O'chirish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const deleteNotif = async (id) => {
     if (!user) return;
     try {
@@ -130,7 +129,7 @@ const Notifications = ({ darkMode, showToast }) => {
   return (
     <div className="w-full max-w-4xl mx-auto px-6 py-12 md:py-20 lg:py-28">
       {/* Header Section */}
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div className="flex flex-wrap items-center justify-between gap-8 mb-12">
           <div>
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -176,10 +175,10 @@ const Notifications = ({ darkMode, showToast }) => {
             </button>
           ))}
         </div>
-      </ScrollReveal>
+      </div>
 
       {/* Notifications List */}
-      <ScrollReveal direction="up" delay={200}>
+      <div direction="up" delay={200}>
         {filtered.length === 0 ? (
           <div className={`py-40 text-center rounded-[3rem] border border-dashed transition-all ${
             darkMode ? "bg-slate-900/20 border-white/10" : "bg-slate-50 border-slate-200 shadow-inner"
@@ -264,7 +263,7 @@ const Notifications = ({ darkMode, showToast }) => {
             ))}
           </div>
         )}
-      </ScrollReveal>
+      </div>
     </div>
   );
 };

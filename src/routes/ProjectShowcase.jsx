@@ -1,7 +1,7 @@
-// ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║          ProjectShowcase.jsx  —  Uzbekas Pixel Platform                     ║
-// ║          Stack: React (Vite) + Tailwind CSS + Firebase + Lucide-React        ║
-// ╚══════════════════════════════════════════════════════════════════════════════╝
+﻿// в•”в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•—
+// в•‘          ProjectShowcase.jsx  —”  Uzbekas Pixel Platform                     в•‘
+// в•‘          Stack: React (Vite) + Tailwind CSS + Firebase + Lucide-React        в•‘
+// в•љв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ќ
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -36,7 +36,7 @@ import {
   LuFolderOpen,
 } from "react-icons/lu";
 
-// ─── TRANSLATIONS ─────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ TRANSLATIONS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const TRANSLATIONS = {
   uz: {
     badge: "Uzbekas Pixel",
@@ -59,7 +59,7 @@ const TRANSLATIONS = {
     cancel: "Bekor qilish",
     submit: "Loyihani Yuklash",
     submitting: "Yuklanmoqda...",
-    successMsg: "Loyihangiz muvaffaqiyatli qo'shildi! 🎉",
+    successMsg: "Loyihangiz muvaffaqiyatli qo'shildi! рџЋ‰",
     errorMsg: "Xatolik yuz berdi. Qayta urinib ko'ring.",
     loginRequired: "Ushbu amalni bajarish uchun tizimga kiring.",
     validUrl: "To'g'ri URL kiriting (https:// bilan boshlang).",
@@ -71,10 +71,56 @@ const TRANSLATIONS = {
     optional: "ixtiyoriy",
     projectCount: (n) => `${n} ta loyiha`,
     community: "Uzbekas Pixel hamjamiyati",
+    untitledProject: "Nomsiz loyiha",
+    unknown: "Noma'lum",
+    like: "Layk bosish",
+    unlike: "Laykni olib tashlash",
+    close: "Yopish",
+    user: "Foydalanuvchi",
+  },
+  en: {
+    badge: "Uzbekas Pixel",
+    title: "Student Projects",
+    subtitle: "The best works created by the community",
+    uploadBtn: "Add Project",
+    noProjects: "No projects yet.",
+    noProjectsSub: "Be the first to upload a project!",
+    modalTitle: "Add New Project",
+    modalSubtitle: "Uzbekas Pixel • Portfolio",
+    labelTitle: "Project name",
+    labelDesc: "Technical description",
+    labelLive: "Demo link (optional)",
+    labelGithub: "GitHub link (optional)",
+    placeholderTitle: "E.g.: E-Commerce Platform",
+    placeholderDesc:
+      "Full-stack project built with React, Firebase and Tailwind...",
+    placeholderLive: "https://my-project.vercel.app",
+    placeholderGithub: "https://github.com/username/repo",
+    cancel: "Cancel",
+    submit: "Upload Project",
+    submitting: "Uploading...",
+    successMsg: "Your project has been added successfully! рџЋ‰",
+    errorMsg: "An error occurred. Please try again.",
+    loginRequired: "Please login to perform this action.",
+    validUrl: "Enter a valid URL (starting with https://).",
+    required: "This field is required.",
+    demoBtn: "Demo",
+    codeBtn: "Code",
+    likeError: "Error liking the project.",
+    oneUrlRequired: "Enter at least one link (Demo or GitHub).",
+    optional: "optional",
+    projectCount: (n) => `${n} projects`,
+    community: "Uzbekas Pixel community",
+    untitledProject: "Untitled project",
+    unknown: "Unknown",
+    like: "Like",
+    unlike: "Unlike",
+    close: "Close",
+    user: "User",
   },
 };
 
-// ─── GLOBAL STYLES (Tailwind arbitrary value xatolarini oldini olish uchun inline CSS) ──
+// в”Ђв”Ђв”Ђ GLOBAL STYLES (Tailwind arbitrary value xatolarini oldini olish uchun inline CSS) в”Ђв”Ђ
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&display=swap');
 
@@ -98,7 +144,7 @@ const GLOBAL_CSS = `
   .up-anim-orb2       { animation: up-orb2 12s ease-in-out infinite }
   .up-heart-pop       { animation: up-heartPop 0.35s ease }
 
-  /* line-clamp — Tailwind plugin olmasa ham ishlaydi */
+  /* line-clamp —” Tailwind plugin olmasa ham ishlaydi */
   .up-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -254,7 +300,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-// ─── TOAST ────────────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ TOAST в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function ToastContainer({ toasts }) {
   return (
     <div
@@ -316,7 +362,7 @@ function ToastContainer({ toasts }) {
   );
 }
 
-// ─── SKELETON CARD ────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ SKELETON CARD в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function SkeletonCard() {
   return (
     <div className="up-glass up-card" style={{ cursor: "default" }}>
@@ -355,7 +401,7 @@ function SkeletonCard() {
   );
 }
 
-// ─── PROJECT CARD ─────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ PROJECT CARD в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const CARD_GRADIENTS = [
   "linear-gradient(135deg,#7c3aed,#06b6d4)",
   "linear-gradient(135deg,#db2777,#7c3aed)",
@@ -438,7 +484,7 @@ function ProjectCard({ project, currentUser, onLike, t }) {
             flex: 1,
           }}
         >
-          {project.title || "Nomsiz loyiha"}
+          {project.title || t.untitledProject}
         </h3>
       </div>
 
@@ -453,7 +499,7 @@ function ProjectCard({ project, currentUser, onLike, t }) {
           flex: 1,
         }}
       >
-        {project.description || "—"}
+        {project.description || "—”"}
       </p>
 
       {/* Meta */}
@@ -477,7 +523,7 @@ function ProjectCard({ project, currentUser, onLike, t }) {
           }}
         >
           <LuUser size={10} />
-          {project.ownerName || "Noma'lum"}
+          {project.ownerName || t.unknown}
         </span>
         {project.createdAt && (
           <span
@@ -527,7 +573,7 @@ function ProjectCard({ project, currentUser, onLike, t }) {
         <button
           onClick={handleLikeClick}
           className={`up-like-btn ${isLiked ? "liked" : "unlike"}`}
-          aria-label={isLiked ? "Laykni olib tashlash" : "Layk bosish"}
+          aria-label={isLiked ? t.unlike : t.like}
         >
           <LuHeart
             size={13}
@@ -541,7 +587,7 @@ function ProjectCard({ project, currentUser, onLike, t }) {
   );
 }
 
-// ─── FORM FIELD ───────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ FORM FIELD в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function FormField({ label, error, children }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -576,7 +622,7 @@ function FormField({ label, error, children }) {
   );
 }
 
-// ─── UPLOAD MODAL ─────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ UPLOAD MODAL в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function UploadModal({ onClose, onSubmit, t }) {
   const [form, setForm] = useState({
     title: "",
@@ -617,7 +663,7 @@ function UploadModal({ onClose, onSubmit, t }) {
     const e = {};
     if (!form.title.trim()) e.title = t.required;
     if (!form.description.trim()) e.description = t.required;
-    // URL lar ixtiyoriy — agar kiritilgan bo'lsa, format tekshiriladi
+    // URL lar ixtiyoriy —” agar kiritilgan bo'lsa, format tekshiriladi
     if (form.liveLink.trim() && !isValidUrl(form.liveLink))
       e.liveLink = t.validUrl;
     if (form.githubLink.trim() && !isValidUrl(form.githubLink))
@@ -723,7 +769,7 @@ function UploadModal({ onClose, onSubmit, t }) {
               onClick={onClose}
               disabled={loading}
               className="up-close-btn"
-              aria-label="Yopish"
+              aria-label={t.close}
             >
               <LuX size={15} />
             </button>
@@ -836,7 +882,7 @@ function UploadModal({ onClose, onSubmit, t }) {
   );
 }
 
-// ─── MAIN EXPORT ──────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ MAIN EXPORT в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 export default function ProjectShowcase() {
   const { user } = useAuth();
   const { lang } = useLang();
@@ -874,7 +920,7 @@ export default function ProjectShowcase() {
       (error) => {
         if (cancelled) return;
         console.error("Firestore onSnapshot xatosi:", error);
-        // setState larni keyingi tick ga surish — "cascading renders" xatosini oldini oladi
+        // setState larni keyingi tick ga surish —” "cascading renders" xatosini oldini oladi
         setTimeout(() => {
           if (!cancelled) {
             setLoading(false);
@@ -903,7 +949,7 @@ export default function ProjectShowcase() {
         liveLink: formData.liveLink,
         githubLink: formData.githubLink,
         ownerId: user.uid,
-        ownerName: user.displayName || user.email || "Foydalanuvchi",
+        ownerName: user.displayName || user.email || t.user,
         likes: [],
         createdAt: serverTimestamp(),
       });
@@ -997,7 +1043,7 @@ export default function ProjectShowcase() {
           padding: "80px 20px 64px",
         }}
       >
-        {/* ── HEADER ── */}
+        {/* в”Ђв”Ђ HEADER в”Ђв”Ђ */}
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           {/* Badge */}
           <div
@@ -1090,7 +1136,7 @@ export default function ProjectShowcase() {
           }}
         />
 
-        {/* ── GRID ── */}
+        {/* в”Ђв”Ђ GRID в”Ђв”Ђ */}
         {loading ? (
           <div
             style={{

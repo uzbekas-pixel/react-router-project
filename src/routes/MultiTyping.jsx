@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import {
@@ -8,6 +8,9 @@ import {
   LuLogOut,
   LuSwords,
   LuTrophy,
+  LuClock,
+  LuUser,
+  LuFrown,
 } from "react-icons/lu";
 import {
   doc,
@@ -131,7 +134,7 @@ const WORDS_UZ = [
   "shahar",
   "qishloq",
   "kocha",
-  "yo‘l",
+  "yo’l",
   "uy",
   "hovli",
   "deraza",
@@ -508,7 +511,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                         : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                   }`}
                 >
-                  {l === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"}
+                  {l === "en" ? "🇬🇧 " + t.english : "🇺🇿 " + t.uzbek}
                 </button>
               ))}
             </div>
@@ -525,7 +528,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
                 <span
                   className={`text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}
                 >
-                  yoki
+                  {t.or}
                 </span>
                 <div
                   className={`flex-1 h-px ${darkMode ? "bg-slate-600" : "bg-gray-200"}`}
@@ -564,7 +567,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
           <div
             className={`rounded-2xl p-8 shadow-xl text-center ${darkMode ? "bg-slate-800" : "bg-white"}`}
           >
-            <div className="text-5xl mb-4">⏳</div>
+            <div className="text-5xl mb-4 flex justify-center"><LuClock className="text-blue-400" size={56} /></div>
             <h2
               className={`text-xl font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}
             >
@@ -578,7 +581,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
             <p
               className={`text-xs mb-6 ${darkMode ? "text-gray-500" : "text-gray-400"}`}
             >
-              {lang === "en" ? "🇬🇧 English" : "🇺🇿 O'zbek"} {t.langSelected}
+              {lang === "en" ? "🇬🇧 " + t.english : "🇺🇿 " + t.uzbek} {t.langSelected}
             </p>
             <div
               className={`text-4xl font-extrabold tracking-widest mb-6 ${darkMode ? "text-blue-400" : "text-blue-500"}`}
@@ -611,7 +614,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
               <h2
                 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
               >
-                {t.competition} • {roomData?.lang === "uz" ? "🇺🇿" : "🇬🇧"}
+                {t.competition} — {roomData?.lang === "uz" ? "🇺🇿" : "🇬🇧"}
               </h2>
              <button onClick={leaveRoom} className="text-red-400 text-sm hover:underline flex items-center gap-1">
   <LuLogOut size={14} /> {t.leaveGame}
@@ -627,10 +630,10 @@ const MultiTyping = ({ darkMode, showToast }) => {
                   <span
                     className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}
                   >
-                    👤 {t.you}
+                    <LuUser className="inline mr-1" size={14} /> {t.you}
                   </span>
                   <span className="text-blue-400">
-                    {myWpm} WPM • {myProgress}%
+                    {myWpm} WPM — {myProgress}%
                   </span>
                 </div>
                 <div
@@ -647,10 +650,10 @@ const MultiTyping = ({ darkMode, showToast }) => {
                   <span
                     className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}
                   >
-                    👤 {opponentName}
+                    <LuUser className="inline mr-1" size={14} /> {opponentName}
                   </span>
                   <span className="text-green-400">
-                    {opponentWpm} WPM • {opponentProgress}%
+                    {opponentWpm} WPM — {opponentProgress}%
                   </span>
                 </div>
                 <div
@@ -728,7 +731,7 @@ const MultiTyping = ({ darkMode, showToast }) => {
               return (
                 <>
                <div className="text-5xl mb-4 flex justify-center">
-  {iWon ? <LuTrophy className="text-yellow-400" size={56} /> : <span>😢</span>}
+  {iWon ? <LuTrophy className="text-yellow-400" size={56} /> : <LuFrown className="text-gray-400" size={56} />}
 </div>
                   <h2
                     className={`text-2xl font-extrabold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}

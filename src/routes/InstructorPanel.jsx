@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
 import {
   collection, doc, getDoc, deleteDoc,
   onSnapshot, query, serverTimestamp, addDoc, updateDoc,
 } from "firebase/firestore";
-import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import {
   LuBookOpen, LuUsers, LuStar, LuTrophy,
   LuPlus, LuTrash2, LuCheck,
@@ -18,8 +17,8 @@ import { getNameStyleByKey } from "../constants/shopConstants";
 const ZEGO_APP_ID        = 77698519;
 const ZEGO_SERVER_SECRET = "640db04ef5b4b66c82185215c289bd00";
 
-const COURSE_CATEGORIES = [
-  "HTML","CSS","JavaScript","React","English","Russian","French","Python","Boshqa",
+const COURSE_CATEGORIES = (t) => [
+  "HTML","CSS","JavaScript","React","English","Russian","French","Python",t.other,
 ];
 
 const CMD_REACTION   = "REACTION";
@@ -29,7 +28,7 @@ const CMD_ACCEPT     = "ACCEPT_COHOST";
 const CMD_REMOVE     = "REMOVE_COHOST";
 const CMD_MUTE       = "MUTE_COHOST";
 
-// ── Floating Reaction (o'quvchilardan keladiganlar ko'rsatiladi) ──────────────
+// в”Ђв”Ђ Floating Reaction (o'quvchilardan keladiganlar ko'rsatiladi) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const FloatingReaction = ({ emoji, onDone, rightOffset, riseAmount }) => {
   const ref = useRef(null);
   useEffect(() => {
@@ -55,9 +54,9 @@ const FloatingReaction = ({ emoji, onDone, rightOffset, riseAmount }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── LIVE LESSON — HOST
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ LIVE LESSON —” HOST
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const LiveLesson = ({ showToast, user, onClose }) => {
   const [liveTitle,  setLiveTitle]  = useState("");
   const [isLive,     setIsLive]     = useState(false);
@@ -92,7 +91,7 @@ const LiveLesson = ({ showToast, user, onClose }) => {
     const onBefore = (e) => {
       if (!isLiveRef.current) return;
       e.preventDefault();
-      e.returnValue = "Live dars hali tugamagan!";
+      e.returnValue = t.liveNotFinished;
     };
     const onHide = () => {
       if (isLiveRef.current && liveDocIdRef.current) {
@@ -132,13 +131,13 @@ const LiveLesson = ({ showToast, user, onClose }) => {
     return () => { unsubChat(); unsubDoc(); };
   }, [liveDocId]);
 
-  // ── O'quvchilardan kelgan commandlarni qabul qilish ──────────────────────
+  // в”Ђв”Ђ O'quvchilardan kelgan commandlarni qabul qilish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleInRoomCommand = useCallback((command) => {
     try {
       const parsed = JSON.parse(command);
 
       if (parsed.type === CMD_REACTION) {
-        // O'quvchi reaction → o'qituvchi ekranida ko'rsatish
+        // O'quvchi reaction в†’ o'qituvchi ekranida ko'rsatish
         setFloatingReactions((prev) => [...prev, {
           id:          `r_${Date.now()}_${prev.length}`,
           emoji:       parsed.emoji,
@@ -164,7 +163,7 @@ const LiveLesson = ({ showToast, user, onClose }) => {
   }, []);
 
   const startLive = async () => {
-    if (!liveTitle.trim()) { showToast?.("Dars nomini kiriting!", "error"); return; }
+    if (!liveTitle.trim()) { showToast?.(t.enterLessonName, "error"); return; }
     if (starting) return;
     setStarting(true);
     try {
@@ -181,11 +180,11 @@ const LiveLesson = ({ showToast, user, onClose }) => {
 
       await new Promise((res) => requestAnimationFrame(res));
       await new Promise((res) => setTimeout(res, 0));
-      if (!zegoRef.current) throw new Error("Video konteyneri topilmadi.");
+      if (!zegoRef.current) throw new Error(t.videoContainerNotFound);
 
       const token = ZegoUIKitPrebuilt.generateKitTokenForTest(
         ZEGO_APP_ID, ZEGO_SERVER_SECRET,
-        channelName, user.uid, user.displayName || "O'qituvchi"
+        channelName, user.uid, user.displayName || t.instructor
       );
       const zc = ZegoUIKitPrebuilt.create(token);
       zegoInst.current = zc;
@@ -196,7 +195,7 @@ const LiveLesson = ({ showToast, user, onClose }) => {
         showPreJoinView:false, showLeavingView:false,
         showRoomDetailsButton:false, showScreenSharingButton:true, showUserList:false,
         onLeaveRoom: () => stopLive(liveDocIdRef.current, false),
-        // ✅ O'quvchilardan kelgan commandlar shu yerda qabul qilinadi
+        // вњ… O'quvchilardan kelgan commandlar shu yerda qabul qilinadi
         // ... boshqa sozlamalar (container, scenario va h.k.)
 onInRoomCommandReceived: (fromUser, command) => {
   try {
@@ -236,9 +235,9 @@ onInRoomCommandReceived: (fromUser, command) => {
 
       setIsLive(true);
       timerRef.current = setInterval(() => setDuration((p) => p + 1), 1000);
-      showToast?.("🔴 Live dars boshlandi!", "success");
+      showToast?.("рџ”ґ " + t.liveStarted, "success");
     } catch (err) {
-      showToast?.("Xatolik: " + err.message, "error");
+      showToast?.(t.error + err.message, "error");
       if (liveDocIdRef.current) {
         await updateDoc(doc(db, "liveLessons", liveDocIdRef.current), {
           status:"ended", endedAt:serverTimestamp(),
@@ -271,7 +270,7 @@ onInRoomCommandReceived: (fromUser, command) => {
     setMsgInput(""); setIsQuestion(false);
     try {
       await addDoc(collection(db, "liveLessons", liveDocId, "messages"), {
-        text, uid:user.uid, name:user.displayName||"O'qituvchi",
+        text, uid:user.uid, name:user.displayName||t.instructor,
         avatar:user.photoURL||null, isInstructor:true,
         isQuestion:asQ, answered:false, createdAt:serverTimestamp(),
       });
@@ -308,7 +307,7 @@ const acceptCohost = (uid, name) => {
     });
 
     if (typeof showToast === "function") {
-      showToast(`${name} sahnaga qo'shildi! 🎙️`, "success");
+      showToast(`${name} ${t.addedToStage}`, "success");
     }
   } catch (_err) {
     console.error("Cohost qabul qilishda xato:", _err);
@@ -340,16 +339,16 @@ const acceptCohost = (uid, name) => {
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 20px", borderBottom:"1px solid #1e293b" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          {isLive && <span style={{ background:"#ef4444", color:"#fff", fontSize:11, fontWeight:800, padding:"4px 10px", borderRadius:6 }}>🔴 LIVE</span>}
-          <span style={{ color:"#f1f5f9", fontWeight:700, fontSize:15 }}>{liveTitle || "Live Dars"}</span>
+          {isLive && <span style={{ background:"#ef4444", color:"#fff", fontSize:11, fontWeight:800, padding:"4px 10px", borderRadius:6 }}>рџ”ґ LIVE</span>}
+          <span style={{ color:"#f1f5f9", fontWeight:700, fontSize:15 }}>{liveTitle || t.liveLesson}</span>
           {isLive && <>
-            <span style={{ color:"#94a3b8", fontSize:12 }}>⏱ {fmt(duration)}</span>
-            <span style={{ color:"#94a3b8", fontSize:12, display:"flex", alignItems:"center", gap:4 }}><LuEye size={13}/>{viewers} tomoshabin</span>
+            <span style={{ color:"#94a3b8", fontSize:12 }}>вЏ± {fmt(duration)}</span>
+            <span style={{ color:"#94a3b8", fontSize:12, display:"flex", alignItems:"center", gap:4 }}><LuEye size={13}/>{viewers} {t.viewers}</span>
           </>}
         </div>
         <button onClick={() => isLive ? stopLive(liveDocIdRef.current) : onClose()}
           style={{ padding:"8px 18px", borderRadius:10, border:"none", background:isLive?"#ef4444":"#334155", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>
-          {isLive ? "⏹ Yakunlash" : "✕ Yopish"}
+          {isLive ? `вЏ№ ${t.end}` : `вњ• ${t.close}`}
         </button>
       </div>
 
@@ -361,18 +360,18 @@ const acceptCohost = (uid, name) => {
           {/* Pre-join */}
           {!isLive && (
             <div style={{ position:"absolute", inset:0, zIndex:10, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20 }}>
-              <div style={{ fontSize:56 }}>📹</div>
+              <div style={{ fontSize:56 }}>рџ“№</div>
               <div style={{ width:"100%", maxWidth:400, padding:"24px", borderRadius:16, background:"#1e293b", border:"1px solid #334155" }}>
-                <h3 style={{ margin:"0 0 14px", fontWeight:700, fontSize:16, color:"#f1f5f9", textAlign:"center" }}>🔴 Live Dars Boshlash</h3>
+                <h3 style={{ margin:"0 0 14px", fontWeight:700, fontSize:16, color:"#f1f5f9", textAlign:"center" }}>рџ”ґ {t.startLiveLesson}</h3>
                 <input value={liveTitle} onChange={(e) => setLiveTitle(e.target.value)}
                   onKeyDown={(e) => e.key==="Enter" && !starting && startLive()}
-                  placeholder="Dars nomi"
+                  placeholder={t.lessonName}
                   style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1px solid #334155", background:"#0f172a", color:"#f1f5f9", fontSize:14, outline:"none", boxSizing:"border-box", marginBottom:14 }}/>
                 <button onClick={startLive} disabled={starting || !liveTitle.trim()}
                   style={{ width:"100%", padding:"13px 0", borderRadius:12, border:"none", background:(starting||!liveTitle.trim())?"#475569":"#ef4444", color:"#fff", fontSize:15, fontWeight:800, cursor:(starting||!liveTitle.trim())?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
                   {starting
-                    ? <><span style={{ width:16,height:16,borderRadius:"50%",border:"2px solid #fff",borderTopColor:"transparent",display:"inline-block",animation:"spin 0.7s linear infinite" }}/>Ulanmoqda...</>
-                    : <><LuRadio size={18}/> Live Boshlash</>}
+                    ? <><span style={{ width:16,height:16,borderRadius:"50%",border:"2px solid #fff",borderTopColor:"transparent",display:"inline-block",animation:"spin 0.7s linear infinite" }}/>{t.connecting}</>
+                    : <><LuRadio size={18}/> {t.startLive}</>}
                 </button>
               </div>
             </div>
@@ -381,7 +380,7 @@ const acceptCohost = (uid, name) => {
           {/* Zego */}
           <div ref={zegoRef} style={{ flex:1, minHeight:0, display:isLive?"flex":"none" }}/>
 
-          {/* ✅ O'quvchilardan kelgan floating reactions ko'rsatish */}
+          {/* вњ… O'quvchilardan kelgan floating reactions ko'rsatish */}
           {isLive && (
             <div style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden" }}>
               {floatingReactions.map((r) => (
@@ -391,11 +390,11 @@ const acceptCohost = (uid, name) => {
             </div>
           )}
 
-          {/* ✅ Raise Hand notification — top-right */}
+          {/* вњ… Raise Hand notification —” top-right */}
           {handNotif && (
             <div style={{ position:"absolute", top:16, right:16, zIndex:60, background:"#1e293b", border:"2px solid #f59e0b", borderRadius:14, padding:"14px 18px", minWidth:260, animation:"slideIn 0.3s ease", boxShadow:"0 8px 32px rgba(245,158,11,0.2)" }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-                <span style={{ fontSize:24, display:"inline-block", animation:"wave 0.6s ease infinite alternate" }}>🖐️</span>
+                <span style={{ fontSize:24, display:"inline-block", animation:"wave 0.6s ease infinite alternate" }}>рџ–ђпёЏ</span>
                 <div>
                   <p style={{ margin:0, color:"#f1f5f9", fontWeight:800, fontSize:14 }}>{handNotif.name}</p>
                   <p style={{ margin:0, color:"#f59e0b", fontSize:12, fontWeight:600 }}>sahna so'ramoqda</p>
@@ -404,22 +403,22 @@ const acceptCohost = (uid, name) => {
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={() => acceptCohost(handNotif.uid, handNotif.name)}
                   style={{ flex:1, padding:"9px 0", background:"#10b981", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer" }}>
-                  ✓ Qabul qilish
+                  вњ“ Qabul qilish
                 </button>
                 <button onClick={() => setHandNotif(null)}
                   style={{ flex:1, padding:"9px 0", background:"#334155", color:"#94a3b8", border:"none", borderRadius:10, fontSize:13, cursor:"pointer" }}>
-                  ✕ Rad etish
+                  вњ• Rad etish
                 </button>
               </div>
             </div>
           )}
 
-          {/* ✅ Qo'l ko'targanlar ro'yxati — bottom-left */}
+          {/* вњ… Qo'l ko'targanlar ro'yxati —” bottom-left */}
           {isLive && raisedHands.length > 0 && (
             <div style={{ position:"absolute", bottom:16, left:16, zIndex:60 }}>
               <div style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(8px)", border:"1px solid rgba(245,158,11,0.4)", borderRadius:12, padding:"10px 14px", minWidth:190 }}>
                 <p style={{ margin:"0 0 8px", color:"#f59e0b", fontSize:11, fontWeight:800 }}>
-                  🖐️ Qo'l ko'targanlar ({raisedHands.length})
+                  рџ–ђпёЏ Qo'l ko'targanlar ({raisedHands.length})
                 </p>
                 {raisedHands.map((h) => (
                   <div key={h.uid} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
@@ -437,7 +436,7 @@ const acceptCohost = (uid, name) => {
             </div>
           )}
 
-          {/* Co-hostlar — top-left */}
+          {/* Co-hostlar —” top-left */}
           {isLive && cohosts.length > 0 && (
             <div style={{ position:"absolute", top:16, left:16, zIndex:60, display:"flex", flexDirection:"column", gap:6 }}>
               {cohosts.map((c) => (
@@ -466,10 +465,10 @@ const acceptCohost = (uid, name) => {
           <div style={{ width:320, borderLeft:"1px solid #1e293b", display:"flex", flexDirection:"column", background:"#060a14" }}>
             <div style={{ padding:"14px 16px", borderBottom:"1px solid #1e293b" }}>
               <p style={{ margin:0, fontWeight:700, fontSize:14, color:"#f1f5f9" }}>
-                💬 Live Chat ({messages.length})
+                рџ’¬ Live Chat ({messages.length})
                 {messages.filter(m => m.isQuestion && !m.answered).length > 0 && (
                   <span style={{ marginLeft:8, background:"#f59e0b", color:"#000", fontSize:10, fontWeight:800, padding:"2px 7px", borderRadius:10 }}>
-                    ❓ {messages.filter(m => m.isQuestion && !m.answered).length}
+                    вќ“ {messages.filter(m => m.isQuestion && !m.answered).length}
                   </span>
                 )}
               </p>
@@ -494,13 +493,13 @@ const acceptCohost = (uid, name) => {
                       <div style={{ flex:1 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
                           <span style={{ fontSize:11, fontWeight:700, color:m.isInstructor?"#f87171":"#60a5fa" }}>
-                            {m.name} {m.isInstructor && "👨‍🏫"}
+                            {m.name} {m.isInstructor && "рџ‘Ё—ЌрџЏ«"}
                           </span>
                           {m.isQuestion && !m.answered && (
-                            <span style={{ fontSize:9, fontWeight:800, background:"#f59e0b", color:"#000", padding:"1px 6px", borderRadius:6 }}>❓ SAVOL</span>
+                            <span style={{ fontSize:9, fontWeight:800, background:"#f59e0b", color:"#000", padding:"1px 6px", borderRadius:6 }}>вќ“ SAVOL</span>
                           )}
                           {m.isQuestion && m.answered && (
-                            <span style={{ fontSize:9, fontWeight:800, background:"#10b981", color:"#fff", padding:"1px 6px", borderRadius:6 }}>✓ Javob</span>
+                            <span style={{ fontSize:9, fontWeight:800, background:"#10b981", color:"#fff", padding:"1px 6px", borderRadius:6 }}>вњ“ Javob</span>
                           )}
                         </div>
                         <p style={{ margin:"2px 0 0", fontSize:13, color:"#e2e8f0", lineHeight:1.5 }}>{m.text}</p>
@@ -521,7 +520,7 @@ const acceptCohost = (uid, name) => {
               <div style={{ marginBottom:8 }}>
                 <button onClick={() => setIsQuestion((p) => !p)}
                   style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:8, border:`1px solid ${isQuestion?"#f59e0b":"#334155"}`, background:isQuestion?"rgba(245,158,11,0.12)":"transparent", color:isQuestion?"#f59e0b":"#6b7280", fontSize:11, fontWeight:700, cursor:"pointer" }}>
-                   {isQuestion ? "❓ Savol rejimi" : "Savol yuborish"}
+                   {isQuestion ? "вќ“ Savol rejimi" : "Savol yuborish"}
                 </button>
               </div>
               <div style={{ display:"flex", gap:8 }}>
@@ -531,7 +530,7 @@ const acceptCohost = (uid, name) => {
                   style={{ flex:1, padding:"9px 12px", borderRadius:10, border:`1px solid ${isQuestion?"#f59e0b":"#334155"}`, background:"#1e293b", color:"#f1f5f9", fontSize:13, outline:"none" }}/>
                 <button onClick={sendMessage} disabled={!msgInput.trim()}
                   style={{ width:36,height:36,borderRadius:10,border:"none",background:msgInput.trim()?"#3b82f6":"#334155",color:"#fff",cursor:msgInput.trim()?"pointer":"default",fontSize:16 }}>
-                  ➤
+                  вћ¤
                 </button>
               </div>
             </div>
@@ -548,11 +547,12 @@ const acceptCohost = (uid, name) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── InstructorPanel (asosiy)
-// ═══════════════════════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// в”Ђв”Ђ InstructorPanel (asosiy)
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const InstructorPanel = ({ darkMode, showToast }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [isInstructor, setIsInstructor] = useState(false);
   const [loading,      setLoading]      = useState(true);
   const [activeTab,    setActiveTab]    = useState("overview");
@@ -598,7 +598,7 @@ const InstructorPanel = ({ darkMode, showToast }) => {
   });
 
   const handleSaveCourse = async () => {
-    if (!courseForm.title.trim() || !courseForm.description.trim()) { showToast?.("Sarlavha va tavsif kiritilmadi!", "error"); return; }
+    if (!courseForm.title.trim() || !courseForm.description.trim()) { showToast?.(t.titleDescRequired, "error"); return; }
     setSaving(true);
     try {
       await addDoc(collection(db, "instructorCourses"), {
@@ -607,24 +607,24 @@ const InstructorPanel = ({ darkMode, showToast }) => {
         instructorPhoto:user.photoURL||null,
         rating:0, students:0, status:"pending", createdAt:serverTimestamp(),
       });
-      showToast?.("✅ Kurs adminga yuborildi!", "success");
+      showToast?.("вњ… " + t.courseSentToAdmin, "success");
       setShowForm(false);
       setCourseForm({ title:"", category:"HTML", description:"", price:"", duration:"", level:"Boshlang'ich", lessons:[{ title:"", videoUrl:"", duration:"" }] });
-    } catch { showToast?.("Xatolik!", "error"); }
+    } catch { showToast?.(t.errorOccurred, "error"); }
     setSaving(false);
   };
 
   const handleDeleteCourse = async (id) => {
-    if (!window.confirm("Bu kursni o'chirishni tasdiqlaysizmi?")) return;
-    try { await deleteDoc(doc(db, "instructorCourses", id)); showToast?.("Kurs o'chirildi!", "error"); }
-    catch { showToast?.("Xatolik!", "error"); }
+    if (!window.confirm(t.confirmDeleteCourse)) return;
+    try { await deleteDoc(doc(db, "instructorCourses", id)); showToast?.(t.courseDeleted, "error"); }
+    catch { showToast?.(t.errorOccurred, "error"); }
   };
 
   const handleDeleteLive = async (id) => {
-    if (!window.confirm("Bu efir tarixini o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t.confirmDeleteLive)) return;
     setDeletingLive(id);
-    try { await deleteDoc(doc(db, "liveLessons", id)); showToast?.("Efir tarixi o'chirildi", "success"); }
-    catch { showToast?.("Xatolik!", "error"); }
+    try { await deleteDoc(doc(db, "liveLessons", id)); showToast?.(t.liveHistoryDeleted, "success"); }
+    catch { showToast?.(t.errorOccurred, "error"); }
     finally { setDeletingLive(null); }
   };
 
@@ -639,11 +639,11 @@ const InstructorPanel = ({ darkMode, showToast }) => {
 
   if (!isInstructor) return (
     <div style={{ maxWidth:500, margin:"0 auto", padding:"80px 20px", textAlign:"center" }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>🔒</div>
-      <h2 style={{ fontSize:22, fontWeight:800, margin:"0 0 10px", color:darkMode?"#f1f5f9":"#111" }}>Ruxsat yo'q</h2>
-      <p style={{ color:"#6b7280", fontSize:14, lineHeight:1.6, marginBottom:24 }}>O'qituvchi paneliga kirish uchun Admin ruxsati kerak.</p>
+      <div style={{ fontSize:64, marginBottom:16 }}>рџ”’</div>
+      <h2 style={{ fontSize:22, fontWeight:800, margin:"0 0 10px", color:darkMode?"#f1f5f9":"#111" }}>{t.permissionDenied}</h2>
+      <p style={{ color:"#6b7280", fontSize:14, lineHeight:1.6, marginBottom:24 }}>{t.adminPermissionRequired}</p>
       <div style={{ padding:"16px 20px", borderRadius:14, background:darkMode?"#1e293b":"#f8fafc", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}` }}>
-        <p style={{ margin:0, fontSize:13, color:"#6b7280" }}>📧 Admin: <span style={{ color:"#3b82f6", fontWeight:600 }}>admin@uzbekaspixel.uz</span></p>
+        <p style={{ margin:0, fontSize:13, color:"#6b7280" }}>рџ“§ Admin: <span style={{ color:"#3b82f6", fontWeight:600 }}>admin@uzbekaspixel.uz</span></p>
       </div>
     </div>
   );
@@ -655,30 +655,30 @@ const InstructorPanel = ({ darkMode, showToast }) => {
     <>
       {showLive && <LiveLesson showToast={showToast} user={user} onClose={() => setShowLive(false)}/>}
       <div style={{ width:"100%", maxWidth:900, margin:"0 auto", padding:"40px 16px 80px" }}>
-        <ScrollReveal direction="up">
+        <div direction="up">
 
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28, flexWrap:"wrap", gap:12 }}>
             <div>
-              <span style={{ display:"inline-block", background:"#d1fae5", color:"#065f46", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #6ee7b7" }}>👨‍🏫 O'qituvchi Panel</span>
-              <h2 style={{ fontSize:24, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111", ...getNameStyleByKey(user.nameColor) }}>Xush kelibsiz, {user?.displayName || "O'qituvchi"}!</h2>
+              <span style={{ display:"inline-block", background:"#d1fae5", color:"#065f46", fontSize:12, fontWeight:700, padding:"4px 14px", borderRadius:20, marginBottom:8, border:"1px solid #6ee7b7" }}>рџ‘Ё—ЌрџЏ« {t.instructorPanel}</span>
+              <h2 style={{ fontSize:24, fontWeight:800, margin:0, color:darkMode?"#f1f5f9":"#111", ...getNameStyleByKey(user.nameColor) }}>{t.welcome}, {user?.displayName || t.instructor}!</h2>
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={() => setShowLive(true)} style={{ padding:"12px 20px", borderRadius:12, border:"none", background:"#ef4444", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, boxShadow:"0 4px 16px #ef444455" }}>
-                <LuRadio size={16}/> 🔴 Live Dars
+                <LuRadio size={16}/> рџ”ґ {t.liveLesson}
               </button>
               <button onClick={() => setShowForm(!showForm)} style={{ padding:"12px 20px", borderRadius:12, border:"none", background:showForm?"#ef4444":"#10b981", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8 }}>
-                {showForm ? <><LuX size={16}/> Yopish</> : <><LuPlus size={16}/> Yangi Kurs</>}
+                {showForm ? <><LuX size={16}/> {t.close}</> : <><LuPlus size={16}/> {t.newCourse}</>}
               </button>
             </div>
           </div>
 
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(150px,1fr))", gap:12, marginBottom:24 }}>
             {[
-              { icon:<LuBookOpen size={22}/>, color:"#3b82f6", label:"Kurslar",      value:myCourses.length },
-              { icon:<LuUsers size={22}/>,   color:"#10b981", label:"Talabalar",     value:totalStudents },
-              { icon:<LuStar size={22}/>,    color:"#f59e0b", label:"O'rt. reyting", value:avgRating },
-              { icon:<LuRadio size={22}/>,   color:"#ef4444", label:"O'tgan live",   value:pastLives.filter((l)=>l.status==="ended").length },
-              { icon:<LuTrophy size={22}/>,  color:"#8b5cf6", label:"Faol kurslar",  value:myCourses.filter((c)=>c.status==="approved").length },
+              { icon:<LuBookOpen size={22}/>, color:"#3b82f6", label:t.coursesLabel,      value:myCourses.length },
+              { icon:<LuUsers size={22}/>,   color:"#10b981", label:t.studentsLabel,     value:totalStudents },
+              { icon:<LuStar size={22}/>,    color:"#f59e0b", label:t.avgRatingLabel, value:avgRating },
+              { icon:<LuRadio size={22}/>,   color:"#ef4444", label:t.pastLiveLabel,   value:pastLives.filter((l)=>l.status==="ended").length },
+              { icon:<LuTrophy size={22}/>,  color:"#8b5cf6", label:t.activeCoursesLabel,  value:myCourses.filter((c)=>c.status==="approved").length },
             ].map((s,i) => (
               <div key={i} style={{ padding:"18px 16px", borderRadius:14, background:darkMode?"#1e293b":"#fff", border:`1px solid ${darkMode?"#334155":"#e5e7eb"}`, textAlign:"center" }}>
                 <div style={{ color:s.color, display:"flex", justifyContent:"center", marginBottom:8 }}>{s.icon}</div>
@@ -751,7 +751,7 @@ const InstructorPanel = ({ darkMode, showToast }) => {
           )}
 
           <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
-            {[{ id:"overview", label:"📚 Kurslarim" },{ id:"live", label:"🔴 Live Tarix" },{ id:"stats", label:"📊 Statistika" }].map((t) => (
+            {[{ id:"overview", label:"рџ“љ Kurslarim" },{ id:"live", label:"рџ”ґ Live Tarix" },{ id:"stats", label:"рџ“Љ Statistika" }].map((t) => (
               <button key={t.id} onClick={() => setActiveTab(t.id)}
                 style={{ padding:"10px 20px", borderRadius:12, border:"none", background:activeTab===t.id?"#3b82f6":darkMode?"#1e293b":"#f1f5f9", color:activeTab===t.id?"#fff":darkMode?"#94a3b8":"#374151", fontSize:13, fontWeight:600, cursor:"pointer", transition:"all 0.2s" }}>
                 {t.label}
@@ -762,7 +762,7 @@ const InstructorPanel = ({ darkMode, showToast }) => {
           {activeTab === "overview" && (
             myCourses.length === 0
               ? <div style={{ textAlign:"center", padding:"60px 0" }}>
-                  <div style={{ fontSize:48, marginBottom:12 }}>📚</div>
+                  <div style={{ fontSize:48, marginBottom:12 }}>рџ“љ</div>
                   <p style={{ color:"#6b7280", marginBottom:16 }}>Hali kurs yaratilmagan</p>
                   <button onClick={() => setShowForm(true)} style={{ padding:"12px 24px", background:"#3b82f6", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer" }}>Birinchi kursni yarating</button>
                 </div>
@@ -773,16 +773,16 @@ const InstructorPanel = ({ darkMode, showToast }) => {
                         <div style={{ flex:1, minWidth:200 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                             <span style={{ padding:"2px 10px", borderRadius:20, fontSize:11, fontWeight:700, background:course.status==="approved"?"#d1fae5":course.status==="rejected"?"#fee2e2":"#fef3c7", color:course.status==="approved"?"#065f46":course.status==="rejected"?"#991b1b":"#92400e" }}>
-                              {course.status==="approved"?"✓ Tasdiqlangan":course.status==="rejected"?"✗ Rad etilgan":"⏳ Kutilmoqda"}
+                              {course.status==="approved"?"вњ“ Tasdiqlangan":course.status==="rejected"?"вњ— Rad etilgan":"вЏі Kutilmoqda"}
                             </span>
                             <span style={{ padding:"2px 10px", borderRadius:20, fontSize:11, fontWeight:700, background:"#eff6ff", color:"#3b82f6" }}>{course.category}</span>
                           </div>
                           <h4 style={{ margin:"0 0 4px", fontSize:16, fontWeight:700, color:darkMode?"#f1f5f9":"#111" }}>{course.title}</h4>
                           <p style={{ margin:"0 0 10px", fontSize:13, color:"#6b7280", lineHeight:1.5 }}>{course.description?.slice(0,100)}...</p>
                           <div style={{ display:"flex", gap:16, fontSize:12, color:"#6b7280", flexWrap:"wrap" }}>
-                            <span>⏱ {course.duration}</span><span>👥 {course.students||0}</span>
-                            <span>⭐ {course.rating||0}</span><span>📚 {course.lessons?.length||0} dars</span>
-                            <span>💰 {course.price===0?"Bepul":`${Number(course.price).toLocaleString()} so'm`}</span>
+                            <span>вЏ± {course.duration}</span><span>рџ‘Ґ {course.students||0}</span>
+                            <span>в­ђ {course.rating||0}</span><span>рџ“љ {course.lessons?.length||0} dars</span>
+                            <span>рџ’° {course.price===0?"Bepul":`${Number(course.price).toLocaleString()} so'm`}</span>
                           </div>
                         </div>
                         <button onClick={() => handleDeleteCourse(course.id)}
@@ -798,14 +798,14 @@ const InstructorPanel = ({ darkMode, showToast }) => {
           {activeTab === "live" && (
             <div>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-                <h3 style={{ margin:0, fontSize:18, fontWeight:700, color:darkMode?"#f1f5f9":"#111" }}>🔴 Live Darslar Tarixi</h3>
+                <h3 style={{ margin:0, fontSize:18, fontWeight:700, color:darkMode?"#f1f5f9":"#111" }}>рџ”ґ Live Darslar Tarixi</h3>
                 <button onClick={() => setShowLive(true)} style={{ padding:"10px 18px", borderRadius:10, border:"none", background:"#ef4444", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
                   <LuRadio size={15}/> Yangi Live
                 </button>
               </div>
               {pastLives.length === 0
                 ? <div style={{ textAlign:"center", padding:"48px 0" }}>
-                    <div style={{ fontSize:48, marginBottom:12 }}>📹</div>
+                    <div style={{ fontSize:48, marginBottom:12 }}>рџ“№</div>
                     <p style={{ color:"#6b7280", marginBottom:16 }}>Hali live dars o'tkazilmagan</p>
                     <button onClick={() => setShowLive(true)} style={{ padding:"12px 24px", background:"#ef4444", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer" }}>Birinchi Live Darsni Boshlang</button>
                   </div>
@@ -819,12 +819,12 @@ const InstructorPanel = ({ darkMode, showToast }) => {
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                             <p style={{ margin:0, fontWeight:700, fontSize:14, color:darkMode?"#f1f5f9":"#111" }}>{live.title}</p>
                             <span style={{ padding:"2px 8px", borderRadius:10, fontSize:10, fontWeight:700, background:live.status==="live"?"#fee2e2":"#f1f5f9", color:live.status==="live"?"#ef4444":"#6b7280" }}>
-                              {live.status==="live"?"🔴 LIVE":"Yakunlandi"}
+                              {live.status==="live"?"рџ”ґ LIVE":"Yakunlandi"}
                             </span>
                           </div>
                           <p style={{ margin:0, fontSize:12, color:"#6b7280" }}>
-                            📅 {live.startedAt?.toDate?.()?.toLocaleString("uz") || "—"}
-                            {live.viewers > 0 && ` · 👁 ${live.viewers} tomoshabin`}
+                            рџ“… {live.startedAt?.toDate?.()?.toLocaleString("uz") || "—”"}
+                            {live.viewers > 0 && ` В· рџ‘Ѓ ${live.viewers} tomoshabin`}
                           </p>
                         </div>
                         {live.status === "ended" && (
@@ -861,10 +861,10 @@ const InstructorPanel = ({ darkMode, showToast }) => {
                           <div style={{ height:"100%", borderRadius:4, background:"#3b82f6", width:`${Math.min(100,((course.students||0)/Math.max(1,totalStudents))*100)}%`, transition:"width 0.5s" }}/>
                         </div>
                         <div style={{ display:"flex", gap:16, marginTop:8, fontSize:12, color:"#6b7280" }}>
-                          <span>⭐ {course.rating||0}</span>
-                          <span>💰 {course.price===0?"Bepul":`${Number(course.price).toLocaleString()} so'm`}</span>
+                          <span>в­ђ {course.rating||0}</span>
+                          <span>рџ’° {course.price===0?"Bepul":`${Number(course.price).toLocaleString()} so'm`}</span>
                           <span style={{ marginLeft:"auto", color:course.status==="approved"?"#10b981":"#f59e0b", fontWeight:600 }}>
-                            {course.status==="approved"?"✓ Faol":"⏳ Kutilmoqda"}
+                            {course.status==="approved"?"вњ“ Faol":"вЏі Kutilmoqda"}
                           </span>
                         </div>
                       </div>
@@ -874,7 +874,7 @@ const InstructorPanel = ({ darkMode, showToast }) => {
             </div>
           )}
 
-        </ScrollReveal>
+        </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </>

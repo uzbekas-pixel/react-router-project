@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, where, deleteDoc, doc, getDoc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
@@ -235,7 +235,7 @@ const DM = ({ darkMode, showToast }) => {
     setMessages([]);
   };
 
-  // ── Users list ────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Users list в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const usersListJSX = (
     <div className={`flex flex-col h-full ${darkMode ? "bg-slate-800" : "bg-white"} rounded-2xl shadow overflow-hidden`}>
       <div className={`p-3 border-b shrink-0 ${darkMode ? "border-slate-700" : "border-gray-200"}`}>
@@ -336,7 +336,7 @@ const DM = ({ darkMode, showToast }) => {
     </div>
   );
 
-  // ── Chat area ─────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Chat area в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const chatAreaJSX = (
     <div className={`flex flex-col h-full ${darkMode ? "bg-slate-800" : "bg-white"} rounded-2xl shadow overflow-hidden`}>
       {selectedUser ? (

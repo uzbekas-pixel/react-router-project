@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "../firebase/config";
@@ -6,20 +6,20 @@ import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useLang } from "../context/useLang";
 import { MdOutlinePersonAdd } from "react-icons/md";
-import { LuArrowRight } from "react-icons/lu";
+import { LuArrowRight, LuPartyPopper } from "react-icons/lu";
 
 const getFirebaseError = (err, t) => {
   switch (err?.code) {
     case "auth/email-already-in-use":  return t.emailInUse;
     case "auth/weak-password":         return t.passwordMin;
     case "auth/invalid-email":         return t.emailInvalidMsg;
-    case "auth/too-many-requests":     return "Juda ko'p urinish! Biroz kuting.";
-    case "auth/popup-closed-by-user":  return "Kirish oynasi yopildi. Qayta urinib ko'ring.";
-    case "auth/popup-blocked":         return "Popup bloklandi. Brauzer sozlamalarini tekshiring.";
+    case "auth/too-many-requests":     return t.tooManyRequests;
+    case "auth/popup-closed-by-user":  return t.popupClosed;
+    case "auth/popup-blocked":         return t.popupBlocked;
     case "auth/cancelled-popup-request": return null;
-    case "auth/account-exists-with-different-credential": return "Bu email allaqachon boshqa usul bilan ro'yxatdan o'tgan. Email/parol yoki Google bilan kiring.";
-    case "auth/network-request-failed": return "Internet aloqasi yo'q. Tekshirib qayta urinib ko'ring.";
-    case "auth/credential-already-in-use": return "Bu hisob allaqachon ishlatilmoqda.";
+    case "auth/account-exists-with-different-credential": return t.accountExistsDifferent;
+    case "auth/network-request-failed": return t.networkError;
+    case "auth/credential-already-in-use": return t.credentialInUse;
     default: return t.errorOccurred;
   }
 };
@@ -84,7 +84,7 @@ const Register = ({ darkMode, showToast, showConfetti }) => {
         streak:      0,
       });
       showConfetti && showConfetti();
-      showToast(`${t.registerSuccess}, ${form.name}! 🎉`, "success");
+      showToast(<span className="flex items-center gap-1">{t.registerSuccess}, {form.name}! <LuPartyPopper size={16} /></span>, "success");
       navigate("/");
     } catch (err) {
       const msg = getFirebaseError(err, t);

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { X, History, Coins, Star, TrendingUp, TrendingDown, Clock } from "lucide-react";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
+import { useLang } from "../context/useLang";
 
 const HistoryModal = ({ darkMode, onClose }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +24,7 @@ const HistoryModal = ({ darkMode, onClose }) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setHistory(data);
       } catch (error) {
-        console.error("Tarixni yuklashda xato:", error);
+        console.error("History loading error:", error);
       } finally {
         setLoading(false);
       }
@@ -32,7 +34,7 @@ const HistoryModal = ({ darkMode, onClose }) => {
   }, [user]);
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return "Hozirgina";
+    if (!timestamp) return t.justNow;
     const date = timestamp.toDate();
     return `${date.toLocaleDateString("uz-UZ")} • ${date.toLocaleTimeString("uz-UZ", { hour: '2-digit', minute: '2-digit' })}`;
   };
@@ -48,7 +50,7 @@ const HistoryModal = ({ darkMode, onClose }) => {
             <div className={`p-2 rounded-xl ${darkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
               <History size={22} />
             </div>
-            <h2 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>Faollik Tarixi</h2>
+            <h2 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>{t.activityHistory}</h2>
           </div>
           <button onClick={onClose} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}>
             <X size={20} />
@@ -59,12 +61,12 @@ const HistoryModal = ({ darkMode, onClose }) => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-60">
                <Clock className="animate-spin mb-3 text-indigo-500" size={30} />
-               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>Yuklanmoqda...</p>
+               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>{t.loadingHistory}</p>
             </div>
           ) : history.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-60">
                <History size={40} className="mb-3 text-slate-400" />
-               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>Hali tarix mavjud emas</p>
+               <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>{t.noHistory}</p>
             </div>
           ) : (
             <div className="space-y-3">

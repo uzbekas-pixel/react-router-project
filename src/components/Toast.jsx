@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { LuInfo, LuX, LuCheck, LuBan} from "react-icons/lu";
 
 const Toast = ({ message, type = "success", onClose }) => {

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect } from "react";
 import { useLang } from "../context/useLang";
 import { useAuth } from "../context/useAuth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -109,7 +108,7 @@ const Pricing = ({ darkMode, showToast }) => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24">
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div className="text-center max-w-2xl mx-auto mb-16 md:mb-24">
           <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
             {t.pricingBadge}
@@ -142,7 +141,7 @@ const Pricing = ({ darkMode, showToast }) => {
             ))}
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {plans.map((plan, i) => {
@@ -151,7 +150,7 @@ const Pricing = ({ darkMode, showToast }) => {
           const isSelected = userPlan === plan.id;
           
           return (
-            <ScrollReveal key={plan.id} direction="up" delay={i * 100}>
+            <div key={plan.id} direction="up" delay={i * 100}>
               <div className={`relative flex flex-col h-full rounded-[2.5rem] p-8 md:p-10 transition-all duration-500 group ${
                 isSelected 
                   ? "ring-2 ring-emerald-500 bg-emerald-500/5 shadow-2xl shadow-emerald-500/10" 
@@ -232,12 +231,12 @@ const Pricing = ({ darkMode, showToast }) => {
                   </span>
                 </button>
               </div>
-            </ScrollReveal>
+            </div>
           );
         })}
       </div>
 
-      <ScrollReveal direction="up" delay={200}>
+      <div direction="up" delay={200}>
         <div className="mt-20 text-center">
           <div className={`inline-flex items-center gap-4 px-8 py-4 rounded-3xl border ${
             darkMode ? "bg-slate-900/40 border-white/5 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-500"
@@ -253,7 +252,7 @@ const Pricing = ({ darkMode, showToast }) => {
             </a>
           </div>
         </div>
-      </ScrollReveal>
+      </div>
     </div>
   );
 };

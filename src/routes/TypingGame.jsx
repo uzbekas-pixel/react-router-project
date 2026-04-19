@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/useAuth";
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
-import ScrollReveal from "../components/ScrollReveal";
+
 import { useLang } from "../context/useLang";
-import { LuTrophy, LuRefreshCw, LuKeyboard } from "react-icons/lu";
+import { LuTrophy, LuRefreshCw, LuKeyboard, LuMedal } from "react-icons/lu";
 import { completeRealTask } from "../utils/taskManager";
 
 const WORDS_UZ = [
@@ -40,7 +40,7 @@ const generateWords = (lang, count = 30) => {
   return Array.from({ length: count }, () => list[Math.floor(Math.random() * list.length)]);
 };
 
-const medals = ["🥇", "🥈", "🥉"];
+const medalColors = ["text-yellow-400", "text-gray-400", "text-amber-600"];
 
 const TypingGame = ({ darkMode }) => {
   const { user } = useAuth();
@@ -65,6 +65,11 @@ const TypingGame = ({ darkMode }) => {
   const wordsContainerRef = useRef(null);
   const activeWordRef = useRef(null);
   const prevLengthRef = useRef(0);
+
+  // Initial words loading when component mounts
+  useEffect(() => {
+    setWords(generateWords(lang));
+  }, [lang]);
 
   // Leaderboard yuklash
   useEffect(() => {
@@ -223,7 +228,7 @@ const TypingGame = ({ darkMode }) => {
 
         {/* Leaderboard panel */}
         {showLeaderboard && (
-          <ScrollReveal direction="up">
+          <div>
             <div className={`rounded-2xl p-4 mb-6 shadow ${darkMode ? "bg-slate-800" : "bg-white"}`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>{t.top10}</h2>
@@ -254,7 +259,7 @@ const TypingGame = ({ darkMode }) => {
                     }`}>
                       <div className="w-8 text-center">
                         {index < 3 ? (
-                          <span className="text-lg">{medals[index]}</span>
+                          <LuMedal size={20} className={medalColors[index]} />
                         ) : (
                           <span className={`text-sm font-bold ${darkMode ? "text-gray-400" : "text-gray-500"}`}>#{index + 1}</span>
                         )}
@@ -277,14 +282,14 @@ const TypingGame = ({ darkMode }) => {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-extrabold text-blue-400">{score.wpm}</div>
-                        <div className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>WPM</div>
+                        <div className={`text-xs ${darkMode ? "text-gray-500" : "text-gray-400"}`}>{t.wpmLabel}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </ScrollReveal>
+          </div>
         )}
 
         {!finished ? (
@@ -353,7 +358,7 @@ const TypingGame = ({ darkMode }) => {
             <h2 className={`text-2xl font-extrabold mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.results}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
-                { value: wpm, label: "WPM", color: "text-blue-400" },
+                { value: wpm, label: t.wpmLabel, color: "text-blue-400" },
                 { value: `${accuracy}%`, label: t.accuracy, color: "text-green-400" },
                 { value: correctCount, label: t.correctWords, color: "text-yellow-400" },
                 { value: wrongCount, label: t.wrongWords, color: "text-red-400" },

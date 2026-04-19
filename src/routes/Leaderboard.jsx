@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../context/useAuth";
@@ -116,7 +115,7 @@ const Leaderboard = ({ darkMode }) => {
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-12 md:py-20 lg:py-28">
       {/* Header Section */}
-      <ScrollReveal direction="up">
+      <div direction="up">
         <div className="flex flex-wrap items-center justify-between gap-8 mb-16">
           <div>
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -242,10 +241,10 @@ const Leaderboard = ({ darkMode }) => {
             </div>
           </div>
         )}
-      </ScrollReveal>
+      </div>
 
       {/* Main Content */}
-      <ScrollReveal direction="up" delay={100}>
+      <div direction="up" delay={100}>
         {/* Category Tabs */}
         <div className="flex gap-2 p-1.5 rounded-2xl bg-slate-900/10 dark:bg-slate-900/40 border dark:border-white/5 backdrop-blur-md mb-12">
           {TABS.map((tab) => (
@@ -358,7 +357,7 @@ const Leaderboard = ({ darkMode }) => {
             </div>
           )}
         </div>
-      </ScrollReveal>
+      </div>
     </div>
   );
 };

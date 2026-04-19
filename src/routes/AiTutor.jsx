@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import { 
@@ -31,7 +30,7 @@ const getQuickTopics = (t, lang) => {
       label: label.html,
       prompt: isUz
         ? "HTML da eng ko'p ishlatiladigan teglar qaysilar va ularning vazifasi nima?"
-        : isRu ? "Какие самые часто используемые HTML-теги?" : isFr ? "Quelles sont les balises HTML ?" : "Which are the most commonly used HTML tags?",
+        : isRu ? "РљР°РєРёРµ СЃР°РјС‹Рµ С‡Р°СЃС‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРјС‹Рµ HTML-С‚РµРіРё?" : isFr ? "Quelles sont les balises HTML ?" : "Which are the most commonly used HTML tags?",
     },
     {
       icon: <LuPalette className="text-purple-400" />,
@@ -79,14 +78,14 @@ const getSuggestedQuestions = (lang) => {
   const isFr = lang === "fr";
 
   return [
-    isUz ? "HTML form elementlari qaysilar?" : isRu ? "Какие есть элементы форм в HTML?" : isFr ? "Quels éléments de formulaire HTML existent ?" : "Which HTML form elements exist?",
-    isUz ? "CSS animatsiya qanday yoziladi?" : isRu ? "Как написать анимации в CSS?" : isFr ? "Comment écrire des animations CSS ?" : "How do I write CSS animations?",
-    isUz ? "JavaScript Promise nima?" : isRu ? "Что такое Promise в JavaScript?" : isFr ? "Qu'est-ce qu'une Promise en JavaScript ?" : "What is a JavaScript Promise?",
-    isUz ? "React component lifecycle tushuntir" : isRu ? "Объясни жизненный цикл компонента React." : isFr ? "Explique le cycle de vie d'un composant React." : "Explain React component lifecycle.",
-    isUz ? "SQL va NoSQL farqi nima?" : isRu ? "В чем разница между SQL и NoSQL?" : isFr ? "Quelle est la différence entre SQL et NoSQL ?" : "What is the difference between SQL and NoSQL?",
-    isUz ? "Git clone, pull, push farqi?" : isRu ? "В чем разница между git clone, pull и push?" : isFr ? "Quelle est la différence entre git clone, pull et push ?" : "What is the difference between git clone, pull, and push?",
-    isUz ? "REST API nima?" : isRu ? "Что такое REST API?" : isFr ? "Qu'est-ce qu'une API REST ?" : "What is a REST API?",
-    isUz ? "Ingliz tilida past simple ishlatish" : isRu ? "Как использовать Past Simple?" : isFr ? "Comment utiliser le prétérit (Past Simple) ?" : "How to use Past Simple tense?",
+    isUz ? "HTML form elementlari qaysilar?" : isRu ? "РљР°РєРёРµ РµСЃС‚СЊ СЌР»РµРјРµРЅС‚С‹ С„РѕСЂРј РІ HTML?" : isFr ? "Quels Г©lГ©ments de formulaire HTML existent ?" : "Which HTML form elements exist?",
+    isUz ? "CSS animatsiya qanday yoziladi?" : isRu ? "РљР°Рє РЅР°РїРёСЃР°С‚СЊ Р°РЅРёРјР°С†РёРё РІ CSS?" : isFr ? "Comment Г©crire des animations CSS ?" : "How do I write CSS animations?",
+    isUz ? "JavaScript Promise nima?" : isRu ? "Р§С‚Рѕ С‚Р°РєРѕРµ Promise РІ JavaScript?" : isFr ? "Qu'est-ce qu'une Promise en JavaScript ?" : "What is a JavaScript Promise?",
+    isUz ? "React component lifecycle tushuntir" : isRu ? "РћР±СЉСЏСЃРЅРё Р¶РёР·РЅРµРЅРЅС‹Р№ С†РёРєР» РєРѕРјРїРѕРЅРµРЅС‚Р° React." : isFr ? "Explique le cycle de vie d'un composant React." : "Explain React component lifecycle.",
+    isUz ? "SQL va NoSQL farqi nima?" : isRu ? "Р’ С‡РµРј СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ SQL Рё NoSQL?" : isFr ? "Quelle est la diffГ©rence entre SQL et NoSQL ?" : "What is the difference between SQL and NoSQL?",
+    isUz ? "Git clone, pull, push farqi?" : isRu ? "Р’ С‡РµРј СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ git clone, pull Рё push?" : isFr ? "Quelle est la diffГ©rence entre git clone, pull et push ?" : "What is the difference between git clone, pull, and push?",
+    isUz ? "REST API nima?" : isRu ? "Р§С‚Рѕ С‚Р°РєРѕРµ REST API?" : isFr ? "Qu'est-ce qu'une API REST ?" : "What is a REST API?",
+    isUz ? "Ingliz tilida past simple ishlatish" : isRu ? "РљР°Рє РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Past Simple?" : isFr ? "Comment utiliser le prГ©tГ©rit (Past Simple) ?" : "How to use Past Simple tense?",
   ];
 };
 
@@ -95,9 +94,9 @@ const getSystemPrompt = (lang, isMockMode) => {
     lang === "uz"
       ? "Har doim o'zbek tilida javob ber (agar savol boshqa tilda bo'lsa, o'sha tilda javob ber)."
       : lang === "ru"
-        ? "Всегда отвечай на русском языке (если вопрос задан на другом языке, ответь на языке вопроса)."
+        ? "Р’СЃРµРіРґР° РѕС‚РІРµС‡Р°Р№ РЅР° СЂСѓСЃСЃРєРѕРј СЏР·С‹РєРµ (РµСЃР»Рё РІРѕРїСЂРѕСЃ Р·Р°РґР°РЅ РЅР° РґСЂСѓРіРѕРј СЏР·С‹РєРµ, РѕС‚РІРµС‚СЊ РЅР° СЏР·С‹РєРµ РІРѕРїСЂРѕСЃР°)."
         : lang === "fr"
-          ? "Réponds toujours en français (si la question est posée dans une autre langue, réponds dans la langue de la question)."
+          ? "RГ©ponds toujours en franГ§ais (si la question est posГ©e dans une autre langue, rГ©ponds dans la langue de la question)."
           : "Always respond in English (if the question is asked in another language, respond in the question's language).";
 
   if (isMockMode) {
@@ -285,6 +284,25 @@ const AiTutor = ({ darkMode, showToast }) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  const clearChat = () => {
+    if (loading) return;
+    messages.forEach((m) => revokeObjectUrl(m?.imagePreviewUrl));
+    revokePendingImage();
+    setPendingImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setInput("");
+    resetTextarea();
+    setShowSugg(!isMockMode);
+    
+    const welcomeMsg = isMockMode
+      ? (lang === 'uz' ? "Assalomu alaykum! Men sizning texnik intervyueringizman. Suhbatni boshlashga tayyormisiz? Qaysi dasturlash yo'nalishi yoki texnologiyalar bo'yicha suhbatlashamiz?" 
+        : lang === 'ru' ? "РџСЂРёРІРµС‚! РЇ С‚РІРѕР№ С‚РµС…РЅРёС‡РµСЃРєРёР№ РёРЅС‚РµСЂРІСЊСЋРµСЂ. Р“РѕС‚РѕРІ РЅР°С‡Р°С‚СЊ? РџРѕ РєР°РєРѕРјСѓ СЃС‚РµРєСѓ Р±СѓРґРµРј РїСЂРѕС…РѕРґРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ?"
+        : "Hello! I am your technical interviewer. Are you ready to start? Which stack are we evaluating today?")
+      : (t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering!");
+    
+    setMessages([{ role: "assistant", content: welcomeMsg }]);
+  };
+
   const toggleMockMode = () => {
     if (loading) return;
     const newMode = !isMockMode;
@@ -301,7 +319,7 @@ const AiTutor = ({ darkMode, showToast }) => {
     
     const startMsg = newMode 
       ? (lang === 'uz' ? "Assalomu alaykum! Men sizning texnik intervyueringizman. Suhbatni boshlashga tayyormisiz? Qaysi dasturlash yo'nalishi yoki texnologiyalar bo'yicha suhbatlashamiz?" 
-        : lang === 'ru' ? "Привет! Я твой технический интервьюер. Готов начать? По какому стеку будем проходить собеседование?"
+        : lang === 'ru' ? "РџСЂРёРІРµС‚! РЇ С‚РІРѕР№ С‚РµС…РЅРёС‡РµСЃРєРёР№ РёРЅС‚РµСЂРІСЊСЋРµСЂ. Р“РѕС‚РѕРІ РЅР°С‡Р°С‚СЊ? РџРѕ РєР°РєРѕРјСѓ СЃС‚РµРєСѓ Р±СѓРґРµРј РїСЂРѕС…РѕРґРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ?"
         : "Hello! I am your technical interviewer. Are you ready to start? Which stack are we evaluating today?")
       : (t.aiTutorCleared || "Salom! Men AI o'qituvchiman. Savol bering!");
       
@@ -415,18 +433,6 @@ const AiTutor = ({ darkMode, showToast }) => {
     textareaRef.current?.focus();
   };
 
-  const clearChat = () => {
-    // Xabar ichidagi rasm preview-larni tozalash (object URL)
-    messages.forEach((m) => revokeObjectUrl(m?.imagePreviewUrl));
-    revokePendingImage();
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setMessages([{ role: "assistant", content: isMockMode ? "Mock suhbat yangilandi. Qaysi yo'nalishda davom etamiz?" : t.aiTutorCleared }]);
-    setShowSugg(!isMockMode);
-    resetTextarea();
-    setPendingImage(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -439,7 +445,7 @@ const AiTutor = ({ darkMode, showToast }) => {
     if (!file) return;
     if (!file.type?.startsWith("image/")) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("Rasm 5MB dan katta bo'lmasligi kerak.");
+      alert(t.imageSizeError);
       e.target.value = "";
       return;
     }
@@ -465,7 +471,7 @@ const AiTutor = ({ darkMode, showToast }) => {
         previewUrl,
       });
     } catch {
-      alert("Rasmni o'qishda xato yuz berdi.");
+      alert(t.imageReadError);
     } finally {
       setImageUploading(false);
       e.target.value = "";
@@ -606,7 +612,7 @@ const AiTutor = ({ darkMode, showToast }) => {
           </div>
           <div>
             <h2 style={{ margin: 0, fontWeight: 800, fontSize: 18, color: darkMode ? "#f1f5f9" : "#111" }}>
-              {isMockMode ? "Mock Intervyuer" : t.aiTutorTitle}
+              {isMockMode ? t.mockInterviewer : t.aiTutorTitle}
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <div style={{ 
@@ -615,7 +621,7 @@ const AiTutor = ({ darkMode, showToast }) => {
                 animation: isMockMode ? "pulseBorder 2s infinite" : "none" 
               }} />
               <span style={{ fontSize: 11, color: isMockMode ? "#ef4444" : "#10b981", fontWeight: 600 }}>
-                {isMockMode ? "Live Suhbat" : t.aiTutorOnline}
+                {isMockMode ? t.liveInterview : t.aiTutorOnline}
               </span>
             </div>
           </div>
@@ -625,7 +631,7 @@ const AiTutor = ({ darkMode, showToast }) => {
           <button onClick={() => setAiVoiceEnabled(!aiVoiceEnabled)} style={{
             padding: "6px", borderRadius: 10, background: "transparent",
             border: `1px solid ${borderColor}`, color: aiVoiceEnabled ? "#3b82f6" : (darkMode ? "#94a3b8" : "#64748b"), cursor: "pointer", transition: "all 0.2s"
-          }} title="AI ovozini yoqish/o'chirish">
+          }} title={t.aiVoiceToggle}>
             {aiVoiceEnabled ? <LuVolume2 size={16} /> : <LuVolumeX size={16} />}
           </button>
           
@@ -636,7 +642,7 @@ const AiTutor = ({ darkMode, showToast }) => {
             color: isMockMode ? "#ef4444" : (darkMode ? "#e2e8f0" : "#334155"), 
             fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.3s"
           }}>
-            <LuBriefcase size={14} /> Mock Suhbat
+            <LuBriefcase size={14} /> {t.mockInterview}
           </button>
           
           <button onClick={clearChat} style={{ 
@@ -664,7 +670,7 @@ const AiTutor = ({ darkMode, showToast }) => {
         </div>
       )}
 
-      {/* Messages area — flex:1 bilan to'liq joy oladi, ichida scroll */}
+      {/* Messages area —” flex:1 bilan to'liq joy oladi, ichida scroll */}
       <div
         ref={messagesAreaRef}
         className="ai-msg-area"
@@ -773,7 +779,7 @@ const AiTutor = ({ darkMode, showToast }) => {
                 justifyContent: "center",
                 boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
               }}
-              title="Rasmni olib tashlash"
+              title={t.removeImage}
             >
               <LuX size={12} />
             </button>
@@ -790,7 +796,7 @@ const AiTutor = ({ darkMode, showToast }) => {
             e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
           }}
           onKeyDown={handleKeyDown}
-          placeholder={listening ? "Eshitilmoqda..." : (isMockMode ? "Javobingizni yozing yoki mikrofondan foydalaning..." : t.aiTutorPlaceholder)}
+          placeholder={listening ? t.aiTutorListening : (isMockMode ? t.aiTutorMockPlaceholder : t.aiTutorPlaceholder)}
           disabled={loading}
           style={{ flex: 1, paddingTop: 10, border: "none", outline: "none", resize: "none", background: "transparent", color: darkMode ? "#f1f5f9" : "#111", fontSize: 14, lineHeight: 1.6, fontFamily: "inherit", minHeight: 40, maxHeight: 100, overflowY: "auto", scrollbarWidth: "none" }}
         />
@@ -806,7 +812,7 @@ const AiTutor = ({ darkMode, showToast }) => {
             fontSize: 16, transition: "all 0.2s",
           }}
         >
-          {loading ? "⏳" : <LuSend size={16} />}
+          {loading ? <LuTimer className="animate-spin" size={16} /> : <LuSend size={16} />}
         </button>
       </div>
 

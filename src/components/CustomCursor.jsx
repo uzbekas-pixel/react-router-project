@@ -1,29 +1,29 @@
-/**
- * CustomCursor.jsx — "Pixel Orb" Premium Edition
- * ══════════════════════════════════════════════════
+﻿/**
+ * CustomCursor.jsx —” "Pixel Orb" Premium Edition
+ * в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
  * Dizayn falsafasi:
- *   • Kichik (32px) — saytni to'smaydi, faqat kursor o'rnida ko'rinadi
- *   • 3D shar effekti — radial gradient + specular highlight
- *   • Follower ring — cursor atrofida lazy LERP bilan ergashuvchi halqa
- *   • Hover state — elementlar ustida scale + blend
- *   • Click ripple — bosganda to'lqin effekti
- *   • Mix-blend-mode: difference — har qanday fonga moslashadi
+ *   • Kichik (32px) —” saytni to'smaydi, faqat kursor o'rnida ko'rinadi
+ *   • 3D shar effekti —” radial gradient + specular highlight
+ *   • Follower ring —” cursor atrofida lazy LERP bilan ergashuvchi halqa
+ *   • Hover state —” elementlar ustida scale + blend
+ *   • Click ripple —” bosganda to'lqin effekti
+ *   • Mix-blend-mode: difference —” har qanday fonga moslashadi
  *   • Touch qurilmalarda avtomatik o'chiriladi
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 
-/* ─── Sozlamalar ──────────────────────────────────────────────── */
-const DOT_SIZE    = 10;   // px — ichki shar
-const RING_SIZE   = 36;   // px — tashqi halqa
+/* в”Ђв”Ђв”Ђ Sozlamalar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+const DOT_SIZE    = 10;   // px —” ichki shar
+const RING_SIZE   = 36;   // px —” tashqi halqa
 const LERP_DOT    = 1;    // dot tezroq (instant)
 const LERP_RING   = 0.10; // ring sekin ergashadi
 
-/* ─── Global CSS ──────────────────────────────────────────────── */
+/* в”Ђв”Ђв”Ђ Global CSS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
 const STYLES = `
   *, *::before, *::after { cursor: none !important; }
 
-  /* ── DOT (ichki shar) ── */
+  /* в”Ђв”Ђ DOT (ichki shar) в”Ђв”Ђ */
   #pc-dot {
     position: fixed;
     top: 0; left: 0;
@@ -75,7 +75,7 @@ const STYLES = `
     height: ${DOT_SIZE * 0.3}px;
   }
 
-  /* ── RING (tashqi halqa) ── */
+  /* в”Ђв”Ђ RING (tashqi halqa) в”Ђв”Ђ */
   #pc-ring {
     position: fixed;
     top: 0; left: 0;
@@ -91,7 +91,7 @@ const STYLES = `
     box-shadow:
       0 0 0 0.5px rgba(74,158,255,0.1),
       inset 0 0 8px rgba(74,158,255,0.05);
-    /* backdrop blur — shisha effekti */
+    /* backdrop blur —” shisha effekti */
     backdrop-filter: blur(0px);
     transition: width 250ms cubic-bezier(.4,0,.2,1),
                 height 250ms cubic-bezier(.4,0,.2,1),
@@ -120,7 +120,7 @@ const STYLES = `
       0 0 30px rgba(74,158,255,0.3);
   }
 
-  /* ── RIPPLE ── */
+  /* в”Ђв”Ђ RIPPLE в”Ђв”Ђ */
   .pc-ripple {
     position: fixed;
     top: 0; left: 0;
@@ -137,7 +137,7 @@ const STYLES = `
     100% { width: 80px; height: 80px; opacity: 0;   transform: translate3d(-50%,-50%,0) scale(1); }
   }
 
-  /* ── TRAIL dots ── */
+  /* в”Ђв”Ђ TRAIL dots в”Ђв”Ђ */
   .pc-trail {
     position: fixed;
     top: 0; left: 0;
@@ -156,7 +156,7 @@ const STYLES = `
   }
 `;
 
-/* ── Hover-ga reaction qiladigan selectorlar ── */
+/* в”Ђв”Ђ Hover-ga reaction qiladigan selectorlar в”Ђв”Ђ */
 const HOVER_SELECTORS = 'a, button, [role="button"], input, select, textarea, label, [data-cursor-hover]';
 
 export default function CustomCursor() {
@@ -200,7 +200,7 @@ export default function CustomCursor() {
   }, []);
 
   useEffect(() => {
-    /* touch qurilmalar — o'chirish */
+    /* touch qurilmalar —” o'chirish */
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     if (isTouch) return;
 
@@ -217,12 +217,12 @@ export default function CustomCursor() {
       styleRef.current = tag;
     }
 
-    /* ── RAF loop: LERP pozitsiyalar ── */
+    /* в”Ђв”Ђ RAF loop: LERP pozitsiyalar в”Ђв”Ђ */
     const tick = () => {
-      /* Dot — deyarli instant */
+      /* Dot —” deyarli instant */
       dot.current.x += (tgt.current.x - dot.current.x) * LERP_DOT;
       dot.current.y += (tgt.current.y - dot.current.y) * LERP_DOT;
-      /* Ring — sekin */
+      /* Ring —” sekin */
       ring.current.x += (tgt.current.x - ring.current.x) * LERP_RING;
       ring.current.y += (tgt.current.y - ring.current.y) * LERP_RING;
 
@@ -233,7 +233,7 @@ export default function CustomCursor() {
     };
     rafRef.current = requestAnimationFrame(tick);
 
-    /* ── Events ── */
+    /* в”Ђв”Ђ Events в”Ђв”Ђ */
     const onMove = (e) => {
       tgt.current.x = e.clientX;
       tgt.current.y = e.clientY;
@@ -305,14 +305,14 @@ export default function CustomCursor() {
 
   return (
     <>
-      {/* 3D Shar — DOT */}
+      {/* 3D Shar —” DOT */}
       <div
         id="pc-dot"
         ref={dotRef}
         aria-hidden="true"
         style={{ opacity: 0 }}
       />
-      {/* Ergashuvchi halqa — RING */}
+      {/* Ergashuvchi halqa —” RING */}
       <div
         id="pc-ring"
         ref={ringRef}
@@ -324,7 +324,7 @@ export default function CustomCursor() {
 }
 
 /*
- * ─── Ishlatish ───────────────────────────────────────────────────
+ * в”Ђв”Ђв”Ђ Ishlatish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
  *
  *   import CustomCursor from './components/CustomCursor';
  *
@@ -337,12 +337,12 @@ export default function CustomCursor() {
  *     );
  *   }
  *
- * ─── Rangni o'zgartirish ─────────────────────────────────────────
+ * в”Ђв”Ђв”Ђ Rangni o'zgartirish в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
  *   Cursor rangi ko'k (#4a9eff). Loyihangiz rangiga moslashtirish uchun
  *   STYLES ichidagi barcha #4a9eff va #a8d4ff ni o'zgartiring.
  *   Masalan, cyberpunk sariq: #ffe04a / #fff0a8
  *
- * ─── Hover qo'shimcha elementlar ────────────────────────────────
+ * в”Ђв”Ђв”Ђ Hover qo'shimcha elementlar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
  *   Biron elementga hover effekt qo'shish uchun:
  *   <div data-cursor-hover>...</div>
- * ──────────────────────────────────────────────────────────────── */
+ * в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */

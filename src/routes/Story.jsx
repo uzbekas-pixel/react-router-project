@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import {
   collection, addDoc, onSnapshot, orderBy, query,
   serverTimestamp, deleteDoc, doc, updateDoc,
@@ -90,7 +90,7 @@ const Story = ({ darkMode, showToast }) => {
 
   useEffect(() => { return () => clearInterval(timerRef.current); }, []);
 
-  // ── Rasm yuklash ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Rasm yuklash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -111,7 +111,7 @@ const Story = ({ darkMode, showToast }) => {
         likes:     [],
         createdAt: serverTimestamp(),
       });
-      showToast?.("Story qo'shildi!", "success");
+      showToast?.(t.storyAdded, "success");
     } catch (err) {
       console.error("Image upload error:", err);
       showToast?.(t.imageError, "error");
@@ -121,11 +121,11 @@ const Story = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── Video yuklash ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Video yuklash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleUploadVideo = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 50 * 1024 * 1024) { showToast?.("Video 50MB dan kichik bo'lishi kerak!", "error"); return; }
+    if (file.size > 50 * 1024 * 1024) { showToast?.(t.videoSizeError, "error"); return; }
     setUploading(true);
     try {
       const reader = new FileReader();
@@ -140,19 +140,19 @@ const Story = ({ darkMode, showToast }) => {
           likes:     [],
           createdAt: serverTimestamp(),
         });
-        showToast?.("Video story qo'shildi!", "success");
+        showToast?.(t.videoStoryAdded, "success");
         setUploading(false);
       };
     } catch (err) {
       console.error("Video upload error:", err);
-      showToast?.("Xatolik yuz berdi!", "error");
+      showToast?.(t.error, "error");
       setUploading(false);
     } finally {
       e.target.value = "";
     }
   };
 
-  // ── Like ──────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Like в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleLike = async (e) => {
     e.stopPropagation();
     const story = viewing?.[viewIndex];
@@ -172,7 +172,7 @@ const Story = ({ darkMode, showToast }) => {
     } catch (err) { console.error("Like error:", err); }
   };
 
-  // ── Comment ───────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Comment в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleComment = async () => {
     if (!commentText.trim() || !viewing || !user) return;
     const story = viewing[viewIndex];
@@ -199,13 +199,13 @@ const Story = ({ darkMode, showToast }) => {
     const story = viewing?.[viewIndex];
     if (!story) return;
     await deleteDoc(doc(db, "stories", story.id)).catch(() => {});
-    showToast?.("Story o'chirildi", "success");
+    showToast?.(t.storyDeleted, "success");
     clearInterval(timerRef.current);
     setViewing(null);
     setShowComments(false);
   };
 
-  // ── Progress — davomiylikka qarab ishlaydi ────────────────────────────────
+  // в”Ђв”Ђ Progress — davomiylikka qarab ishlaydi в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const startProgressWithDuration = (userStories, index, duration) => {
     clearInterval(timerRef.current);
     setProgress(0);
@@ -233,7 +233,7 @@ const Story = ({ darkMode, showToast }) => {
     }, interval);
   };
 
-  // ── Story ochish (ichki) ───────────────────────────────────────────────────
+  // в”Ђв”Ђ Story ochish (ichki) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const openStoryAt = (userStories, index) => {
     const story = userStories[index];
     if (!story) return;
@@ -249,7 +249,7 @@ const Story = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── Story ochish (tashqi — user bosganida) ────────────────────────────────
+  // в”Ђв”Ђ Story ochish (tashqi — user bosganida) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const openStory = (userStories, index = 0) => {
     setViewing(userStories);
     setViewIndex(index);
@@ -259,7 +259,7 @@ const Story = ({ darkMode, showToast }) => {
     openStoryAt(userStories, index);
   };
 
-  // ── Video metadata yuklanganda progress boshlash ──────────────────────────
+  // в”Ђв”Ђ Video metadata yuklanganda progress boshlash в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleVideoLoaded = () => {
     if (!videoRef.current || !viewing) return;
     const duration = videoRef.current.duration;
@@ -271,7 +271,7 @@ const Story = ({ darkMode, showToast }) => {
     }
   };
 
-  // ── Video tugaganda keyingi story ─────────────────────────────────────────
+  // в”Ђв”Ђ Video tugaganda keyingi story в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleVideoEnded = () => {
     clearInterval(timerRef.current);
     setProgress(100);
@@ -320,7 +320,7 @@ const Story = ({ darkMode, showToast }) => {
     setTimeout(() => commentInputRef.current?.focus(), 150);
   };
 
-  // ── Grouped stories ───────────────────────────────────────────────────────
+  // в”Ђв”Ђ Grouped stories в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const grouped = stories.reduce((acc, story) => {
     if (!acc[story.uid]) {
       acc[story.uid] = { uid: story.uid, name: story.name, avatar: story.avatar, stories: [] };
@@ -339,7 +339,7 @@ const Story = ({ darkMode, showToast }) => {
   return (
     <div className={`page-transition w-full max-w-3xl mx-auto px-4 py-6 mt-10 ${darkMode ? "text-white" : "text-gray-900"}`}>
       <h1 className={`text-2xl font-extrabold mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        <LuCamera className="text-pink-400" /> {t.story || "Story"}
+        <LuCamera className="text-pink-400" /> {t.story}
       </h1>
 
       {/* Story ro'yxati */}
@@ -372,7 +372,7 @@ const Story = ({ darkMode, showToast }) => {
             </button>
           </div>
           <span className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-            {myStories.length > 0 ? "Sizning" : "Qo'shish"}
+            {myStories.length > 0 ? t.yourStory : t.addStory}
           </span>
         </div>
 
@@ -394,14 +394,14 @@ const Story = ({ darkMode, showToast }) => {
               }
             </button>
             <span className={`text-xs max-w-[64px] truncate ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              {group.name?.split(" ")[0] || "User"}
+              {group.name?.split(" ")[0] || t.user}
             </span>
           </div>
         ))}
 
         {groupedList.length === 0 && (
           <div className={`flex items-center justify-center flex-1 py-4 text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
-            Hali story yo'q. Birinchi bo'lib qo'shing!
+            {t.noStories}
           </div>
         )}
       </div>
@@ -412,17 +412,17 @@ const Story = ({ darkMode, showToast }) => {
           onClick={() => fileInputRef.current?.click()}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
         >
-          <LuCamera size={16} /> Rasm yuklash
+          <LuCamera size={16} /> {t.uploadImage}
         </button>
         <button
           onClick={() => videoInputRef.current?.click()}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
         >
-          <LuVideo size={16} /> Video yuklash
+          <LuVideo size={16} /> {t.uploadVideo}
         </button>
       </div>
 
-      {/* ── Story Viewer ── */}
+      {/* в”Ђв”Ђ Story Viewer в”Ђв”Ђ */}
       {viewing && (
         <div className="fixed inset-0 z-9999 bg-black flex items-center justify-center">
           <div className="absolute inset-0" onClick={() => { if (showComments) return; clearInterval(timerRef.current); setViewing(null); }} />
@@ -454,7 +454,7 @@ const Story = ({ darkMode, showToast }) => {
                   }
                 </div>
                 <span className="text-white text-sm font-semibold drop-shadow">{currentStory?.name}</span>
-                {paused && <span className="text-white/60 text-xs">⏸</span>}
+                {paused && <span className="text-white/60 text-xs">вЏё</span>}
               </div>
               <div className="flex items-center gap-3">
                 {canDelete && (
@@ -556,7 +556,7 @@ const Story = ({ darkMode, showToast }) => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                  <span className="text-white text-sm font-semibold flex items-center gap-2"><LuMessageCircle size={16} /> Izohlar ({comments.length})</span>
+                  <span className="text-white text-sm font-semibold flex items-center gap-2"><LuMessageCircle size={16} /> {t.comments} ({comments.length})</span>
                   <button onClick={toggleComments} className="text-white/60 hover:text-white transition">
                     <LuX size={18} />
                   </button>
@@ -564,7 +564,7 @@ const Story = ({ darkMode, showToast }) => {
 
                 <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
                   {comments.length === 0 ? (
-                    <p className="text-white/50 text-xs text-center py-4">Hali izoh yo'q. Birinchi bo'ling!</p>
+                    <p className="text-white/50 text-xs text-center py-4">{t.noComments}</p>
                   ) : (
                     comments.map((c) => (
                       <div key={c.id} className="flex items-start gap-2 group">
@@ -592,7 +592,7 @@ const Story = ({ darkMode, showToast }) => {
                   <input
                     ref={commentInputRef}
                     type="text"
-                    placeholder={t.commentPlaceholder || "Izoh yozing..."}
+                    placeholder={t.commentPlaceholder}
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleComment()}

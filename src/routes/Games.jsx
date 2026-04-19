@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import TypingGame from "./TypingGame";
 import MultiTyping from "./MultiTyping";
 import SnakeGame from "../components/games/SnakeGame";
@@ -6,6 +6,7 @@ import FlappyBird from "../components/games/FlappyBird";
 import TicTacToe from "../components/games/TicTacToe";
 import Tetris from "../components/games/Tetris";
 import Game2048 from "../components/games/Game2048";
+import Counter2D from "../components/games/Counter2D";
 import Wordle from "../components/games/Wordle";
 import MemoryCard from "../components/games/MemoryCard";
 import MarioGame from "../components/games/MarioGame";
@@ -23,7 +24,7 @@ const BackButton = ({ onClick, darkMode, t }) => (
   </button>
 );
 
-// ─── SVG illyustratsiyalar ────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ SVG illyustratsiyalar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const SnakeSVG = () => (
   <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
     <rect width="200" height="130" fill="#052e16"/>
@@ -222,6 +223,31 @@ const MarioSVG = () => (
   </svg>
 );
 
+const Counter2DSVG = () => (
+  <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" style={{ width:"100%", height:"100%" }}>
+    <rect width="200" height="130" fill="#0f172a"/>
+    {/* Player */}
+    <circle cx="100" cy="65" r="15" fill="#3b82f6"/>
+    <circle cx="100" cy="65" r="8" fill="#60a5fa" opacity="0.5"/>
+    {/* Enemies */}
+    <circle cx="30" cy="30" r="12" fill="#ef4444"/>
+    <circle cx="170" cy="40" r="10" fill="#f97316"/>
+    <circle cx="160" cy="100" r="14" fill="#a855f7"/>
+    <circle cx="40" cy="110" r="11" fill="#22c55e"/>
+    {/* Bullets */}
+    <circle cx="120" cy="50" r="4" fill="#fbbf24"/>
+    <circle cx="80" cy="80" r="4" fill="#fbbf24"/>
+    <circle cx="130" cy="90" r="4" fill="#fbbf24"/>
+    {/* Score and Health HUD simulation */}
+    <rect x="10" y="10" width="50" height="18" rx="4" fill="#1e293b" opacity="0.8"/>
+    <text x="20" y="22" fontSize="8" fill="#fbbf24" fontWeight="800">SCORE: 50</text>
+    <rect x="140" y="10" width="50" height="18" rx="4" fill="#1e293b" opacity="0.8"/>
+    <text x="150" y="22" fontSize="8" fill="#ef4444" fontWeight="800">❤️❤️❤️</text>
+    {/* Title */}
+    <text x="100" y="120" textAnchor="middle" fontSize="12" fill="#3b82f6" fontWeight="800">COUNTER 2D</text>
+  </svg>
+);
+
 const SVGS = {
   snake:    <SnakeSVG/>,
   flappy:   <FlappySVG/>,
@@ -231,12 +257,14 @@ const SVGS = {
   wordle:   <WordleSVG/>,
   memory:   <MemorySVG/>,
   mario:    <MarioSVG/>,
+  counter2d: <Counter2DSVG/>,
 };
 
 const COLORS = {
   snake:"#16a34a", flappy:"#d97706", tictactoe:"#7c3aed",
   tetris:"#dc2626", "2048":"#0891b2", wordle:"#059669",
   memory:"#9333ea", mario:"#e8a020",
+  counter2d:"#3b82f6",
 };
 
 const GameCard = ({ game, onClick, t }) => {
@@ -288,10 +316,11 @@ const Games = ({ darkMode, showToast }) => {
     { id:"flappy",    icon:"🐦", title:"Flappy Bird",  desc:t.flappyDesc },
     { id:"tictactoe", icon:"❌", title:"Tic-Tac-Toe",  desc:t.ticDesc    },
     { id:"tetris",    icon:"🧱", title:"Tetris",       desc:t.tetrisDesc },
-    { id:"2048",      icon:"🔢", title:"2048",         desc:"Raqamlarni birlashtiring" },
-    { id:"wordle",    icon:"🔤", title:"Wordle",       desc:"So'zni toping" },
-    { id:"memory",    icon:"🧠", title:"Memory Card",  desc:"Eslab qolish o'yini" },
-    { id:"mario",     icon:"🍄", title:"Super Mario",  desc:"Yugur, sakra, g'alaba qozon!" },
+    { id:"2048",      icon:"🔢", title:"2048",         desc:t.game2048Desc },
+    { id:"wordle",    icon:"🔤", title:"Wordle",       desc:t.wordleDesc },
+    { id:"memory",    icon:"🧠", title:"Memory Card",  desc:t.memoryDesc },
+    { id:"mario",     icon:"🍄", title:"Super Mario",  desc:t.marioDesc },
+    { id:"counter2d", icon:"🎯", title:"Counter 2D",   desc:t.counter2dDesc },
   ];
 
   // 👇 YANGI QO'SHILDI: O'yinga kirganda vazifani belgilaydigan maxsus funksiya
@@ -310,6 +339,7 @@ const Games = ({ darkMode, showToast }) => {
   if (screen==="wordle")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><Wordle darkMode={darkMode}/></div></div>;
   if (screen==="memory")    return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MemoryCard darkMode={darkMode}/></div></div>;
   if (screen==="mario")     return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><MarioGame darkMode={darkMode}/></div></div>;
+  if (screen==="counter2d") return <div className="page-transition"><BackButton onClick={()=>setScreen("home")} darkMode={darkMode} t={t}/><div className="pt-12"><Counter2D darkMode={darkMode}/></div></div>;
 
   return (
     <div className="page-transition min-h-[calc(100vh-64px)] px-4 py-6 mt-10">

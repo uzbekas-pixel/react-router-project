@@ -212,7 +212,10 @@ const OnlineGame = ({ darkMode, t, user }) => {
         <LuGlobe className="text-blue-500" /> {t.onlineGame || "Online O'yin"}
       </h3>
       {error && <p className="text-red-400 text-sm text-center mb-3">{error}</p>}
+      <button onClick={createRoom}
+        className={`w-full py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2 mb-4 ${darkMode ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-blue-500 hover:bg-blue-400 text-white"}`}>
         <LuGamepad /> {t.createRoomBtn || "Yangi room yaratish"}
+      </button>
       <div className="flex gap-2">
         <input type="text" placeholder={t.enterRoomId || "Room ID kiriting..."} value={joinInput}
           onChange={e => setJoinInput(e.target.value.toUpperCase())} maxLength={6}
@@ -231,7 +234,7 @@ const OnlineGame = ({ darkMode, t, user }) => {
     <div className={`w-full max-w-sm mx-auto rounded-2xl p-8 text-center shadow-xl ${darkMode ? "bg-slate-800" : "bg-white"}`}>
       <div className="text-5xl mb-4 text-gray-400 flex justify-center"><LuTimer className="animate-spin-slow" /></div>
       <h3 className={`text-lg font-bold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>{t.waitingOpponent || "Raqib kutilmoqda..."}</h3>
-      <p className={`text-sm mb-4 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.sendCodeToFriend || "Do'stingizga bu kodni yuboring:"}</p>
+      <p className={`text-sm mb-4 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{t.sendCode || "Do'stingizga bu kodni yuboring:"}</p>
       <div className={`text-4xl font-extrabold tracking-widest mb-4 ${darkMode ? "text-blue-400" : "text-blue-500"}`}>{roomId}</div>
     <button onClick={() => { navigator.clipboard.writeText(roomId); }}
   className={`px-4 py-2 rounded-xl text-sm font-semibold mb-4 transition flex items-center gap-2 mx-auto ${darkMode ? "bg-slate-700 text-gray-300 hover:bg-slate-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
@@ -313,7 +316,7 @@ const TicTacToe = ({ darkMode }) => {
   return (
     <div className={`flex flex-col items-center justify-center min-h-[calc(100vh-130px)] px-4 py-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <h2 className={`text-xl font-extrabold mb-4 flex items-center justify-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        <LuSwords className="text-red-500" /> Tic-Tac-Toe
+        <LuSwords className="text-red-500" /> {t.ticTacToeTitle}
       </h2>
 
       {/* Mode tanlash */}

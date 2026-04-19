@@ -12,10 +12,10 @@ const EMOJI_SETS = {
   sports:  ["⚽","🏀","🏈","⚾","🎾","🏐","🏉","🎱","🏓","🏸","🥊","🎿"],
 };
 
-const LEVELS = [
-  { id: "easy",   label: "Oson",  pairs: 6,  cols: 3 },
-  { id: "medium", label: "O'rta", pairs: 8,  cols: 4 },
-  { id: "hard",   label: "Qiyin", pairs: 12, cols: 4 },
+const LEVELS = (t) => [
+  { id: "easy",   label: t.easy || "Oson",  pairs: 6,  cols: 3 },
+  { id: "medium", label: t.medium || "O'rta", pairs: 8,  cols: 4 },
+  { id: "hard",   label: t.hard || "Qiyin", pairs: 12, cols: 4 },
 ];
 
 const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
@@ -31,9 +31,10 @@ const MemoryCard = ({ darkMode }) => {
   const { t }    = useLang();
   const { user } = useAuth();
 
-  const [level,     setLevel]     = useState(LEVELS[0]);
+  const levels = LEVELS(t);
+  const [level,     setLevel]     = useState(levels[0]);
   const [theme,     setTheme]     = useState("animals");
-  const [cards,     setCards]     = useState(() => createCards(LEVELS[0].pairs, "animals"));
+  const [cards,     setCards]     = useState(() => createCards(levels[0].pairs, "animals"));
   const [selected,  setSelected]  = useState([]);
   const [moves,     setMoves]     = useState(0);
   const [time,      setTime]      = useState(0);
@@ -133,15 +134,21 @@ useEffect(() => {
   };
 
   const reset = useCallback((newLevel = level, newTheme = theme) => {
+    const lvls = LEVELS(t);
     setCards(createCards(newLevel.pairs, newTheme));
     setSelected([]);
     setMoves(0);
     setTime(0);
     setRunning(false);
     setWon(false);
-  }, [level, theme]);
+  }, [level, theme, t]);
 
-  const changeLevel = (l) => { setLevel(l); reset(l, theme); };
+  const changeLevel = (l) => { 
+    const lvls = LEVELS(t);
+    const newLevel = lvls.find(lvl => lvl.id === l.id) || lvls[0];
+    setLevel(newLevel); 
+    reset(newLevel, theme); 
+  };
   const changeTheme = (th) => { setTheme(th); reset(level, th); };
 
   const formatTime = (s) =>
@@ -157,7 +164,7 @@ useEffect(() => {
       </h2>
 
       <div className="flex gap-2 mb-3">
-        {LEVELS.map(l => (
+        {levels.map(l => (
           <button key={l.id} onClick={() => changeLevel(l)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
               level.id === l.id

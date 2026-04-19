@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import ScrollReveal from "../components/ScrollReveal";
+﻿import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
@@ -35,6 +34,7 @@ import {
   LuShield,
   LuLightbulb,
   LuTarget,
+  LuTrendingUp,
   LuHeart,
   LuGhost,
   LuTrophy,
@@ -47,14 +47,29 @@ import {
   LuUserPlus,
   LuFlame,
   LuX,
+  LuCat,
 } from "react-icons/lu";
+import {
+  Drumstick,
+  Gamepad2,
+  Zap,
+  Cookie,
+} from "lucide-react";
 import { NAME_COLORS } from "../constants/shopConstants";
 
 const IMGBB_KEY = "2166816880e7d95d3a1fccc6a40a0a2b";
 const DEFAULT_MAX_SNIPPETS = 5;
 const XP_PER_COIN = 10;
 
-// ─── VIDEO AVATAR MODAL (imgbb) ───────────────────────────────────────────────
+// XP → Coin conversion packages with bonuses
+const CONVERSION_PACKAGES = [
+  { xp: 100, coins: 10, bonus: 0, popular: false },
+  { xp: 500, coins: 60, bonus: 5, popular: false },
+  { xp: 1000, coins: 130, bonus: 15, popular: true },
+  { xp: 5000, coins: 700, bonus: 100, popular: false },
+];
+
+// в”Ђв”Ђв”Ђ VIDEO AVATAR MODAL (imgbb) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const VideoAvatarModal = ({ darkMode, onClose, onSave, showToast, t }) => {
   const [videoUrl, setVideoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -162,7 +177,7 @@ const VideoAvatarModal = ({ darkMode, onClose, onSave, showToast, t }) => {
                 {t.videoUploadPrompt || "Videoni yuklang"}
               </p>
               <p className="text-slate-500/60 text-[10px] font-bold uppercase tracking-[0.15em]">
-                MP4, WebM, OGG · max 10MB
+                MP4, WebM, OGG В· max 10MB
               </p>
             </>
           )}
@@ -243,12 +258,12 @@ const VideoAvatarModal = ({ darkMode, onClose, onSave, showToast, t }) => {
   );
 };
 
-// ─── MAIN COIN SHOP COMPONENT ────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ MAIN COIN SHOP COMPONENT в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const CoinShop = ({ darkMode, showToast }) => {
   const { user } = useAuth();
   const { t } = useLang();
 
-  // ── SHOP ITEMS ──────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ SHOP ITEMS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const SHOP_ITEMS = useMemo(
     () => [
       // BOOSTS
@@ -465,11 +480,53 @@ const CoinShop = ({ darkMode, showToast }) => {
         price: 300,
         color: "#ef4444",
       },
+
+      // PET ITEMS
+      {
+        id: "pet_food",
+        category: "pet",
+        icon: <Drumstick size={20} />,
+        name: t.itemPetFoodName || "Pet Food",
+        desc: t.itemPetFoodDesc || "Petni oziqlantirish - ochlikni 0% qiladi",
+        price: 50,
+        color: "#f97316",
+        effect: { hunger: -100, happiness: +20, xp: +15 },
+      },
+      {
+        id: "pet_toy",
+        category: "pet",
+        icon: <Gamepad2 size={20} />,
+        name: t.itemPetToyName || "Pet Toy",
+        desc: t.itemPetToyDesc || "Pet bilan o'ynash - baxtni 100% qiladi",
+        price: 80,
+        color: "#ec4899",
+        effect: { happiness: +100, energy: -10, xp: +25 },
+      },
+      {
+        id: "pet_energy",
+        category: "pet",
+        icon: <Zap size={20} />,
+        name: t.itemPetEnergyName || "Energy Drink",
+        desc: t.itemPetEnergyDesc || "Pet energiyasini to'ldirish +100%",
+        price: 60,
+        color: "#3b82f6",
+        effect: { energy: +100, xp: +10 },
+      },
+      {
+        id: "pet_treat",
+        category: "pet",
+        icon: <Cookie size={20} />,
+        name: t.itemPetTreatName || "Premium Treat",
+        desc: t.itemPetTreatDesc || "Maxsus delicatessen - barcha statistikani to'ldiradi",
+        price: 150,
+        color: "#a855f7",
+        effect: { hunger: 0, happiness: 100, energy: 100, xp: +50 },
+      },
     ],
     [t]
   );
 
-  // ── CATEGORIES ──────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ CATEGORIES в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const CATEGORIES = useMemo(
     () => [
       {
@@ -507,11 +564,16 @@ const CoinShop = ({ darkMode, showToast }) => {
         label: t.catIdentity || "Profil",
         icon: <LuSparkles size={14} />,
       },
+      {
+        id: "pet",
+        label: t.catPet || "Pet",
+        icon: <LuCat size={14} />,
+      },
     ],
     [t]
   );
 
-  // ── STATE ────────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ STATE в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const [coins, setCoins] = useState(0);
   const [xp, setXp] = useState(0);
   const [owned, setOwned] = useState([]);
@@ -522,11 +584,12 @@ const CoinShop = ({ darkMode, showToast }) => {
   const [buying, setBuying] = useState(null);
   const [converting, setConverting] = useState(false);
   const [convertAmount, setConvertAmount] = useState(100);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [tab, setTab] = useState("shop");
   const [category, setCategory] = useState("all");
   const [showVideoModal, setShowVideoModal] = useState(false);
 
-  // ── FIREBASE LISTENERS ───────────────────────────────────────────────────────
+  // в”Ђв”Ђ FIREBASE LISTENERS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(
@@ -574,20 +637,21 @@ const CoinShop = ({ darkMode, showToast }) => {
     return () => unsub();
   }, [user]);
 
-  // ── FILTERED ITEMS ───────────────────────────────────────────────────────────
+  // в”Ђв”Ђ FILTERED ITEMS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const filtered = useMemo(() => {
     const allItems = Array.isArray(SHOP_ITEMS) ? SHOP_ITEMS : [];
     if (category === "all") return allItems;
     return allItems.filter((item) => item.category === category);
   }, [category, SHOP_ITEMS]);
 
-  // ── YAXSHILANGAN BUY ITEM FUNKSIYASI ──────────────────────────────────────
+  // в”Ђв”Ђ YAXSHILANGAN BUY ITEM FUNKSIYASI в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const buyItem = async (item) => {
     if (!user || buying) return;
 
     const isConsumable =
       item.category === "boost" ||
       item.category === "xp" ||
+      item.category === "pet" ||
       item.id === "snippet_slot_5";
     const isBadge = item.category === "badge";
     const isNameColor = item.nameColor;
@@ -671,6 +735,31 @@ const CoinShop = ({ darkMode, showToast }) => {
         await setDoc(uRef, { maxSnippets: curMax + 5 }, { merge: true });
       }
 
+      // Pet items - saqlash Firebase'ga
+      if (item.category === "pet") {
+        const petRef = doc(db, "users", user.uid, "data", "pet");
+        const petSnap = await getDoc(petRef);
+        const petData = petSnap.exists() ? petSnap.data() : {};
+        const effect = item.effect || {};
+        
+        // Apply effects
+        const updates = {};
+        if (effect.hunger !== undefined) updates.hunger = effect.hunger;
+        if (effect.happiness !== undefined) updates.happiness = effect.happiness;
+        if (effect.energy !== undefined) updates.energy = effect.energy;
+        if (effect.xp) updates.xp = (petData.xp || 0) + effect.xp;
+        
+        await setDoc(petRef, {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        
+        // XP ham qo'shish
+        if (effect.xp) {
+          await giveReward(user.uid, effect.xp, "xp", `${item.name} ishlatildi`);
+        }
+      }
+
       showToast?.(
         `✅ "${item.name}" ${t.buySuccess || "sotib olindi"}`,
         "success"
@@ -693,7 +782,7 @@ const CoinShop = ({ darkMode, showToast }) => {
     setBuying(null);
   };
 
-  // ── VIDEO AVATAR SAVE ────────────────────────────────────────────────────────
+  // в”Ђв”Ђ VIDEO AVATAR SAVE в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handleVideoAvatarSave = async (url) => {
     setShowVideoModal(false);
     if (!user || !url) {
@@ -747,33 +836,37 @@ const CoinShop = ({ darkMode, showToast }) => {
     setBuying(null);
   };
 
-  // ── CONVERT XP → COINS ──────────────────────────────────────────────────────
-  const convertXpToCoins = async () => {
-    if (!user || converting || xp < XP_PER_COIN) return;
+  // в”Ђв”Ђ CONVERT XP в†’ COINS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”‚
+  const convertXpToCoins = async (pkg = null) => {
+    if (!user || converting) return;
+    
+    const targetPkg = pkg || selectedPackage;
+    if (!targetPkg) return;
+    
+    if (xp < targetPkg.xp) {
+      showToast?.(t.notEnoughXP || "Yetarli XP yo'q!", "error");
+      return;
+    }
 
-    const maxConvertable = Math.floor(xp / XP_PER_COIN) * XP_PER_COIN;
-    const amount = Math.min(convertAmount, maxConvertable);
-    const gained = Math.floor(amount / XP_PER_COIN);
-
-    if (gained <= 0) return;
     setConverting(true);
 
     try {
-      await giveReward(user.uid, -amount, "xp", "Tangaga almashtirildi");
-      await giveReward(user.uid, gained, "coins", "XP konvertatsiyasi");
+      await giveReward(user.uid, -targetPkg.xp, "xp", "Tangaga almashtirildi");
+      await giveReward(user.uid, targetPkg.coins + targetPkg.bonus, "coins", "XP konvertatsiyasi");
       showToast?.(
-        `✅ ${amount} XP → ${gained} ${
+        `вњ… ${targetPkg.xp} XP в†’ ${targetPkg.coins + targetPkg.bonus} ${
           t.convertSuccess || "Tanga aylantirildi"
-        }`,
+        }${targetPkg.bonus > 0 ? ` (+${targetPkg.bonus} bonus)` : ''}`,
         "success"
       );
+      setSelectedPackage(null);
     } catch {
       showToast?.(t.updateError || "Xatolik yuz berdi", "error");
     }
     setConverting(false);
   };
 
-  // ── LOADING ──────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ LOADING в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   if (!user || !dataReady)
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
@@ -784,7 +877,7 @@ const CoinShop = ({ darkMode, showToast }) => {
       </div>
     );
 
-  // ── RENDER ───────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ RENDER в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 md:py-8 lg:py-12">
       {showVideoModal && (
@@ -801,7 +894,7 @@ const CoinShop = ({ darkMode, showToast }) => {
       )}
 
       {/* Header Section */}
-      <ScrollReveal direction="up">
+      <div direction="up">
         {/* Title + Stats */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -810,10 +903,10 @@ const CoinShop = ({ darkMode, showToast }) => {
                 darkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              {t.shopTitle || "Coin Shop"}
+              {t.shopTitle}
             </h2>
             <p className="text-slate-500 text-sm font-medium mt-1">
-              {t.shopSub || "Tangalaringizni yutuqlarga almashtiring."}
+              {t.shopSub}
             </p>
           </div>
 
@@ -821,13 +914,13 @@ const CoinShop = ({ darkMode, showToast }) => {
             {[
               {
                 icon: <LuCoins size={16} />,
-                label: t.coinsLabel || "Coin",
+                label: t.coinsLabel,
                 value: coins,
                 color: "amber",
               },
               {
                 icon: <LuStar size={16} />,
-                label: t.xpLabel || "XP",
+                label: t.xpLabel,
                 value: xp.toLocaleString(),
                 color: "blue",
               },
@@ -893,10 +986,10 @@ const CoinShop = ({ darkMode, showToast }) => {
                 className="text-base font-black tracking-tight block truncate"
                 style={NAME_COLORS[activeNameColor]?.style}
               >
-                {user?.displayName || t.userLabel || "Foydalanuvchi"}
+                {user?.displayName || t.userLabel}
               </span>
               <p className="text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-widest truncate mt-0.5">
-                {t.activeIdentity || "Aktiv Ko'rinish"} ·{" "}
+                {t.activeIdentity} В·{" "}
                 {NAME_COLORS[activeNameColor]?.label || "Default"}
               </p>
             </div>
@@ -908,13 +1001,13 @@ const CoinShop = ({ darkMode, showToast }) => {
           {[
             {
               id: "shop",
-              label: t.shopTabShop || "Bozor",
+              label: t.shopTabShop || "Do'kon",
               icon: <LuShoppingBag size={16} />,
             },
             {
               id: "convert",
-              label: t.shopTabConvert || "Convert XP",
-              icon: <LuCoins size={16} />,
+              label: t.shopTabConvert || "XP→Coin",
+              icon: <LuZap size={16} />,
             },
             {
               id: "history",
@@ -927,8 +1020,8 @@ const CoinShop = ({ darkMode, showToast }) => {
               onClick={() => setTab(item.id)}
               className={`flex-1 min-w-max flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-xs md:text-sm font-black transition-all duration-300 ${
                 tab === item.id
-                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-[1.02]"
-                  : "text-slate-500 hover:text-amber-500"
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.02]"
+                  : "text-slate-500 hover:text-orange-500"
               }`}
             >
               {item.icon}
@@ -936,11 +1029,11 @@ const CoinShop = ({ darkMode, showToast }) => {
             </button>
           ))}
         </div>
-      </ScrollReveal>
+      </div>
 
-      {/* ── SHOP TAB ── */}
+      {/* в”Ђв”Ђ SHOP TAB в”Ђв”Ђ */}
       {tab === "shop" && (
-        <ScrollReveal direction="up" delay={100}>
+        <div direction="up" delay={100}>
           {/* Categories */}
           <div className="flex flex-wrap gap-2 mb-6">
             {CATEGORIES.map((c) => (
@@ -949,10 +1042,10 @@ const CoinShop = ({ darkMode, showToast }) => {
                 onClick={() => setCategory(c.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black transition-all duration-300 ${
                   category === c.id
-                    ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/25 scale-[1.02]"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 border-transparent text-white shadow-lg shadow-orange-500/25 scale-[1.02]"
                     : darkMode
-                    ? "bg-slate-900/40 border-white/5 text-slate-500 hover:text-amber-500"
-                    : "bg-white border-slate-100 text-slate-500 hover:border-amber-500 hover:shadow-md"
+                    ? "bg-slate-900/40 border-white/5 text-slate-500 hover:text-orange-500"
+                    : "bg-white border-slate-100 text-slate-500 hover:border-orange-500 hover:shadow-md"
                 }`}
               >
                 {c.icon} {c.label}
@@ -968,14 +1061,14 @@ const CoinShop = ({ darkMode, showToast }) => {
                 className="mx-auto mb-4 opacity-20 text-slate-500"
               />
               <p className="text-slate-500 font-bold">
-                Hozircha mahsulotlar yuklanmadi.
+                {t.shopEmpty}
               </p>
-              <p className="text-slate-400 text-sm">Turkum: {category}</p>
+              <p className="text-slate-400 text-sm">{t.category}: {category}</p>
               <button
                 onClick={() => setCategory("all")}
                 className="mt-6 px-6 py-3 bg-amber-500 text-white rounded-xl font-black shadow-lg hover:bg-amber-600 transition-colors"
               >
-                Hammasini ko'rish
+                {t.showAll}
               </button>
             </div>
           ) : (
@@ -1016,8 +1109,8 @@ const CoinShop = ({ darkMode, showToast }) => {
                       {noBuy && (
                         <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
                           {isActiveNameItem
-                            ? "Active"
-                            : t.owned || "Olingan"}
+                            ? t.active
+                            : t.owned}
                         </span>
                       )}
                     </div>
@@ -1040,7 +1133,7 @@ const CoinShop = ({ darkMode, showToast }) => {
                         }`}
                         style={NAME_COLORS[item.nameColor]?.style}
                       >
-                        {user?.displayName || "Sizning Ismingiz"}
+                        {user?.displayName || t.userLabel}
                       </div>
                     )}
 
@@ -1087,11 +1180,11 @@ const CoinShop = ({ darkMode, showToast }) => {
                         )}
                         {noBuy
                           ? isActiveNameItem
-                            ? "Active"
-                            : t.owned || "Olingan"
+                            ? t.active
+                            : t.owned
                           : canBuy
-                          ? t.get || "Olish"
-                          : t.neededMore || "Yetarli emas"}
+                          ? t.get
+                          : t.neededMore}
                       </button>
                     </div>
                   </div>
@@ -1099,14 +1192,14 @@ const CoinShop = ({ darkMode, showToast }) => {
               })}
             </div>
           )}
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── CONVERT TAB ── */}
+      {/* в”Ђв”Ђ CONVERT TAB в”Ђв”Ђ */}
       {tab === "convert" && (
-        <ScrollReveal direction="up" delay={100}>
+        <div direction="up" delay={100}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-            {/* Conversion Card */}
+            {/* Conversion Card with Packages */}
             <div
               className={`p-6 md:p-10 rounded-4xl md:rounded-[3rem] border ${
                 darkMode
@@ -1124,103 +1217,133 @@ const CoinShop = ({ darkMode, showToast }) => {
                       darkMode ? "text-white" : "text-slate-900"
                     }`}
                   >
-                    {t.xpToCoin || "XP ni Tangaga aylantirish"}
+                    {t.xpToCoin}
                   </h3>
                   <p className="text-slate-500 text-xs md:text-sm font-medium mt-1">
-                    {t.xpToCoinRate || "Har 10 XP = 1 Tanga"}
+                    XP ni Coin ga bonuslar bilan almashtiring
                   </p>
                 </div>
               </div>
 
-              <div
-                className={`p-6 md:p-8 rounded-4xl border mb-8 flex flex-col md:flex-row items-center justify-between gap-6 ${
-                  darkMode
-                    ? "bg-slate-900/60 border-white/5"
-                    : "bg-slate-50 border-slate-200"
-                }`}
-              >
-                <div className="flex-1 text-center w-full">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2 md:mb-3">
-                    {t.spending || "Berilayotgan"}
-                  </p>
-                  <div className="text-3xl md:text-4xl font-black text-blue-500 tabular-nums">
-                    {Math.min(convertAmount, xp)}{" "}
-                    <span className="text-lg">XP</span>
+              {/* Package Selection Grid */}
+              <div className="space-y-3 mb-8">
+                {CONVERSION_PACKAGES.map((pkg, index) => {
+                  const canAfford = xp >= pkg.xp;
+                  const isSelected = selectedPackage?.xp === pkg.xp;
+                  const totalCoins = pkg.coins + pkg.bonus;
+
+                  return (
+                    <button
+                      key={pkg.xp}
+                      onClick={() => canAfford && setSelectedPackage(pkg)}
+                      disabled={!canAfford}
+                      className={`w-full relative p-4 rounded-2xl border-2 transition-all ${
+                        isSelected
+                          ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
+                          : canAfford
+                          ? darkMode
+                            ? "border-slate-600 hover:border-amber-500/50 bg-slate-800/50"
+                            : "border-slate-200 hover:border-amber-300 bg-slate-50"
+                          : darkMode
+                          ? "border-slate-700 bg-slate-800/30 opacity-50"
+                          : "border-slate-100 bg-slate-50 opacity-50"
+                      }`}
+                    >
+                      {/* Popular Badge */}
+                      {pkg.popular && (
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                          <LuSparkles className="w-3 h-3" />
+                          Ommabop
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            isSelected 
+                              ? "bg-amber-500 text-white" 
+                              : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                          }`}>
+                            <LuTrendingUp className="w-6 h-6" />
+                          </div>
+                          <div className="text-left">
+                            <p className={`font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+                              {pkg.xp.toLocaleString()} XP
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              → {totalCoins} coin
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          {pkg.bonus > 0 && (
+                            <p className="text-xs text-emerald-500 font-medium mb-0.5">
+                              +{pkg.bonus} bonus
+                            </p>
+                          )}
+                          {!canAfford && (
+                            <p className="text-xs text-red-400">
+                              XP yetarli emas
+                            </p>
+                          )}
+                          {isSelected && (
+                            <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center ml-auto">
+                              <LuCheck className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Summary Display */}
+              {selectedPackage && (
+                <div
+                  className={`p-6 rounded-2xl border mb-6 flex items-center justify-between gap-4 ${
+                    darkMode
+                      ? "bg-slate-900/60 border-white/5"
+                      : "bg-slate-50 border-slate-200"
+                  }`}
+                >
+                  <div className="text-center flex-1">
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">
+                      {t.spending}
+                    </p>
+                    <div className="text-2xl font-black text-blue-500">
+                      {selectedPackage.xp} <span className="text-sm">XP</span>
+                    </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <LuArrowRight size={16} />
+                  </div>
+                  <div className="text-center flex-1">
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">
+                      {t.receiving}
+                    </p>
+                    <div className="text-2xl font-black text-amber-500 flex items-center justify-center gap-1">
+                      {selectedPackage.coins + selectedPackage.bonus}
+                      <LuCoins size={18} />
+                    </div>
+                    {selectedPackage.bonus > 0 && (
+                      <p className="text-xs text-emerald-500 mt-0.5">
+                        ({selectedPackage.coins} + {selectedPackage.bonus} bonus)
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 rotate-90 md:rotate-0">
-                  <LuArrowRight size={20} />
-                </div>
-                <div className="flex-1 text-center w-full">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2 md:mb-3">
-                    {t.receiving || "Olinayotgan"}
-                  </p>
-                  <div className="text-3xl md:text-4xl font-black text-amber-500 tabular-nums flex items-center justify-center gap-2">
-                    {Math.floor(Math.min(convertAmount, xp) / XP_PER_COIN)}{" "}
-                    <LuCoins size={24} className="md:w-8 md:h-8" />
-                  </div>
-                </div>
-              </div>
+              )}
 
-              <div className="px-2 md:px-4 mb-8">
-                <input
-                  type="range"
-                  min={XP_PER_COIN}
-                  max={Math.max(
-                    XP_PER_COIN,
-                    Math.floor(xp / XP_PER_COIN) * XP_PER_COIN
-                  )}
-                  step={XP_PER_COIN}
-                  value={convertAmount}
-                  onChange={(e) => setConvertAmount(Number(e.target.value))}
-                  className="w-full h-3 bg-slate-800/10 dark:bg-white/5 rounded-full appearance-none cursor-pointer accent-amber-500"
-                />
-                <div className="flex justify-between mt-4 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  <span>
-                    {t.min || "MIN"}: {XP_PER_COIN} XP
-                  </span>
-                  <span className="text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg">
-                    {convertAmount} XP
-                  </span>
-                  <span>
-                    {t.max || "MAX"}:{" "}
-                    {Math.floor(xp / XP_PER_COIN) * XP_PER_COIN} XP
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-8 md:mb-10">
-                {[100, 500, 1000, 2000].map((amt) => (
-                  <button
-                    key={amt}
-                    onClick={() =>
-                      setConvertAmount(
-                        Math.min(
-                          amt,
-                          Math.floor(xp / XP_PER_COIN) * XP_PER_COIN
-                        )
-                      )
-                    }
-                    className={`flex-1 min-w-[70px] py-3 rounded-xl text-xs font-black transition-all border ${
-                      convertAmount === amt
-                        ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/30"
-                        : darkMode
-                        ? "bg-slate-900/60 border-white/5 text-slate-500 hover:text-amber-500"
-                        : "bg-white border-slate-200 text-slate-500 hover:border-amber-500"
-                    }`}
-                  >
-                    {amt} XP
-                  </button>
-                ))}
-              </div>
-
+              {/* Convert Button */}
               <button
-                onClick={convertXpToCoins}
-                disabled={converting || xp < XP_PER_COIN}
+                onClick={() => convertXpToCoins()}
+                disabled={converting || !selectedPackage || xp < (selectedPackage?.xp || 0)}
                 className={`w-full py-5 rounded-2xl text-sm md:text-base font-black transition-all flex items-center justify-center gap-3 md:gap-4 ${
-                  converting || xp < XP_PER_COIN
+                  converting || !selectedPackage || xp < (selectedPackage?.xp || 0)
                     ? "bg-slate-500/20 text-slate-500/50 cursor-not-allowed border border-slate-500/20"
-                    : "bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-xl shadow-amber-500/30 hover:scale-[1.02] active:scale-95"
+                    : "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xl shadow-amber-500/30 hover:scale-[1.02] active:scale-95"
                 }`}
               >
                 {converting ? (
@@ -1228,8 +1351,15 @@ const CoinShop = ({ darkMode, showToast }) => {
                 ) : (
                   <LuCoins size={20} />
                 )}
-                {t.xpToCoin || "Aylantirish"}
+                {selectedPackage 
+                  ? `${selectedPackage.xp} XP ni ${selectedPackage.coins + selectedPackage.bonus} coin ga almashtirish`
+                  : "Paket tanlang"
+                }
               </button>
+
+              <p className={`text-center text-xs mt-4 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+                Almashtirilgan coinlar do'konda ishlatiladi. XP dan kamayish darajangizga ta'sir qilmaydi.
+              </p>
             </div>
 
             {/* Methods Card */}
@@ -1246,43 +1376,43 @@ const CoinShop = ({ darkMode, showToast }) => {
                 }`}
               >
                 <LuGift className="text-emerald-500" size={24} />{" "}
-                {t.howToEarn || "Qanday qilib tanga topish mumkin?"}
+                {t.howToEarn}
               </h4>
               <div className="space-y-3 md:space-y-4">
                 {[
                   {
                     icon: <LuBookOpen />,
-                    text: t.earnLesson || "Darslarni ko'rish",
+                    text: t.earnLesson,
                     coins: "+2",
                     color: "blue",
                   },
                   {
                     icon: <LuTarget />,
-                    text: t.earnQuiz || "Quiz yechish",
+                    text: t.earnQuiz,
                     coins: "+3",
                     color: "red",
                   },
                   {
                     icon: <LuTrophy />,
-                    text: t.earnTournament || "Musobaqalarda qatnashish",
+                    text: t.earnTournament,
                     coins: "+5",
                     color: "amber",
                   },
                   {
                     icon: <LuFlame />,
-                    text: t.earnStreak || "Kunlik streak ushlab turish",
+                    text: t.earnStreak,
                     coins: "+10",
                     color: "orange",
                   },
                   {
                     icon: <LuUserPlus />,
-                    text: t.earnInvite || "Do'stlarni taklif qilish",
+                    text: t.earnInvite,
                     coins: "+20",
                     color: "emerald",
                   },
                   {
                     icon: <LuCoins />,
-                    text: "Pixel Challenge yutish",
+                    text: t.earnPixelChallenge,
                     coins: "500",
                     color: "amber",
                   },
@@ -1334,12 +1464,12 @@ const CoinShop = ({ darkMode, showToast }) => {
               </div>
             </div>
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
-      {/* ── HISTORY TAB ── */}
+      {/* в”Ђв”Ђ HISTORY TAB в”Ђв”Ђ */}
       {tab === "history" && (
-        <ScrollReveal direction="up" delay={100}>
+        <div direction="up" delay={100}>
           {history.length === 0 ? (
             <div
               className={`py-24 md:py-32 text-center rounded-4xl border border-dashed ${
@@ -1376,22 +1506,22 @@ const CoinShop = ({ darkMode, showToast }) => {
                         darkMode ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      {h.name}
+                      {h.title}
                     </p>
                     <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">
-                      {h.date}
+                      {h.date?.toDate ? h.date.toDate().toLocaleDateString() : h.date?.seconds ? new Date(h.date.seconds * 1000).toLocaleDateString() : typeof h.date === 'string' ? h.date : 'Noma\'lum sana'}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-lg md:text-xl font-black text-red-500 tabular-nums bg-red-500/10 px-3 py-1.5 rounded-xl">
-                      -{h.price} 🪙
+                    <span className="text-lg md:text-xl font-black text-red-500 tabular-nums bg-red-500/10 px-3 py-1.5 rounded-xl flex items-center gap-1">
+                      -{h.amount} <LuCoins size={18} />
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </ScrollReveal>
+        </div>
       )}
     </div>
   );

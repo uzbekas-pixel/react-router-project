@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { auth, db } from "../firebase/config";
 import { updateProfile, updatePassword } from "firebase/auth";
 import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import ScrollReveal from "../components/ScrollReveal";
 import { useLang } from "../context/useLang";
 import { 
   LuUser, 
@@ -24,6 +24,7 @@ import {
   LuClock,
   LuPartyPopper,
   LuInfo,
+  LuSettings,
 } from "react-icons/lu";
 import { MdOutlineEdit } from "react-icons/md";
 
@@ -41,6 +42,7 @@ const BADGES_DICT = {
 const Profile = ({ darkMode, showToast, showConfetti }) => {
   const { user } = useAuth();
   const { t }    = useLang();
+  const navigate = useNavigate();
 
   // Tablar: profil, xavfsizlik, mentorlik, va nishonlar
   const [activeTab, setActiveTab] = useState("profile");
@@ -52,12 +54,12 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
     confirmPassword: "",
   });
   
-  // ── Mentorlik arizasi uchun state ──
+  // Mentorlik arizasi uchun state
   const [mentorForm, setMentorForm] = useState({ phone: "", subject: "Front-End", reason: "" });
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isSupport, setIsSupport] = useState(false);
 
-  // ── Yutuqlar va Ranglar uchun state ──
+  // Yutuqlar va Ranglar uchun state
   const [nameColor, setNameColor] = useState("default");
   const [ownedBadges, setOwnedBadges] = useState([]);
   const [activeBadges, setActiveBadges] = useState([]);
@@ -107,21 +109,21 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
     loadProfileAndStatus();
   }, [user]);
 
-  // ── Nishonni Taqish / Yechish Funksiyasi ──
+  // Nishonni Taqish / Yechish Funksiyasi
   const toggleBadge = async (badgeId) => {
     let newActive = [...activeBadges];
     if (newActive.includes(badgeId)) {
       // Agar taqilgan bo'lsa, olib tashlaymiz
       newActive = newActive.filter(id => id !== badgeId);
-      showToast("Nishon olib tashlandi", "success");
+      showToast(t.badgeRemoved, "success");
     } else {
       // Maksimal 3 ta nishon taqish mumkin
       if (newActive.length >= 3) {
-        showToast("Maksimal 3 ta nishon taqish mumkin", "warning");
+        showToast(t.maxBadgesWarning, "warning");
         return;
       }
       newActive.push(badgeId);
-      showToast("Nishon taqildi!", "success");
+      showToast(t.badgeEquipped, "success");
       showConfetti?.();
     }
     
@@ -130,7 +132,7 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
       await setDoc(doc(db, "users", user.uid), { activeBadges: newActive }, { merge: true });
     } catch (err) {
       console.error(err);
-      showToast("Xatolik yuz berdi", "error");
+      showToast(t.errorOccurred, "error");
     }
   };
 
@@ -204,7 +206,7 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
 
   const handleApplyMentor = async () => {
     if (!mentorForm.phone || !mentorForm.reason) {
-      showToast("Iltimos, barcha maydonlarni to'ldiring!", "warning");
+      showToast(t.fillAllFields, "warning");
       return;
     }
     setLoading(true);
@@ -222,10 +224,10 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
       });
       setApplicationStatus("pending");
       showConfetti?.();
-      showToast("Arizangiz muvaffaqiyatli yuborildi!", "success");
+      showToast(t.applicationSent, "success");
     } catch (err) {
       console.error(err);
-      showToast("Ariza yuborishda xatolik yuz berdi.", "error");
+      showToast(t.applicationError, "error");
     } finally {
       setLoading(false);
     }
@@ -238,10 +240,10 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
   }`;
 
   const tabs = [
-    { id: "profile",  label: t.profileTab || "Profil",  icon: <LuUser size={16} />   },
-    { id: "security", label: t.securityTab || "Xavfsizlik", icon: <LuShield size={16} /> },
-    { id: "mentor", label: "Mentorlik", icon: <LuBriefcase size={16} /> },
-    { id: "badges", label: "Nishonlar", icon: <LuBadgeCheck size={16} /> },
+    { id: "profile",  label: t.profileTab,  icon: <LuUser size={16} />   },
+    { id: "security", label: t.securityTab, icon: <LuShield size={16} /> },
+    { id: "mentor", label: t.mentorshipTab, icon: <LuBriefcase size={16} /> },
+    { id: "badges", label: t.badgesTab, icon: <LuBadgeCheck size={16} /> },
   ];
 
   // Do'kondan kelayotgan rang stili
@@ -250,9 +252,21 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
   return (
     <div className={`page-transition w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 md:py-12 mt-4 md:mt-8 ${darkMode ? "text-white" : "text-slate-900"}`}>
 
-      {/* ── Avatar & Info Header ── */}
-      <ScrollReveal direction="up">
-        <div className={`rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl mb-8 backdrop-blur-md border transition-colors duration-300 ${darkMode ? "bg-slate-900/60 border-white/10 shadow-black/50" : "bg-white border-slate-100 shadow-slate-200/50"}`}>
+      {/* Avatar & Info Header */}
+      <div direction="up">
+        <div className={`relative rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl mb-8 backdrop-blur-md border transition-colors duration-300 ${darkMode ? "bg-slate-900/60 border-white/10 shadow-black/50" : "bg-white border-slate-100 shadow-slate-200/50"}`}>
+          {/* Settings Button - Top Right */}
+          <button
+            onClick={() => navigate('/settings')}
+            className={`absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-11 md:h-11 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 z-10 ${
+              darkMode 
+                ? "bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border border-white/10" 
+                : "bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 border border-slate-200"
+            }`}
+            title={t.settings || "Sozlamalar"}
+          >
+            <LuSettings size={18} />
+          </button>
           <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-8">
             <div className="relative shrink-0">
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-4xl overflow-hidden border-4 border-blue-500/20 shadow-2xl rotate-3 transform hover:rotate-0 transition-transform duration-500 bg-slate-100 dark:bg-slate-800">
@@ -273,7 +287,7 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
             <div className="text-center sm:text-left flex-1 min-w-0">
               {/* SHU YERDA ISM RANGI QO'LLANILADI */}
               <h2 className="text-2xl md:text-4xl font-black tracking-tight truncate mb-2" style={activeNameStyle}>
-                {form.displayName || user?.displayName || t.unknown || "Foydalanuvchi"}
+                {form.displayName || user?.displayName || t.unknown || t.user}
               </h2>
               
               <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-2 mb-4">
@@ -295,7 +309,7 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                 
                 {applicationStatus === "approved" && (
                    <span className="inline-flex items-center gap-1.5 text-[10px] md:text-xs font-black bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-lg border border-emerald-500/20 uppercase tracking-widest">
-                   <LuBriefcase size={14} /> Mentor
+                   <LuBriefcase size={14} /> {t.mentorBadge}
                  </span>
                 )}
 
@@ -312,10 +326,10 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
             </div>
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
-      {/* ── Tabs (Responsive swipeable) ── */}
-      <ScrollReveal direction="up" delay={100}>
+      {/* Tabs (Responsive swipeable) */}
+      <div direction="up" delay={100}>
         <div className={`flex gap-2 mb-8 p-1.5 rounded-2xl border backdrop-blur-md overflow-x-auto no-scrollbar transition-colors duration-300 ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-slate-50 border-slate-200"}`}>
           {tabs.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -330,137 +344,137 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
             </button>
           ))}
         </div>
-      </ScrollReveal>
+      </div>
 
-      {/* ── TABS CONTENT ── */}
+      {/* TABS CONTENT */}
       <div className={`rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-xl backdrop-blur-md border transition-colors duration-300 ${darkMode ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-slate-200/50"}`}>
         
         {/* Profile Tab */}
         {activeTab === "profile" && (
-          <ScrollReveal direction="up">
+          <div direction="up">
             <h3 className={`text-xl md:text-2xl font-black mb-6 md:mb-8 flex items-center gap-3 ${darkMode ? "text-white" : "text-slate-900"}`}>
-              <LuUser className="text-blue-500" /> {t.profileTitle || "Shaxsiy ma'lumotlar"}
+              <LuUser className="text-blue-500" /> {t.profileTitle}
             </h3>
             <div className="space-y-5 md:space-y-6">
               <div>
                 <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
-                  {t.fullName || "To'liq ism"}
+                  {t.fullName}
                 </label>
-                <input type="text" placeholder="Ismingizni kiriting" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} className={inputClass} />
+                <input type="text" placeholder={t.enterName} value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
-                  {t.phone || "Telefon"}
+                  {t.phone}
                 </label>
-                <input type="tel" placeholder="+998 90 123 45 67" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} />
+                <input type="tel" placeholder={t.phonePlaceholder} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
-                  {t.bio || "O'zingiz haqingizda"}
+                  {t.bio}
                 </label>
-                <textarea rows={4} placeholder="Nimalarga qiziqasiz?" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className={inputClass + " resize-none"} />
+                <textarea rows={4} placeholder={t.whatInterestsYou} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className={inputClass + " resize-none"} />
               </div>
               <button onClick={handleSaveProfile} disabled={loading} className="w-full py-4 md:py-4.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-sm md:text-base rounded-2xl shadow-xl shadow-blue-600/30 transition-all duration-300 flex items-center justify-center gap-2 mt-4 active:scale-95">
-                {loading ? (t.saving || "Saqlanmoqda...") : <><LuSave size={20} /> {t.save || "Saqlash"}</>}
+                {loading ? (t.saving) : <><LuSave size={20} /> {t.save}</>}
               </button>
             </div>
-          </ScrollReveal>
+          </div>
         )}
 
         {/* Security Tab */}
         {activeTab === "security" && (
-           <ScrollReveal direction="up">
+           <div direction="up">
               <h3 className={`text-xl md:text-2xl font-black mb-6 md:mb-8 flex items-center gap-3 ${darkMode ? "text-white" : "text-slate-900"}`}>
-                <LuShield className="text-blue-500" /> {t.securityTab || "Xavfsizlik"}
+                <LuShield className="text-blue-500" /> {t.securityTab}
               </h3>
               <div className="space-y-5 md:space-y-6">
                 <div>
                   <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
-                    {t.newPassword || "Yangi parol"}
+                    {t.newPassword}
                   </label>
-                  <input type="password" placeholder="••••••••" value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} className={inputClass} />
+                  <input type="password" placeholder="—•—•—•—•—•—•—•—" value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} className={inputClass} />
                 </div>
                 <div>
                   <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
-                    {t.confirmPasswordLabel || "Parolni tasdiqlang"}
+                    {t.confirmPasswordLabel}
                   </label>
-                  <input type="password" placeholder="••••••••" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className={inputClass} />
+                  <input type="password" placeholder="—•—•—•—•—•—•—•—" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className={inputClass} />
                 </div>
                 <button onClick={handleChangePassword} disabled={loading} className="w-full py-4 md:py-4.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-sm md:text-base rounded-2xl shadow-xl shadow-blue-600/30 transition-all duration-300 flex items-center justify-center gap-2 mt-4 active:scale-95">
-                  {loading ? (t.updating || "Yangilanmoqda...") : <><LuLock size={20} /> {t.updatePassword || "Parolni yangilash"}</>}
+                  {loading ? (t.updating) : <><LuLock size={20} /> {t.updatePassword}</>}
                 </button>
               </div>
-           </ScrollReveal>
+           </div>
         )}
 
         {/* Mentor Tab */}
         {activeTab === "mentor" && (
-          <ScrollReveal direction="up">
+          <div direction="up">
             <h3 className={`text-xl md:text-2xl font-black mb-6 flex items-center gap-3 ${darkMode ? "text-white" : "text-slate-900"}`}>
-              <LuBriefcase className="text-blue-500" /> Mentorlikka Ariza
+              <LuBriefcase className="text-blue-500" /> {t.mentorApplication}
             </h3>
             
             {applicationStatus === "pending" ? (
               <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
-                <LuClock className="shrink-0" /> {t.mentorPending || "Arizangiz qabul qilingan va ko'rib chiqilmoqda. Tez orada siz bilan bog'lanamiz!"}
+                <LuClock className="shrink-0" /> {t.mentorPending}
               </div>
             ) : applicationStatus === "approved" ? (
               <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
-                <LuPartyPopper className="shrink-0" /> {t.mentorApproved || "Tabriklaymiz! Siz rasmiy Mentorsiz! Endi platformada o'z darslaringizni bera olasiz."}
+                <LuPartyPopper className="shrink-0" /> {t.mentorApproved}
               </div>
             ) : applicationStatus === "rejected" ? (
               <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner mb-6 flex items-center gap-3">
-                <LuX className="shrink-0" /> {t.mentorRejected || "Afsuski arizangiz rad etildi. Tajribangizni oshirib, yana urinib ko'ring."}
+                <LuX className="shrink-0" /> {t.mentorRejected}
               </div>
             ) : !isSupport ? (
                <div className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-5 md:p-6 rounded-2xl text-sm md:text-base font-bold leading-relaxed shadow-inner flex items-center gap-3">
-                <LuInfo className="shrink-0" /> <span>Ariza berish uchun avval darslarni tugatib, <b>"Support"</b> unvonini olishingiz kerak.</span>
+                <LuInfo className="shrink-0" /> <span>{t.needSupportBadge}</span>
               </div>
             ) : null}
 
             {isSupport && (!applicationStatus || applicationStatus === "rejected") && (
               <div className="space-y-5 md:space-y-6 mt-6">
                 <div>
-                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>Aloqa uchun telefon raqam *</label>
-                  <input type="tel" placeholder="+998 90 123 45 67" value={mentorForm.phone} onChange={(e) => setMentorForm({ ...mentorForm, phone: e.target.value })} className={inputClass} />
+                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>{t.contactPhone} *</label>
+                  <input type="tel" placeholder={t.phonePlaceholder} value={mentorForm.phone} onChange={(e) => setMentorForm({ ...mentorForm, phone: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>Qaysi yo'nalishda mentorlik qilasiz? *</label>
+                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>{t.mentorSubject} *</label>
                   <select value={mentorForm.subject} onChange={(e) => setMentorForm({ ...mentorForm, subject: e.target.value })} className={inputClass}>
-                    <option value="Front-End">Front-End (HTML, CSS, JS, React)</option>
-                    <option value="Back-End">Back-End (Node.js, Python, PHP)</option>
-                    <option value="Boshqa">Boshqa...</option>
+                    <option value="Front-End">{t.frontEndOption}</option>
+                    <option value="Back-End">{t.backEndOption}</option>
+                    <option value="Boshqa">{t.otherOption}</option>
                   </select>
                 </div>
                 <div>
-                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>Tajribangiz (Nima uchun siz?) *</label>
-                  <textarea rows={5} placeholder="O'zingiz haqingizda yozing..." value={mentorForm.reason} onChange={(e) => setMentorForm({ ...mentorForm, reason: e.target.value })} className={inputClass + " resize-none"} />
+                  <label className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block ${darkMode ? "text-slate-500" : "text-slate-400"}`}>{t.yourExperience} *</label>
+                  <textarea rows={5} placeholder={t.writeAboutYourself} value={mentorForm.reason} onChange={(e) => setMentorForm({ ...mentorForm, reason: e.target.value })} className={inputClass + " resize-none"} />
                 </div>
                 <button onClick={handleApplyMentor} disabled={loading} className="w-full py-4 md:py-4.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-sm md:text-base rounded-2xl shadow-xl shadow-blue-600/30 transition-all duration-300 flex items-center justify-center gap-2 mt-4 active:scale-95">
-                  {loading ? "Yuborilmoqda..." : <><LuSend size={20} /> Arizani Yuborish</>}
+                  {loading ? t.sending : <><LuSend size={20} /> {t.sendApplication}</>}
                 </button>
               </div>
             )}
-          </ScrollReveal>
+          </div>
         )}
 
-        {/* ── YANGI: Badges Tab (Nishonlar) ── */}
+        {/* YANGI: Badges Tab (Nishonlar) */}
         {activeTab === "badges" && (
-          <ScrollReveal direction="up">
+          <div direction="up">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <h3 className={`text-xl md:text-2xl font-black flex items-center gap-3 ${darkMode ? "text-white" : "text-slate-900"}`}>
-                <LuBadgeCheck className="text-blue-500" /> Kolleksiya
+                <LuBadgeCheck className="text-blue-500" /> {t.collection}
               </h3>
               <p className={`text-xs md:text-sm font-bold px-4 py-2 rounded-xl ${darkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
-                Taqilgan: {activeBadges.length} / 3
+                {t.equipped}: {activeBadges.length} / 3
               </p>
             </div>
 
             {ownedBadges.length === 0 ? (
               <div className={`py-16 text-center rounded-3xl border-2 border-dashed ${darkMode ? "border-slate-700/50" : "border-slate-200"}`}>
                  <LuTrophy size={48} className="mx-auto mb-4 opacity-20 text-slate-500"/>
-                 <p className={`text-sm font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Sizda hozircha hech qanday nishon yo'q.</p>
-                 <p className="text-xs text-slate-500 mt-2">Coin Shop'dan sotib olishingiz mumkin.</p>
+                 <p className={`text-sm font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{t.noBadges}</p>
+                 <p className="text-xs text-slate-500 mt-2">{t.buyFromCoinShop}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -479,8 +493,8 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 ${b.bg} ${b.color}`}>
                         {b.icon}
                       </div>
-                      <h4 className={`text-base md:text-lg font-black mb-1 ${darkMode ? "text-white" : "text-slate-900"}`}>{b.label} Nishoni</h4>
-                      <p className="text-[10px] md:text-xs font-bold text-slate-500 mb-6">Profil uchun maxsus yutuq</p>
+                      <h4 className={`text-base md:text-lg font-black mb-1 ${darkMode ? "text-white" : "text-slate-900"}`}>{b.label} {t.badgeSuffix}</h4>
+                      <p className="text-[10px] md:text-xs font-bold text-slate-500 mb-6">{t.badgeDescription}</p>
                       
                       <button 
                         onClick={() => toggleBadge(badgeId)}
@@ -490,14 +504,14 @@ const Profile = ({ darkMode, showToast, showConfetti }) => {
                             : "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
                         }`}
                       >
-                        {isActive ? <><LuX size={16}/> Olib tashlash</> : <><LuCheck size={16}/> Taqish</>}
+                        {isActive ? <><LuX size={16}/> {t.unequip}</> : <><LuCheck size={16}/> {t.equip}</>}
                       </button>
                     </div>
                   )
                 })}
               </div>
             )}
-          </ScrollReveal>
+          </div>
         )}
       </div>
     </div>
