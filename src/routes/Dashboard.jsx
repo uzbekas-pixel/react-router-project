@@ -2,7 +2,8 @@
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
-import {
+import { useNavigate } from "react-router-dom";
+import { 
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from "firebase/firestore";
 import { getNameStyleByKey } from "../constants/shopConstants";
@@ -45,6 +46,7 @@ const MiniBar = ({ value, max, color, darkMode }) => {
 const Dashboard = ({ darkMode, showToast }) => {
   const { user } = useAuth();
   const { t } = useLang();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab]   = useState("overview");
   const [loading, setLoading]       = useState(true);
   const [marking, setMarking]       = useState(null);
@@ -226,21 +228,32 @@ const Dashboard = ({ darkMode, showToast }) => {
             </h2>
           </div>
           
-          <div className={`flex items-center gap-6 p-4 rounded-4xl border transition-all duration-500 ${
-            darkMode ? "bg-slate-900/40 border-white/5 shadow-2xl shadow-blue-500/5" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"
-          }`} style={{ backdropFilter: "blur(20px)" }}>
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-blue-500/10 overflow-hidden shrink-0 ${
-              photoURL ? "" : "bg-blue-600"
-            }`}>
-              {photoURL ? (
-                <img src={photoURL} alt="av" className="w-full h-full object-cover" />
-              ) : initials}
-            </div>
-            <div>
-              <p className={`text-lg font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`} style={getNameStyleByKey(user?.nameColor)}>
-                {displayName}
-              </p>
-              <p className="text-slate-500 text-sm font-medium">{user?.email}</p>
+          <div className="flex items-center gap-4 flex-row-reverse md:flex-row">
+            <button
+              onClick={() => navigate('/leaderboard')}
+              className={`p-3 rounded-2xl transition-all duration-300 hover:scale-110 ${
+                darkMode ? 'bg-slate-800/80 hover:bg-slate-700 text-amber-400 border border-white/10' : 'bg-white hover:bg-slate-100 text-amber-500 border border-slate-200 shadow-lg'
+              }`}
+              title="Leaderboard"
+            >
+              <LuTrophy size={28} />
+            </button>
+            <div className={`flex items-center gap-6 p-4 rounded-4xl border transition-all duration-500 ${
+              darkMode ? "bg-slate-900/40 border-white/5 shadow-2xl shadow-blue-500/5" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"
+            }`} style={{ backdropFilter: "blur(20px)" }}>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-blue-500/10 overflow-hidden shrink-0 ${
+                photoURL ? "" : "bg-blue-600"
+              }`}>
+                {photoURL ? (
+                  <img src={photoURL} alt="av" className="w-full h-full object-cover" />
+                ) : initials}
+              </div>
+              <div>
+                <p className={`text-lg font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`} style={getNameStyleByKey(user?.nameColor)}>
+                  {displayName}
+                </p>
+                <p className="text-slate-500 text-sm font-medium">{user?.email}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -268,17 +281,17 @@ const Dashboard = ({ darkMode, showToast }) => {
         ))}
       </div>
 
-     {/* Tabs System */}
+      {/* Tabs System */}
       <div className="mb-6 md:mb-10 flex gap-1 sm:gap-2 p-1.5 rounded-2xl bg-slate-900/10 dark:bg-slate-900/40 border dark:border-white/5 backdrop-blur-md">
-        {[
+        {[ 
           { id: "overview", label: t.overviewTab, icon: <LuActivity size={20} className="sm:w-4 sm:h-4" /> }, 
           { id: "courses", label: t.coursesTab, icon: <LuBook size={20} className="sm:w-4 sm:h-4" /> }, 
           { id: "achievements", label: t.achievementsTab, icon: <LuAward size={20} className="sm:w-4 sm:h-4" /> }
         ].map((tab) => (
-          <button 
-            key={tab.id} 
-            onClick={() => setActiveTab(tab.id)} 
-            title={tab.label} // Telefonda ikonka ustiga bosib turganda nomi chiqishi uchun
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            title={tab.label}
             className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-2 sm:px-6 rounded-xl text-sm font-black transition-all duration-500 ${
               activeTab === tab.id 
                 ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 active:scale-95" 
@@ -474,6 +487,7 @@ const Dashboard = ({ darkMode, showToast }) => {
           })}
         </div>
       )}
+
     </div>
   );
 };

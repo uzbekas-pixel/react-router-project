@@ -134,12 +134,12 @@ const Leaderboard = ({ darkMode }) => {
               { id: "month", label: t.lbPeriodMonth },
               { id: "week", label: t.lbPeriodWeek }
             ].map((p) => (
-              <button 
-                key={p.id} 
+              <button
+                key={p.id}
                 onClick={() => setPeriod(p.id)}
                 className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all duration-300 ${
-                  period === p.id 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" 
+                  period === p.id
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                     : "text-slate-500 hover:text-blue-400"
                 }`}
               >

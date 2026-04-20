@@ -145,7 +145,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
     { path: "/story",         label: t.story,                        icon: <LuInstagram className="text-pink-500" />         },
     { path: "/games",         label: t.gamesTab,                     icon: <LuGamepad2 className="text-yellow-400" />        },
     { path: "/code",          label: t.codeTab,                      icon: <LuCode className="text-cyan-400" />              },
-    { path: "/supports",      label: t.supportsNav,                  icon: <LuUsers className="text-green-400" />            },
     { path: "/projects",      label: t.projectsNav,                       icon: <LuTerminal className="text-cyan-400" />              },
     { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
@@ -167,7 +166,8 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
     "/code", // /code telefondan umuman olib tashlandi
     "/live" ,
     "/dm",
-    "/story" // Avvalgi filtrda bor edi, uni ham shu yerga qo'shdim
+    "/story",
+    "/games" // Avvalgi filtrda bor edi, uni ham shu yerga qo'shdim
   ];
 
   // в”Ђв”Ђ Effects в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
@@ -332,26 +332,13 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
             <div className="h-6 w-px bg-slate-700/50 mx-2" />
 
             <div className="flex items-center gap-3">
-              {/* Leaderboard */}
-              <NavLink to="/leaderboard" onClick={onNavClick} className={({ isActive }) => `p-2 rounded-xl transition-all ${isActive ? "text-yellow-400 bg-yellow-400/10" : "text-slate-400 hover:text-yellow-400 hover:bg-yellow-400/5"}`}>
-                <LuTrophy size={20} />
-              </NavLink>
+            
 
               {/* Notifications */}
               <NavLink to="/notifications" onClick={onNavClick} className={({ isActive }) => `p-2 rounded-xl relative transition-all ${isActive ? "text-blue-400 bg-blue-400/10" : "text-slate-400 hover:text-blue-400 hover:bg-blue-400/5"}`}>
                 <LuBell size={20} />
                 {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-800" />}
               </NavLink>
-
-              {/* Dark mode */}
-              <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-slate-400 hover:text-blue-400 transition-colors">
-                {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}
-              </button>
-
-              {/* Language */}
-              <button onClick={() => setLang(lang === "en" ? "uz" : "en")} className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${darkMode ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
-                {lang === "en" ? "UZ" : "EN"}
-              </button>
 
               {/* Ambience */}
               <div className="relative" ref={desktopSoundRef}>
@@ -400,20 +387,15 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
 
           {/* в”Ђв”Ђ Mobile Controls в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
           <div className="flex md:hidden items-center gap-3">
-            <button 
-              onClick={() => setLang(lang === "en" ? "uz" : "en")} 
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${darkMode ? "border-slate-700 text-slate-300 bg-slate-800" : "border-slate-200 text-slate-600 bg-slate-50"}`}
-            >
-              {lang === "en" ? "UZ" : "EN"}
-            </button>
-            <NavLink to="/leaderboard" onClick={onNavClick} className="text-slate-400 hover:text-yellow-400 transition-colors">
-    <LuTrophy size={20} />
-  </NavLink>
+          
+        
+  
+              {/* Notifications */}
+              <NavLink to="/notifications" onClick={onNavClick} className={({ isActive }) => `p-2 rounded-xl relative transition-all ${isActive ? "text-blue-400 bg-blue-400/10" : "text-slate-400 hover:text-blue-400 hover:bg-blue-400/5"}`}>
+                <LuBell size={20} />
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-800" />}
+              </NavLink>
 
-            <button onClick={() => setDarkMode(!darkMode)} className="text-slate-400">
-              {darkMode ? <LuSun size={20} /> : <LuMoon size={20} />}
-            </button>
-            
             <button onClick={() => setMenuOpen(!menuOpen)} className={`text-2xl transition-colors ${darkMode ? "text-white" : "text-slate-900"}`}>
               {menuOpen ? <LuX /> : <LuMenu />}
             </button>

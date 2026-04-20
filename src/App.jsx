@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import 'flag-icons/css/flag-icons.min.css';
 
 // Asosiy komponentlar
 import Navbar from "./components/Navbar";
@@ -512,6 +513,7 @@ function App() {
                 <ProtectedRoute>
                   <Settings
                     darkMode={darkMode}
+                    setDarkMode={toggleDarkMode}
                     showToast={showToast}
                     onThemeChange={(id) => {
                       setCurrentTheme(id);

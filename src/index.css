@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Inter font with Cyrillic support for Uzbek characters (ў, ќ) */
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
 * {
   cursor: none !important;
 }

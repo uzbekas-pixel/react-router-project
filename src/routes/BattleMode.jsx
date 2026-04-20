@@ -749,10 +749,10 @@ const BattleMode = ({ darkMode, showToast }) => {
 
           await addDoc(collection(db, "users", user.uid, "notifications"), {
             title: iWon
-              ? "рџЏ† G'alaba!"
+              ? "🏆 G'alaba!"
               : isDraw
-                ? "рџ¤ќ Durang!"
-                : "рџ’Є Jang tugadi!",
+                ? "🤝 Durang!"
+                : "💪 Jang tugadi!",
             message: `${score}/${qs.length} savol. XP: ${xpDelta >= 0 ? "+" : ""}${xpDelta}`,
             type: iWon ? "success" : "info",
             read: false,

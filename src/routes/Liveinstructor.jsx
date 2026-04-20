@@ -19,8 +19,12 @@ import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { LuHand, LuCheck, LuTrash2, LuX, LuMessageCircle, LuEye, LuGraduationCap } from "react-icons/lu";
 
 // в”Ђв”Ђв”Ђ ZegoCloud credentials в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-const ZEGO_APP_ID        = 77698519;
-const ZEGO_SERVER_SECRET = "640db04ef5b4b66c82185215c289bd00";
+const ZEGO_APP_ID = parseInt(import.meta.env.VITE_ZEGO_APP_ID, 10);
+const ZEGO_SERVER_SECRET = import.meta.env.VITE_ZEGO_SERVER_SECRET;
+
+if (!ZEGO_APP_ID || !ZEGO_SERVER_SECRET) {
+  console.error("[Liveinstructor] ZegoCloud credentials not configured. Please set VITE_ZEGO_APP_ID and VITE_ZEGO_SERVER_SECRET environment variables.");
+}
 
 // в”Ђв”Ђв”Ђ Reaction emojis в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const REACTION_EMOJIS = ["❤️", "🔥", "👍", "👏", "😂"];

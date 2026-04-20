@@ -58,9 +58,11 @@ const Notifications = ({ darkMode, showToast }) => {
       const list = snap.docs.map((d) => {
         const data = d.data();
         const meta = TYPE_META[data.type] || TYPE_META.info;
+        // Firestore'dagi eski icon va color maydonlarini olib tashlaymiz
+        const { icon: _, color: __, ...restData } = data;
         return {
           id:    d.id,
-          ...data,
+          ...restData,
           icon:  meta.icon,
           color: meta.color,
           // Vaqtni formatlash

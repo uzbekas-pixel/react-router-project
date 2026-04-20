@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { giveReward } from "./rewardSystem";
+import { giveReward, CURRENCY } from "./rewardSystem";
 import { db } from "../firebase/config";
 
 // DAILY_TASKS bilan bir xil id, xp va max qiymatlari saqlanishi kerak
@@ -48,7 +48,7 @@ export const completeRealTask = async (userId, taskId, showToast) => {
 
     // Agar vazifa endi to'liq bajarilgan bo'lsa (max ga yetgan bo'lsa), XP beramiz
     if (newCount === taskConf.max) {
-        await giveReward(userId, taskConf.xp, "xp", "Kunlik vazifa bajarildi: " + taskId);
+        await giveReward(userId, taskConf.xp, CURRENCY.XP, "Kunlik vazifa bajarildi: " + taskId);
         
         if (showToast) {
            showToast(`Vazifa yakunlandi: +${taskConf.xp} XP!`, "success");
