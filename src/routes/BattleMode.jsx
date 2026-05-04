@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../context/useAuth";
 import { useLang } from "../context/useLang";
 import { db } from "../firebase/config";
@@ -22,6 +22,9 @@ import {
   remove,
   onDisconnect,
   serverTimestamp as rtServerTimestamp,
+  query,
+  orderByChild,
+  equalTo,
 } from "firebase/database";
 import {
   LuSwords,
@@ -571,9 +574,16 @@ const checkEditorAnswer = (code, testCases) => {
   let passed = 0;
   const results = [];
   
+  // Extract function name automatically (e.g. from "function add(a, b) {")
+  const funcMatch = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
+  const funcName = funcMatch ? funcMatch[1] : null;
+
   for (const tc of testCases) {
-    // Kodga input larni qo'shish
-    const fullCode = code + '\n' + tc.input.map((val, i) => `const arg${i} = ${JSON.stringify(val)};`).join('\n');
+    let fullCode = code;
+    if (funcName) {
+      fullCode += `\nconst result = ${funcName}(${tc.input.map((_, i) => `arg${i}`).join(', ')});`;
+    }
+    
     const { error, output } = runCodeSafely(fullCode, tc.input);
     
     if (error) {
@@ -640,7 +650,7 @@ const PlayerAvatar = ({ displayName, avatarUrl, size = 48 }) => (
 
 const BattleMode = ({ darkMode, showToast }) => {
   const { user } = useAuth();
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const rtdb = getDatabase();
 
   // UI state — faqat render uchun kerak bo'lganlar
@@ -675,25 +685,34 @@ const BattleMode = ({ darkMode, showToast }) => {
   const countdownRef = useRef(null);
   const battleRef = useRef(null);
   const queueRef = useRef(null);
-  const battlesListenerRef = useRef(null);
+  const battlesListenerRef = useRef(null); // safely tracks listener for clean unmounts
   const savingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     if (!user) return;
-    getDoc(doc(db, "users", user.uid, "data", "stats")).then((snap) => {
-      if (snap.exists()) setMyXP(snap.data().xp || 0);
-    });
+    getDoc(doc(db, "users", user.uid, "data", "stats"))
+      .then((snap) => {
+        if (snap.exists() && isMountedRef.current) setMyXP(snap.data().xp || 0);
+      })
+      .catch(console.error);
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [user]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    return () => {
       clearInterval(timerRef.current);
       clearInterval(countdownRef.current);
       if (queueRef.current) remove(queueRef.current).catch(() => {});
       if (battleRef.current) off(battleRef.current);
-    },
-    [],
-  );
+      if (battlesListenerRef.current) {
+        off(battlesListenerRef.current.ref, "value", battlesListenerRef.current.fn);
+      }
+    };
+  }, []);
 
   const handleBattleEnd = useCallback(
     (bId) => {
@@ -753,27 +772,30 @@ const BattleMode = ({ darkMode, showToast }) => {
               : isDraw
                 ? "🤝 Durang!"
                 : "💪 Jang tugadi!",
-            message: `${score}/${qs.length} savol. XP: ${xpDelta >= 0 ? "+" : ""}${xpDelta}`,
+            message: `${score}/${qs.length} savol. XP: ${xpDelta > 0 ? "+" : ""}${xpDelta}`,
             type: iWon ? "success" : "info",
             read: false,
             createdAt: new Date(),
           });
-          showToast?.(
-            iWon
-              ? `G'alaba! +${wager} XP!`
-              : isDraw
-                ? "Durang!"
-                : "Jang tugadi!",
-            iWon ? "success" : "error",
-          );
+          
+          if (isMountedRef.current && showToast) {
+            showToast(
+              iWon
+                ? `G'alaba! +${wager} XP!`
+                : isDraw
+                  ? "Durang!"
+                  : "Jang tugadi!",
+              iWon ? "success" : "info",
+            );
+          }
         } catch (e) {
           console.error(e);
         } finally {
-          savingRef.current = false;
+          if (isMountedRef.current) savingRef.current = false;
         }
 
         const wrong = finalAnswers.filter((a) => !a.correct);
-        if (wrong.length > 0) {
+        if (wrong.length > 0 && isMountedRef.current) {
           setLoadingAI(true);
           const review = await generateMistakeReview(
             wrong.map((a) => ({
@@ -783,8 +805,10 @@ const BattleMode = ({ darkMode, showToast }) => {
               correct: a.correct_ans,
             })),
           );
-          setAiReview(review);
-          setLoadingAI(false);
+          if (isMountedRef.current) {
+            setAiReview(review);
+            setLoadingAI(false);
+          }
         }
       })();
 
@@ -799,37 +823,33 @@ const BattleMode = ({ darkMode, showToast }) => {
       const q = qs[currentQ];
       if (!q) return;
 
-      // Puzzle yoki Editor uchun: idxOrCorrect boolean (true/false)
-      // Quiz uchun: idxOrCorrect number (index)
       let isCorrect;
       let selectedIdx;
       let userAnswerText;
       let correctAnswerText;
-      
+
       if (isPuzzle) {
-        // Puzzle/Editor: idxOrCorrect boolean
         isCorrect = idxOrCorrect === true;
         selectedIdx = isCorrect ? 0 : 1;
         userAnswerText = puzzleAnswerText || (isCorrect ? "To'g'ri" : "Noto'g'ri");
         correctAnswerText = q.answer || q.instruction || "To'g'ri javob";
       } else {
-        // Quiz: idxOrCorrect number
         isCorrect = idxOrCorrect === q.answer;
         selectedIdx = idxOrCorrect;
-        userAnswerText = q.options?.[idxOrCorrect] || "";
-        correctAnswerText = q.options?.[q.answer] || "";
+        userAnswerText = q.options?.[idxOrCorrect] || "Noma'lum";
+        correctAnswerText = q.options?.[q.answer] || "Noma'lum";
       }
-      
+
       setSelected((prev) => {
         if (prev !== null) return prev;
         return selectedIdx;
       });
-      
+
       answersRef.current = [
         ...answersRef.current,
         {
           correct: isCorrect,
-          selected: idxOrCorrect,
+          selected: selectedIdx,
           q: q.q || q.code || q.instruction,
           category: q.category,
           userAnswer: userAnswerText,
@@ -847,8 +867,6 @@ const BattleMode = ({ darkMode, showToast }) => {
           idx: selectedIdx,
           correct: isCorrect,
         }).catch(() => {});
-        // Note: score will be calculated from answersRef.current in handleBattleEnd
-        // but we sync it for the opponent's view
         const currentScore = answersRef.current.filter((a) => a.correct).length;
         set(ref(rtdb, `battles/${bId}/${role}/score`), currentScore).catch(
           () => {},
@@ -856,6 +874,7 @@ const BattleMode = ({ darkMode, showToast }) => {
       }
 
       setTimeout(() => {
+        if (!isMountedRef.current) return;
         setCurrentQ((cq) => {
           if (cq + 1 < qs.length) {
             setSelected(null);
@@ -881,6 +900,7 @@ const BattleMode = ({ darkMode, showToast }) => {
 
       battleRef.current = ref(rtdb, `battles/${bId}`);
       onValue(battleRef.current, (snap) => {
+        if (!isMountedRef.current) return;
         const data = snap.val();
         if (!data) return;
         const opKey = myRoleRef.current === "player1" ? "player2" : "player1";
@@ -888,6 +908,7 @@ const BattleMode = ({ darkMode, showToast }) => {
       });
 
       timerRef.current = setInterval(() => {
+        if (!isMountedRef.current) return clearInterval(timerRef.current);
         setTimeLeft((t) => {
           if (t <= 1) {
             clearInterval(timerRef.current);
@@ -906,6 +927,7 @@ const BattleMode = ({ darkMode, showToast }) => {
       let c = 3;
       setCountdown(c);
       countdownRef.current = setInterval(() => {
+        if (!isMountedRef.current) return clearInterval(countdownRef.current);
         c--;
         setCountdown(c);
         if (c <= 0) {
@@ -921,7 +943,10 @@ const BattleMode = ({ darkMode, showToast }) => {
   const startSearch = useCallback(async () => {
     if (!user || loadingMatch) return;
     if (myXP < wager) {
-      showToast?.(t.battleNotEnoughXPToast?.replace('{wager}', wager) || `Yetarli XP yo'q! Kerak: ${wager}`, "error");
+      showToast?.(
+        t.battleNotEnoughXPToast?.replace("{wager}", wager) || `Yetarli XP yo'q! Kerak: ${wager}`,
+        "error"
+      );
       return;
     }
     setLoadingMatch(true);
@@ -946,10 +971,8 @@ const BattleMode = ({ darkMode, showToast }) => {
         const [opKey, opData] = entries[0];
         const newBattleRef = push(ref(rtdb, "battles"));
         const bId = newBattleRef.key;
-        const mySnap = await getDoc(
-          doc(db, "users", user.uid, "data", "stats"),
-        );
-        // O'yin turiga qarab savollarni yuklash
+        const mySnap = await getDoc(doc(db, "users", user.uid, "data", "stats"));
+        
         let qs;
         if (gameType === "puzzle") {
           qs = getCodePuzzles();
@@ -984,6 +1007,7 @@ const BattleMode = ({ darkMode, showToast }) => {
         });
         await remove(ref(rtdb, `battleQueue/${opKey}`)).catch(() => {});
 
+        if (!isMountedRef.current) return;
         battleIdRef.current = bId;
         myRoleRef.current = "player1";
         questionsRef.current = qs;
@@ -1001,16 +1025,19 @@ const BattleMode = ({ darkMode, showToast }) => {
         queueRef.current = myQueueRef;
         await set(myQueueRef, myEntry);
         onDisconnect(myQueueRef).remove();
+        
+        if (!isMountedRef.current) return;
         setScreen("searching");
         setLoadingMatch(false);
 
-        const battlesPath = ref(rtdb, "battles");
+        const battlesQuery = query(ref(rtdb, "battles"), orderByChild("player2/uid"), equalTo(user.uid));
+        
         const handleBattles = (bSnap) => {
+          if (!isMountedRef.current) return;
           const battles = bSnap.val() || {};
           for (const [bId, battle] of Object.entries(battles)) {
-            if (battle.player2?.uid !== user.uid) continue;
-
-            off(battlesPath, "value", handleBattles);
+            off(battlesQuery, "value", handleBattles);
+            battlesListenerRef.current = null;
             remove(myQueueRef).catch(() => {});
             queueRef.current = null;
 
@@ -1030,11 +1057,15 @@ const BattleMode = ({ darkMode, showToast }) => {
           }
         };
 
-        onValue(battlesPath, handleBattles);
+        battlesListenerRef.current = { ref: battlesQuery, fn: handleBattles };
+        onValue(battlesQuery, handleBattles);
 
         setTimeout(() => {
-          if (queueRef.current) {
-            off(battlesPath, "value", handleBattles);
+          if (queueRef.current && isMountedRef.current) {
+            if (battlesListenerRef.current) {
+              off(battlesListenerRef.current.ref, "value", battlesListenerRef.current.fn);
+              battlesListenerRef.current = null;
+            }
             remove(myQueueRef).catch(() => {});
             queueRef.current = null;
             setScreen("lobby");
@@ -1045,25 +1076,12 @@ const BattleMode = ({ darkMode, showToast }) => {
       }
     } catch (err) {
       console.error("Matchmaking:", err);
-      showToast?.(t.battleErrorToast, "error");
-      setLoadingMatch(false);
+      if (isMountedRef.current) {
+        showToast?.(t.battleErrorToast, "error");
+        setLoadingMatch(false);
+      }
     }
-  }, [
-    user,
-    wager,
-    myXP,
-    loadingMatch,
-    rtdb,
-    db,
-    showToast,
-    gameType,
-    generateBattleQuestions,
-    startCountdown,
-    t.battleEasy,
-    t.battleMedium,
-    t.battleHard,
-    t.battleYou,
-  ]);
+  }, [user, wager, myXP, loadingMatch, rtdb, showToast, gameType, startCountdown, t]);
 
   const cancelSearch = useCallback(async () => {
     if (queueRef.current) {
@@ -1071,12 +1089,14 @@ const BattleMode = ({ darkMode, showToast }) => {
       queueRef.current = null;
     }
     if (battlesListenerRef.current) {
-      off(ref(rtdb, "battles"), "value", battlesListenerRef.current);
+      off(battlesListenerRef.current.ref, "value", battlesListenerRef.current.fn);
       battlesListenerRef.current = null;
     }
-    setScreen("lobby");
-    setLoadingMatch(false);
-  }, [rtdb]);
+    if (isMountedRef.current) {
+      setScreen("lobby");
+      setLoadingMatch(false);
+    }
+  }, []);
 
   const resetBattle = () => {
     clearInterval(timerRef.current);
@@ -2047,7 +2067,7 @@ const BattleMode = ({ darkMode, showToast }) => {
               
               <button
                 onClick={() => {
-                  handleAnswer(0);
+                  handleAnswer(false, true, "O'tkazib yuborildi");
                   setEditorCode("");
                   setEditorOutput("");
                   setEditorError("");

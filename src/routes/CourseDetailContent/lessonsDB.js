@@ -33,6 +33,7 @@ export const lessonsDB = {
           "Bitta <p> tagidan foydalanib kasbingizni yozing"
         ],
         hints: ["Teglarni ochgandan keyin yopishni unutmang (masalan: </h1>)"],
+        mustInclude: ["<h1>", "<p>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -74,6 +75,7 @@ export const lessonsDB = {
           "<body> ichida <h1> tagida 'Salom Dunyo' deb yozing"
         ],
         hints: ["<title> tegi doim <head> ichida bo'lishi kerak."],
+        mustInclude: ["<!DOCTYPE html>", "<title>", "<body>", "<h1>"],
         starterCode: "<!DOCTYPE html>\n<html>\n\n</html>"
       },
       quizQuestions: [
@@ -105,7 +107,7 @@ export const lessonsDB = {
           icon: "📏",
           title: "Paragraf va Bo'sh joylar",
           content: "<p>Matnlarni xatboshilarga ajratish uchun <b>&lt;p&gt;</b> ishlatiladi. Agar shunchaki yangi qatorga tushish kerak bo'lsa <b>&lt;br&gt;</b> (yopilmaydigan teg) ishlatiladi.</p>",
-          code: "<p>Bu birinchi qator.<br>Bu xuddi shu paragrafdagi ikkinchi qator.</p>\n<br>\n<p>br tegi esa chiziq tortadi.</p>",
+          code: "<p>Bu birinchi qator.<br>Bu xuddi shu paragrafdagi ikkinchi qator.</p>\n<hr>\n<p>hr tegi esa gorizontal chiziq tortadi.</p>",
           language: "html"
         }
       ],
@@ -114,9 +116,10 @@ export const lessonsDB = {
         requirements: [
           "Bitta <h2> sarlavha yozing", 
           "Ostidan 2 ta turli xil <p> (paragraf) yozing",
-          "Ikki paragraf orasini chiziq (<br>) bilan ajrating"
+          "Ikki paragraf orasini chiziq (<hr>) bilan ajrating"
         ],
-        hints: ["<hr> tegi yopilmaydi, to'g'ridan-to'g'ri yozilaveradi."],
+        hints: ["<hr> tegi yopilmaydi — shunchaki <hr> yozing, xolos. <br> esa yangi qatorga tushiradi, chiziq tortmaydi."],
+        mustInclude: ["<h2>", "<p>", "<hr>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -158,6 +161,7 @@ export const lessonsDB = {
           "Yana bitta so'zni sariq fonli (<mark>) qiling"
         ],
         hints: ["Teglarni matn ichida ochib, darhol so'z tugagach yoping."],
+        mustInclude: ["<p>", "<strong>", "<mark>"],
         starterCode: "<p>Men React va Tailwind texnologiyalarini o'rganyapman.</p>"
       },
       quizQuestions: [
@@ -200,6 +204,7 @@ export const lessonsDB = {
           "Rasm ostida Youtube ga olib boruvchi <a> havolasini yarating"
         ],
         hints: ["Havola (a) va Rasm (img) yonma-yon tushib qolmasligi uchun orasiga <br> qo'shib yuborishingiz mumkin."],
+        mustInclude: ["<img>", "<a>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -241,6 +246,7 @@ export const lessonsDB = {
           "Ikkinchi qatorda 2 ta <td> (Masalan: HTML, Yuqori) bo'lsin"
         ],
         hints: ["Har bir qator <tr> bilan boshlanib </tr> bilan tugashi shart."],
+        mustInclude: ["<table>", "<th>", "<td>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -281,6 +287,7 @@ export const lessonsDB = {
           "Ma'lumotni jo'natish uchun 'Kirish' yozuvli <button> qo'shing"
         ],
         hints: ["<input> yopilmaydigan teg. Unga placeholder atributini qo'shsangiz, ichida yordamchi matn chiqadi."],
+        mustInclude: ["<form>", "<input>", "<button>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -321,6 +328,7 @@ export const lessonsDB = {
           "Parol maydoniga kamida 6 ta belgi (minlength) talabini qo'ying va required qiling"
         ],
         hints: ["required atributiga qiymat berish shart emas, shunchaki required deb yozib ketsangiz yetarli."],
+        mustInclude: [],
         starterCode: "<form>\n  <input type=\"email\" placeholder=\"Email\">\n  <input type=\"password\" placeholder=\"Parol\">\n  <button type=\"submit\">Kirish</button>\n</form>"
       },
       quizQuestions: [
@@ -362,6 +370,7 @@ export const lessonsDB = {
           "Pastda <footer> ochib, 'Barcha huquqlar himoyalangan' deb yozing"
         ],
         hints: ["Bu teglar xuddi <div> kabi oddiy quti vazifasini bajaradi, faqat nomlari ma'noga ega."],
+        mustInclude: ["<header>", "<main>", "<p>", "<footer>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -403,6 +412,7 @@ export const lessonsDB = {
           "controls atributini qo'shishni unutmang"
         ],
         hints: ["controls atributiga qiymat kerak emas. Uning o'zini yozib qo'yish kifoya."],
+        mustInclude: ["<audio>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -444,6 +454,7 @@ export const lessonsDB = {
           "width ni 500, height ni 300 qilib bering"
         ],
         hints: ["Iframe juft teg, ya'ni uni albatta </iframe> qilib yopish kerak."],
+        mustInclude: ["<iframe>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -485,6 +496,7 @@ export const lessonsDB = {
           "Saytning pastida kishi sizga xabar yozishi uchun <form> yarating (ichida input va button bo'lsin)"
         ],
         hints: ["O'zingizni erkin qo'ying. Xohlasangiz rasm (img) yoki qobiliyatlaringiz ro'yxatini (table) ham qo'shishingiz mumkin."],
+        mustInclude: ["<header>", "<h1>", "<main>", "<p>", "<form>"],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <title>Mening Portfoliom</title>\n</head>\n<body>\n\n  \n\n</body>\n</html>"
       },
       quizQuestions: [
@@ -532,6 +544,7 @@ export const lessonsDB = {
           "<p> matnining orqa fonini (background-color) sariq (yellow) qiling"
         ],
         hints: ["CSS xususiyatlari figurali qavslar { } ichida yoziladi va nuqtali vergul (;) bilan tugaydi."],
+        mustInclude: ["<style>", "<h1>", "<p>"],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    /* CSS kodingizni shu yerga yozing */\n    \n  </style>\n</head>\n<body>\n  <h1>CSS Asoslari</h1>\n  <p>Men CSS o'rganishni boshladim!</p>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -573,6 +586,7 @@ export const lessonsDB = {
           "#special ID siga ega elementning rangini (color) white qiling"
         ],
         hints: ["Class uchun nuqta (.), ID uchun panjara (#) ishlatishni unutmang."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    /* CSS kodingizni shu yerga yozing */\n    \n  </style>\n</head>\n<body>\n  <div class=\"box\" id=\"special\">Maxsus quti</div>\n  <div class=\"box\">Oddiy quti</div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -615,6 +629,7 @@ export const lessonsDB = {
           "Yonidagi matndan uzoqlashishi uchun 20px margin bering"
         ],
         hints: ["Barcha o'lchamlar oxirida px (piksel) yozilishini unutmang."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .btn {\n      /* Kodingizni yozing */\n      \n    }\n  </style>\n</head>\n<body>\n  <button class=\"btn\">Meni bosing</button>\n  <span>Yonidagi matn</span>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -656,6 +671,7 @@ export const lessonsDB = {
           "align-items yordamida ularni vertikal o'rtaga keltiring"
         ],
         hints: ["Markazga keltirish uchun ikkala xususiyatga ham 'center' qiymati beriladi."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .container {\n      height: 300px;\n      background-color: #eee;\n      /* Flex kodingiz bu yerga */\n      \n    }\n    .box {\n      width: 50px; height: 50px;\n      background-color: blue;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"box\"></div>\n  </div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -696,6 +712,7 @@ export const lessonsDB = {
           ".last elementiga order yordamida shunday qiymat beringki, u birinchi bo'lib ko'rinsin"
         ],
         hints: ["Orderning standart qiymati 0. Uni boshiga o'tkazish uchun manfiy son (-1) berish mumkin."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .container { display: flex; gap: 10px; }\n    .box { padding: 20px; background: orange; }\n    \n    .middle {\n      /* Kodingizni yozing */\n    }\n    .last {\n      /* Kodingizni yozing */\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"box\">Birinchi</div>\n    <div class=\"box middle\">O'rtadagi</div>\n    <div class=\"box last\">Oxirgi</div>\n  </div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -737,6 +754,7 @@ export const lessonsDB = {
           "Elementlar vertikal o'rtada bo'lishi uchun align-items: center bering"
         ],
         hints: ["Hamma ishlarni faqat .navbar klassi ichida qilasiz."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .navbar {\n      background-color: #1e293b;\n      color: white;\n      padding: 15px 30px;\n      /* Kodingizni yozing */\n      \n    }\n    .links { display: flex; gap: 20px; }\n  </style>\n</head>\n<body>\n  <nav class=\"navbar\">\n    <div class=\"logo\"><h1>Uzbekas</h1></div>\n    <div class=\"links\">\n      <span>Asosiy</span>\n      <span>Kurslar</span>\n      <span>Aloqa</span>\n    </div>\n  </nav>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -778,6 +796,7 @@ export const lessonsDB = {
           "Kardlar yopishib qolmasligi uchun gap: 20px bering"
         ],
         hints: ["'fr' (fraction) Grid uchun maxsus o'lchov birligi bo'lib, bo'sh joyni teng qismlarga bo'ladi."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .grid-layout {\n      /* Grid kodingizni yozing */\n      \n    }\n    .card {\n      background: #3b82f6;\n      color: white;\n      padding: 30px;\n      text-align: center;\n      border-radius: 10px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"grid-layout\">\n    <div class=\"card\">Kurs 1</div>\n    <div class=\"card\">Kurs 2</div>\n    <div class=\"card\">Kurs 3</div>\n    <div class=\"card\">Kurs 4</div>\n  </div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -818,6 +837,7 @@ export const lessonsDB = {
           ".main va .footer larga ham o'z nomini bering"
         ],
         hints: ["E'tibor bering, hudud nomlari qo'shtirnoq (' ') ichida yoziladi."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .layout {\n      display: grid;\n      gap: 10px;\n      /* Grid Areas kodingiz */\n\n    }\n    .box { padding: 20px; background: #3b82f6; color: white; text-align: center; }\n    .header { /* ... */ }\n    .main { /* ... */ }\n    .footer { /* ... */ }\n  </style>\n</head>\n<body>\n  <div class=\"layout\">\n    <div class=\"box header\">Tepa qism</div>\n    <div class=\"box main\">Asosiy qism</div>\n    <div class=\"box footer\">Pastki qism</div>\n  </div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -859,6 +879,7 @@ export const lessonsDB = {
           ".card kengligini (width) 100% qilib o'zgartiring"
         ],
         hints: ["Media query blokining o'z figurali qavslari {} bo'ladi va uning ichida yana elementning qavslari {} ochiladi."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .card {\n      background-color: blue;\n      width: 300px;\n      height: 200px;\n      color: white;\n      padding: 20px;\n    }\n    \n    /* Media Query ni shu yerga yozing */\n    \n  </style>\n</head>\n<body>\n  <div class=\"card\">Ekranni kichraytirib ko'ring!</div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -900,6 +921,7 @@ export const lessonsDB = {
           ".btn:hover da matn rangini (color) black qiling"
         ],
         hints: ["Transition doim elementning o'ziga beriladi, :hover qismiga emas."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .btn {\n      background-color: #3b82f6;\n      color: white;\n      padding: 15px 30px;\n      border: none;\n      border-radius: 8px;\n      cursor: pointer;\n      /* Transition qo'shing */\n      \n    }\n    \n    /* Hover holatini yozing */\n    \n  </style>\n</head>\n<body>\n  <button class=\"btn\">Meni silliq o'zgartir</button>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -943,6 +965,7 @@ export const lessonsDB = {
           ".circle klassiga shu animatsiyani (animation: pulse 2s infinite;) ulab qo'ying"
         ],
         hints: ["@keyframes har doim faylning alohida joyida yoziladi, boshqa klass ichida emas."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .circle {\n      width: 100px; height: 100px;\n      border-radius: 50%;\n      background-color: blue;\n      /* Animatsiyani ulang */\n      \n    }\n    \n    /* @keyframes yarating */\n    \n  </style>\n</head>\n<body>\n  <div class=\"circle\"></div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -984,6 +1007,7 @@ export const lessonsDB = {
           "Kard qiyalashi uchun scale yoniga rotate(-10deg) ham qo'shing"
         ],
         hints: ["Bir nechta transform effektlari orasiga vergul qo'yilmaydi, probel bilan yoziladi."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .box {\n      width: 150px; height: 200px;\n      background: linear-gradient(135deg, #f59e0b, #ef4444);\n      border-radius: 15px;\n      color: white;\n      display: flex; align-items: center; justify-content: center;\n      /* Transition yozing */\n      \n    }\n    \n    /* Hover holatini yozing */\n    \n  </style>\n</head>\n<body>\n  <div class=\"box\">Kard</div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -1026,6 +1050,7 @@ export const lessonsDB = {
           "Ixtiyoriy: Flexbox yordamida kard ichidagi matnni markazga keltiring"
         ],
         hints: ["O'zingizni erkin his qiling! Loyihani xohlaganingizcha bezating."],
+        mustInclude: [],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { background-color: #f1f5f9; padding: 50px; }\n    \n    /* Loyihangizni shu yerdan boshlang */\n    .kard {\n      \n    }\n    \n  </style>\n</head>\n<body>\n  <div class=\"kard\">\n    <h2>Mening zo'r kardim</h2>\n    <p>CSS juda qiziqarli til ekan!</p>\n  </div>\n</body>\n</html>"
       },
       quizQuestions: [
@@ -1071,6 +1096,7 @@ export const lessonsDB = {
           "Ikkinchi console.log() ichida tug'ilgan yilingizni (raqam ko'rinishida) chiqaring"
         ],
         hints: ["Matnlar (so'zlar) doim qo'shtirnoq (' ' yoki \" \") ichida yoziladi, raqamlarga esa qo'shtirnoq shart emas."],
+        mustInclude: [],
         starterCode: "// Kodingizni shu yerga yozing\n\n"
       },
       quizQuestions: [
@@ -1112,6 +1138,7 @@ export const lessonsDB = {
           "Ikkala o'zgaruvchini console.log() orqali chiqaring"
         ],
         hints: ["const ni ochgan joyning o'zida unga qiymat berish shart."],
+        mustInclude: [],
         starterCode: "// O'zgaruvchilarni e'lon qiling\n\n\n"
       },
       quizQuestions: [
@@ -1154,6 +1181,7 @@ export const lessonsDB = {
           "Barchasini konsolga chiqaring"
         ],
         hints: ["Boolean va Number turlari uchun qo'shtirnoq ishlatmang."],
+        mustInclude: [],
         starterCode: "// O'zgaruvchilarni e'lon qiling\n\n\n// Ularni konsolga chiqaring\n"
       },
       quizQuestions: [
@@ -1195,6 +1223,7 @@ export const lessonsDB = {
           "'x' katta 'y' ekanligini taqqoslab konsolga chiqaring"
         ],
         hints: ["Taqqoslash natijasi doim Boolean (true/false) bo'ladi."],
+        mustInclude: [],
         starterCode: "let x = 20;\nlet y = 15;\n\n// Kodingizni yozing\n"
       },
       quizQuestions: [
@@ -1236,6 +1265,7 @@ export const lessonsDB = {
           "Aks holda (else), konsolga 'Kirish mumkin emas' deb chiqaring"
         ],
         hints: [">= (katta yoki teng) operatoridan foydalaning."],
+        mustInclude: [],
         starterCode: "let yosh = 16;\n\n// If/Else kodingizni yozing\n\n"
       },
       quizQuestions: [
@@ -1277,6 +1307,7 @@ export const lessonsDB = {
           "Funksiyani chaqirib, natijani konsolga chiqaring"
         ],
         hints: ["Funksiya chaqirilayotganda uzatiladigan ma'lumotlar argumentlar deyiladi."],
+        mustInclude: [],
         starterCode: "// Funksiyani yarating\n\n\n// Chaqiring va natijani ko'ring\n"
       },
       quizQuestions: [
@@ -1318,6 +1349,7 @@ export const lessonsDB = {
           "Shu sonning kvadratini (o'zini o'ziga ko'paytirib) qaytarsin"
         ],
         hints: ["Eng qisqa usuldan foydalaning (return so'zisiz)."],
+        mustInclude: [],
         starterCode: "// Buni Arrow function qiling:\n// function kvadrat(son) {\n//   return son * son;\n// }\n\nconst kvadrat = \n\nconsole.log(kvadrat(4));"
       },
       quizQuestions: [
@@ -1357,6 +1389,7 @@ export const lessonsDB = {
           "Sahifaning joriy sarlavhasini (document.title) chiqaring"
         ],
         hints: ["JavaScriptda document so'zi doim brauzerning o'zi tomonidan taqdim etiladi, uni alohida ochish shart emas."],
+        mustInclude: [],
         starterCode: "// Kodingizni yozing\n\n"
       },
       quizQuestions: [
@@ -1397,6 +1430,7 @@ export const lessonsDB = {
           "O'sha o'zgaruvchini konsolga chiqaring"
         ],
         hints: ["querySelector ichiga CSS selektori yoziladi, ya'ni class uchun nuqta (.) qatnashishi shart."],
+        mustInclude: [],
         starterCode: "// Kodingizni yozing\n\n"
       },
       quizQuestions: [
@@ -1438,6 +1472,7 @@ export const lessonsDB = {
           "Tugma bosilganda konsolga 'JavaScript juda qiziq!' deb chiqsin"
         ],
         hints: ["addEventListener ning ikkinchi parametri funksiya (arrow function bo'lsa ham bo'ladi) bo'lishi kerak."],
+        mustInclude: [],
         starterCode: "const btn = document.querySelector('.btn');\n\n// Hodisani qo'shing\n"
       },
       quizQuestions: [
@@ -1478,6 +1513,7 @@ export const lessonsDB = {
           "Uning rangini (style.color) 'red' qilib qo'ying"
         ],
         hints: ["JavaScriptda CSS xususiyatlari chiziqchasiz (camelCase) yoziladi. Masalan, background-color emas, backgroundColor."],
+        mustInclude: [],
         starterCode: "const title = document.querySelector('.title');\n\n// Matn va rangni o'zgartiring\n"
       },
       quizQuestions: [
@@ -1518,6 +1554,7 @@ export const lessonsDB = {
           "Olingan 'model' va 'yil' o'zgaruvchilarini konsolga chiqaring"
         ],
         hints: ["const { } = obyekt_nomi; sintaksisidan foydalaning."],
+        mustInclude: [],
         starterCode: "const avto = { marka: 'Tesla', model: 'Model 3', yil: 2024, rang: 'oq' };\n\n// Destructuring qiling\n\n\n// Konsolga chiqaring\n"
       },
       quizQuestions: [
@@ -1559,6 +1596,7 @@ export const lessonsDB = {
           "'fullUser' ni konsolga chiqaring"
         ],
         hints: ["Obyekt ichida ... obyektNomi yozish orqali uning ichidagi hamma narsani shu yerga to'kib tashlash mumkin."],
+        mustInclude: [],
         starterCode: "const user = { ism: 'Hasan', yosh: 22 };\nconst details = { kasb: 'Dizayner', shahar: 'Toshkent' };\n\n// Ikkita obyektni birlashtiring\nconst fullUser = \n\nconsole.log(fullUser);"
       },
       quizQuestions: [
@@ -1600,6 +1638,7 @@ export const lessonsDB = {
           "Agar xato bo'lsa .catch() orqali xatoni konsolga chiqaring"
         ],
         hints: ["Promise bilan ishlashning eng oddiy usuli: vada.then(javob => console.log(javob))"],
+        mustInclude: [],
         starterCode: "const vada = new Promise((resolve, reject) => {\n  setTimeout(() => resolve('Ma\\'lumot keldi!'), 1000);\n});\n\n// .then() va .catch() orqali javobni oling\n\n"
       },
       quizQuestions: [
@@ -1641,6 +1680,7 @@ export const lessonsDB = {
           "Foydalanuvchining ismini (data.name) konsolga chiqaring"
         ],
         hints: ["Bu ishlarni async funksiya ichida yozishni va await ishlatishni unutmang."],
+        mustInclude: [],
         starterCode: "async function getData() {\n  // fetch orqali ma'lumot torting\n\n\n}\ngetData();"
       },
       quizQuestions: [
@@ -1680,6 +1720,7 @@ export const lessonsDB = {
           "Yaratilgan elementni ekrandagi ro'yxatga (appendChild orqali) qo'shing"
         ],
         hints: ["Sizga ul elementi 'ruyxat' nomi bilan tanlab berilgan. Shunchaki yangi 'li' yasab unga ulang."],
+        mustInclude: ["<li>"],
         starterCode: "const ruyxat = document.querySelector('#todoList');\n\n// 1. Yangi li element yarating\n\n// 2. Unga matn bering\n\n// 3. ruyxat ga appendChild qiling\n"
       },
       quizQuestions: [
@@ -1720,6 +1761,7 @@ export const lessonsDB = {
           "Kelgan ma'lumotdagi ob-havo darajasini ekrandagi (document.querySelector('.harorat')) elementning ichiga yozing"
         ],
         hints: ["Sizga qulay bo'lishi uchun API manzili berilgan. .json() qilishni unutmang."],
+        mustInclude: [],
         starterCode: "const url = 'https://jsonplaceholder.typicode.com/users/1';\n\nasync function haroratniOlish() {\n  // Fetch kodini yozing\n  \n  \n}\nharoratniOlish();"
       },
       quizQuestions: [
@@ -1760,6 +1802,7 @@ export const lessonsDB = {
           "'javobBering' nomli funksiya yarating. U chaqirilganda 'ball' va 'savolIndeksi' bittaga (++) oshsin"
         ],
         hints: ["O'zgaruvchini bittaga oshirish uchun uning yoniga ++ qo'yiladi (masalan, x++)."],
+        mustInclude: [],
         starterCode: "// O'zgaruvchilarni oching\n\n\nfunction javobBering() {\n  // Mantiqni yozing\n  \n}\n\njavobBering();\nconsole.log('Ball:', ball, 'Savol:', savolIndeksi);"
       },
       quizQuestions: [
@@ -1805,6 +1848,7 @@ export const lessonsDB = {
           "Komponentni export default qiling"
         ],
         hints: ["Reactda komponent nomlari doim Katta harf bilan boshlanishi shart."],
+        mustInclude: ["<h1>"],
         starterCode: "// Komponentni shu yerda yarating\n\n"
       },
       quizQuestions: [
@@ -1845,6 +1889,7 @@ export const lessonsDB = {
           "Uning ichiga kirish (cd) va paketlarni o'rnatish (npm install) komandalarini yozing"
         ],
         hints: ["Bu amaliyot asosan xotirani charxlash uchun. Shunchaki terminal komandalarini izohsiz yozing."],
+        mustInclude: [],
         starterCode: "/* Terminal komandalarini yozing */\n\n"
       },
       quizQuestions: [
@@ -1886,6 +1931,7 @@ export const lessonsDB = {
           "<img> tegini oxirida / bilan yoping"
         ],
         hints: ["Bo'sh teglar (<> va </>) Fragment deyiladi va ular ortiqcha div yaratmaslik uchun ishlatiladi."],
+        mustInclude: ["<img>"],
         starterCode: "function User() {\n  return (\n    <h1 class=\"ism\">Hasan</h1>\n    <p>Dasturchi</p>\n    <img src=\"logo.png\">\n  );\n}"
       },
       quizQuestions: [
@@ -1926,6 +1972,7 @@ export const lessonsDB = {
           "'App' komponenti ichida o'sha <Navbar /> ni chaqirib qo'ying"
         ],
         hints: ["Komponentni chaqirganda o'z-o'zidan yopiluvchi teg (<Komponent />) ko'rinishida yozamiz."],
+        mustInclude: ["<nav>", "<Navbar>"],
         starterCode: "// Navbar komponentini yarating\n\n\nfunction App() {\n  return (\n    <div>\n      {/* Navbarni shu yerda chaqiring */}\n      <main>Asosiy qism</main>\n    </div>\n  );\n}"
       },
       quizQuestions: [
@@ -1967,6 +2014,7 @@ export const lessonsDB = {
           "App ichida Maxsulot ni chaqirib, unga nom=\"Noutbuk\" va narx=\"1000\" qiymatlarini bering"
         ],
         hints: ["Destructuring bu `props.nom` o'rniga to'g'ridan-to'g'ri `nom` ishlatish imkonini beradi."],
+        mustInclude: [],
         starterCode: "function Maxsulot() { // Shu yerga props yozing\n  return (\n    <div className=\"card\">\n      {/* nom va narxni chiqaring */}\n    </div>\n  );\n}\n\nfunction App() {\n  return (\n    <>\n      {/* Maxsulot ni chaqiring va props bering */}\n    </>\n  );\n}"
       },
       quizQuestions: [
@@ -2008,6 +2056,7 @@ export const lessonsDB = {
           "Bosilganda 'setSon' orqali uni bittaga (son + 1) oshiring"
         ],
         hints: ["Destructuring formatini unutmang: const [son, setSon] = useState(0);"],
+        mustInclude: ["<button>"],
         starterCode: "import { useState } from 'react';\n\nfunction Hisoblagich() {\n  // 1. Shu yerda useState oching\n  \n  return (\n    <div>\n      <h1>Sanoq: {/* sonni chiqaring */}</h1>\n      {/* 2. Tugmaga onClick yozing */}\n      <button>Oshirish</button>\n    </div>\n  );\n}\nexport default Hisoblagich;"
       },
       quizQuestions: [
@@ -2049,6 +2098,7 @@ export const lessonsDB = {
           "onChange ichida 'setMatn(e.target.value)' qiling"
         ],
         hints: ["Event (e) degani bu foydalanuvchi amalga oshirgan harakat. e.target.value esa o'sha inputning ichidagi matn."],
+        mustInclude: ["<input>"],
         starterCode: "import { useState } from 'react';\n\nfunction LiveText() {\n  // State ni oching\n  \n  return (\n    <div>\n      {/* Inputni sozlang */}\n      <input type=\"text\" placeholder=\"Nimadir yozing...\" />\n      \n      {/* Matnni chiqaring */}\n      <h2>Siz yozdingiz: </h2>\n    </div>\n  );\n}"
       },
       quizQuestions: [
@@ -2089,6 +2139,7 @@ export const lessonsDB = {
           "useEffect faqat bir marta ishlashi uchun oxiriga bo'sh massiv [] qo'shing"
         ],
         hints: ["useEffect doim ikkita narsa oladi: 1-si Arrow function () => {}, 2-si massiv []."],
+        mustInclude: [],
         starterCode: "import { useEffect } from 'react';\n\nfunction Dastur() {\n  // Shu yerda useEffect yozing\n  \n\n  return <h1>Sarlavha o'zgardi!</h1>;\n}"
       },
       quizQuestions: [
@@ -2130,6 +2181,7 @@ export const lessonsDB = {
           "Tugma onClick bo'lganda 'matnRef.current.focus()' ni chaqiring"
         ],
         hints: ["useRef bilan ushlangan elementning ichki imkoniyatlariga doim '.current' orqali yetib boramiz."],
+        mustInclude: ["<input>"],
         starterCode: "import { useRef } from 'react';\n\nfunction Fokus() {\n  // useRef oching\n  \n  const fokusQil = () => {\n    // Fokus mantig'i\n  };\n\n  return (\n    <div>\n      {/* ref ni ulang */}\n      <input type=\"text\" />\n      <button onClick={fokusQil}>Yozishni boshlash</button>\n    </div>\n  );\n}"
       },
       quizQuestions: [
@@ -2171,6 +2223,7 @@ export const lessonsDB = {
           "Kodni qisqartirish uchun 'light'ni 'dark'ga almashtiruvchi mantiq va themeni massiv [theme, toggleTheme] ko'rinishida return qiling"
         ],
         hints: ["Custom Hook lar oddiy mantiqiy funksiyalar bo'lgani uchun, ular JSX emas (ya'ni HTML) return qilmaydi."],
+        mustInclude: [],
         starterCode: "import { useState } from 'react';\n\n// Shu yerda useTheme yarating\n\n\nfunction App() {\n  const [theme, toggleTheme] = useTheme();\n  \n  return (\n    <div className={theme}>\n      <button onClick={toggleTheme}>Temani O'zgartirish</button>\n    </div>\n  );\n}"
       },
       quizQuestions: [
@@ -2210,6 +2263,7 @@ export const lessonsDB = {
           "'/aloqa' manziliga olib boruvchi 'Aloqa' nomli <Link> yarating"
         ],
         hints: ["<Link> tegining manzil ko'rsatuvchi atributi 'href' emas, 'to' hisoblanadi."],
+        mustInclude: ["<Link>"],
         starterCode: "import { Link } from 'react-router-dom';\n\nfunction Menyular() {\n  return (\n    <div className=\"flex gap-4\">\n      {/* Linklarni shu yerda yarating */}\n      \n    </div>\n  );\n}"
       },
       quizQuestions: [
@@ -2250,6 +2304,7 @@ export const lessonsDB = {
           "Olingan 'theme' qiymatini <h1> ichida ekranga chiqaring"
         ],
         hints: ["useContext hooki qavslari ichiga qaysi Context dan ma'lumot olayotganingizni yozishingiz shart."],
+        mustInclude: ["<h1>"],
         starterCode: "import { useContext } from 'react';\n// Faraz qiling ThemeContext allaqachon yaratilgan va export qilingan\nimport { ThemeContext } from './ThemeContext';\n\nfunction Navbar() {\n  // Theme ni shu yerda tutib oling\n  \n  return (\n    <nav>\n      <h1>Hozirgi tema: {/* theme ni chiqaring */}</h1>\n    </nav>\n  );\n}"
       },
       quizQuestions: [
@@ -2292,6 +2347,7 @@ export const lessonsDB = {
           "Har bir <li> ga takrorlanmas 'key' atributini (kino.id) berishni unutmang"
         ],
         hints: ["Reactda massivlarni ekranga chizishda har doim eng ota elementga 'key' berish shart."],
+        mustInclude: ["<li>"],
         starterCode: "function MovieList() {\n  const kinolar = [\n    { id: 1, nomi: \"Avatar\" },\n    { id: 2, nomi: \"Titanik\" }\n  ];\n\n  return (\n    <ul>\n      {/* .map orqali kinolarni shu yerda chizing */}\n      \n    </ul>\n  );\n}"
       },
       quizQuestions: [
@@ -2333,6 +2389,7 @@ export const lessonsDB = {
           "Undan keyin vergul bilan 'yangiXarajat' obyektini kiriting"
         ],
         hints: ["Massivni yangilashda har doim spread (...) operatoridan foydalanishni odat qiling."],
+        mustInclude: [],
         starterCode: "import { useState } from 'react';\n\nfunction Tracker() {\n  const [xarajatlar, setXarajatlar] = useState([{ id: 1, nom: 'Yo\\'lkira', narx: 2000 }]);\n\n  const qoshish = () => {\n    const yangiXarajat = { id: Date.now(), nom: 'Tushlik', narx: 25000 };\n    \n    // Shu yerda setXarajatlar orqali massivni yangilang\n    \n  };\n\n  return <button onClick={qoshish}>Qo'shish</button>;\n}"
       },
       quizQuestions: [
@@ -2373,6 +2430,7 @@ export const lessonsDB = {
           "Shundan so'nggina console.log da izlanayotgan matnni chiqaring"
         ],
         hints: ["e (event) parametri formaning jo'natilish hodisasini o'zida saqlaydi."],
+        mustInclude: [],
         starterCode: "import { useState } from 'react';\n\nfunction MovieSearch() {\n  const [qidiruv, setQidiruv] = useState('');\n\n  const handleIzlash = (e) => {\n    // 1. Sahifa yangilanishini to'xtating\n    \n    \n    console.log(\"Qidirilmoqda:\", qidiruv);\n  };\n\n  return (\n    <form onSubmit={handleIzlash}>\n      <input value={qidiruv} onChange={e => setQidiruv(e.target.value)} />\n      <button type=\"submit\">Izlash</button>\n    </form>\n  );\n}"
       },
       quizQuestions: [
@@ -2414,6 +2472,7 @@ export const lessonsDB = {
           "Filter qoidasi: item.id teng EMAS (!==) bo'lganlarini qoldiring"
         ],
         hints: ["Filter funksiyasi qaysi elementlarning qoidasi true bo'lsa, o'shalardan iborat yangi massiv qaytaradi."],
+        mustInclude: [],
         starterCode: "import { useState } from 'react';\n\nfunction Cart() {\n  const [korzinka, setKorzinka] = useState([\n    { id: 1, nom: 'Noutbuk', soni: 1 },\n    { id: 2, nom: 'Sichqoncha', soni: 2 }\n  ]);\n\n  const ochirish = (ochiriladiganId) => {\n    // Filter orqali tanlangan ID ni massivdan olib tashlang\n    setKorzinka(\n      \n    );\n  };\n\n  return <button onClick={() => ochirish(1)}>Noutbukni o'chirish</button>;\n}"
       },
       quizQuestions: [
@@ -3855,6 +3914,7 @@ export const lessonsDB = {
           "<head> ichida <meta charset=\"UTF-8\"> ni yozing (bu barcha tillardagi harflarni, jumladan o'zbekcha o', g' larni to'g'ri o'qish uchun kerak)"
         ],
         hints: ["Meta teglar yopilmaydi."],
+        mustInclude: ["<!DOCTYPE html>", "<html>", "<head>", "<meta>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -3896,6 +3956,7 @@ export const lessonsDB = {
           "Sayt oxirida <footer> yarating"
         ],
         hints: ["Bu teglar vizual jihatdan hech narsani o'zgartirmaydi (xuddi div kabi ishlaydi), lekin qidiruv tizimlari (SEO) uchun juda muhim."],
+        mustInclude: ["<header>", "<h1>", "<main>", "<article>", "<p>", "<footer>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -3938,6 +3999,7 @@ export const lessonsDB = {
           "Yuborish uchun <button> qo'shing"
         ],
         hints: ["required atributi orqali brauzerning o'zi email xato yozilganini tekshirib (validatsiya qilib) beradi."],
+        mustInclude: ["<form>", "<button>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -3980,6 +4042,7 @@ export const lessonsDB = {
           "Musiqa tugagach o'zidan o'zi qaytadan boshlanishi uchun 'loop' atributini qo'shing"
         ],
         hints: ["Atributlarni ketma-ket, probel bilan yozib ketaverasiz (Masalan: <audio src=\"...\" controls loop>)."],
+        mustInclude: ["<audio>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -4021,6 +4084,7 @@ export const lessonsDB = {
           "Ko'rinib turishi uchun style=\"border: 2px solid black;\" atributini bering"
         ],
         hints: ["Canvas juft teg, uni </canvas> bilan yopish esdan chiqmasin."],
+        mustInclude: ["<canvas>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -4062,6 +4126,7 @@ export const lessonsDB = {
           "width ni 400, height ni 300 qilib bering"
         ],
         hints: ["Iframe juft teg, ya'ni uni albatta </iframe> qilib yopish kerak."],
+        mustInclude: ["<iframe>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -4103,6 +4168,7 @@ export const lessonsDB = {
           "Pastda <footer> orqali yilni yozib qo'ying"
         ],
         hints: ["Eng muhimi HTML5 qoidalari: barcha qismlarni mantiqiy semantik teglarga o'rang."],
+        mustInclude: ["<header>", "<h1>", "<main>", "<form>", "<footer>"],
         starterCode: "<!DOCTYPE html>\n<html>\n<head>\n  <title>Mening Loyiham</title>\n</head>\n<body>\n\n  \n\n</body>\n</html>"
       },
       quizQuestions: [
@@ -4148,6 +4214,7 @@ export const lessonsDB = {
           "O'qib olingan ismni console.log() ga chiqaring"
         ],
         hints: ["LocalStorage faqat matn (String) ko'rinishidagi ma'lumotlarni saqlaydi."],
+        mustInclude: [],
         starterCode: "// LocalStorage bilan ishlang\n\n\n"
       },
       quizQuestions: [
@@ -4189,6 +4256,7 @@ export const lessonsDB = {
           "Ularni konsolga chiqaring"
         ],
         hints: ["Bu kod ishlashi uchun brauzer ruxsat so'raydi, ruxsat berishni unutmang."],
+        mustInclude: [],
         starterCode: "// Joylashuvni aniqlash kodini yozing\n\n\n"
       },
       quizQuestions: [
@@ -4230,6 +4298,7 @@ export const lessonsDB = {
           "id=\"meningElementim\" deb nom bering"
         ],
         hints: ["JavaScript qismini yozishingiz shart emas, shunchaki HTML ni to'g'rilang."],
+        mustInclude: ["<div>", "<img>"],
         starterCode: "\n<div>Meni sudrab ko'ring</div>\n"
       },
       quizQuestions: [
@@ -4271,6 +4340,7 @@ export const lessonsDB = {
           "<rect> ga width=\"100\" height=\"50\" va fill=\"blue\" atributlarini bering"
         ],
         hints: ["To'rtburchak chizish uchun <circle> o'rniga <rect> (rectangle) ishlatiladi."],
+        mustInclude: ["<svg>", "<rect>"],
         starterCode: "\n\n"
       },
       quizQuestions: [
@@ -4311,6 +4381,7 @@ export const lessonsDB = {
           "console.log da 'Worker muvaffaqiyatli ishga tushdi' deb yozing"
         ],
         hints: ["Faqat obyektni yaratishning o'zi kifoya."],
+        mustInclude: [],
         starterCode: "if (window.Worker) {\n  // Shu yerda Worker yarating\n  \n\n}\n"
       },
       quizQuestions: [
@@ -4357,6 +4428,7 @@ export const lessonsDB = {
           "<main> ichida 20x20 o'lchamli to'rtburchak (<rect>) chizilgan <svg> yarating"
         ],
         hints: ["Barcha ishlarni semantic teglar ichida tartibli bajaring."],
+        mustInclude: ["<header>", "<h1>", "<main>", "<video>", "<rect>", "<svg>"],
         starterCode: "<!DOCTYPE html>\n<html>\n<body>\n  \n\n</body>\n</html>"
       },
       quizQuestions: [

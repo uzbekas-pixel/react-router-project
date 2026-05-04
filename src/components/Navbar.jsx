@@ -134,7 +134,6 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
   const sidebarLinks = [
     { path: "/dashboard",     label: t.dashboardTitle,               icon: <LuLayoutDashboard className="text-indigo-400" /> },
     { path: "/quiz",          label: t.quizTitle,                    icon: <LuTarget className="text-red-400" />             },
-    { path: "/battlemode",    label: t.battleModeNav,                icon: <LuSwords className="text-red-400" />             },
     { path: "/promo",         label: t.notifFilterPromo,             icon: <LuGift className="text-pink-400" />              },
     { path: "/pixel-challenge", label: t.pixelChallengeNav,            icon: <LuSwords className="text-red-400" />             },
     { path: "/live",          label: t.liveClassNav,                 icon: <LuRadio className="text-red-400" />              },
@@ -149,7 +148,7 @@ const Navbar = ({ darkMode, setDarkMode, onNavClick, showToast }) => {
     { path: "/shop",          label: t.coinShopNav,                  icon: <LuCoins className="text-yellow-400" />           },
     { path: "/profile",       label: t.profileTab,                   icon: <RiUserSmileLine className="text-blue-400" />     },
     { path: "/history", label: t.historyNav || "Tarix", icon: <LuClock className="text-indigo-400" /> },
-    { path: "/qa",            label: t.qaNav,                        icon: <LuMessageCircle className="text-blue-400" />     },
+   
     ...(isAdmin
       ? [{ path: "/admin",      label: t.adminBadge,        icon: <LuShieldCheck className="text-yellow-400" /> }]
       : []),

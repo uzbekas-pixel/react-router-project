@@ -48,7 +48,7 @@ import InstructorPanel from "./routes/InstructorPanel";
 import UserProfile from "./routes/UserProfile";
 import QA from "./routes/QA";
 import Live from "./routes/Liveinstructor";
-import BattleMode from "./routes/BattleMode";
+
 import Supports from "./routes/Supports";
 import ResumeBuilder from "./routes/ResumeBuilder";
 import ProjectShowcase from "./routes/ProjectShowcase";
@@ -314,10 +314,7 @@ function App() {
                 <ForgotPassword darkMode={darkMode} showToast={showToast} />
               }
             />
-            <Route
-              path="/battlemode"
-              element={<BattleMode darkMode={darkMode} showToast={showToast} />}
-            />
+          
 
             <Route
               path="/profile"

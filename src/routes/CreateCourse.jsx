@@ -148,7 +148,7 @@ const CreateCourse = ({ darkMode, showToast }) => {
             </div>
             <div style={{ display:"flex", gap:12 }}>
               <div style={{ flex:1 }}>
-                {label(t.priceLabel)}
+                {label(t.priceFormLabel)}
                 <input type="number" value={info.price} onChange={(e)=>setInfo({...info,price:e.target.value})} placeholder="0" style={inputStyle()}/>
               </div>
               <div style={{ flex:1 }}>
